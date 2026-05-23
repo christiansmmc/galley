@@ -170,8 +170,24 @@ export function DiffPanel() {
   }, [selectedFile]);
 
   // Threads + drafts scoped to the open file.
-  const fileThreads = useMemo(() => threads.filter(t => t.path === selectedFile && t.line != null), [threads, selectedFile]);
-  const fileDrafts = useMemo(() => drafts.filter(d => d.path === selectedFile), [drafts, selectedFile]);
+  //
+  // Sub-phase 2.0 decision: LEFT-side comments (on the original file) are
+  // not rendered inline. The data model (Rust + IPC types) keeps `side:
+  // String` so we can wire LEFT-side rendering later without a schema
+  // change; only the React state and these filters narrow to RIGHT now.
+  // The trade-off is: LEFT threads pulled from GitHub are silently
+  // ignored. Acceptable in sub-phase 2.0 because new draft comments can
+  // only be created RIGHT-side anyway (gutter listeners are bound to the
+  // modified editor), so the only case affected is *replying* to a
+  // pre-existing LEFT-side thread — rare in practice.
+  const fileThreads = useMemo(
+    () => threads.filter(t => t.path === selectedFile && t.line != null && t.side !== "LEFT"),
+    [threads, selectedFile],
+  );
+  const fileDrafts = useMemo(
+    () => drafts.filter(d => d.path === selectedFile && d.side !== "LEFT"),
+    [drafts, selectedFile],
+  );
 
   // Build the view-zone spec list. Each spec has a stable `key` so the hook
   // diffs cleanly between renders.
@@ -185,10 +201,7 @@ export function DiffPanel() {
 
     for (const t of fileThreads) {
       if (t.line == null) continue;
-      // For RIGHT side we use the modified reverse map; LEFT would need the
-      // original reverse map. Until we ship LEFT-side rendering, only RIGHT
-      // threads are placed inline.
-      if (t.side === "LEFT") continue;
+      // LEFT-side threads are filtered out above (see fileThreads memo).
       const editorLine = modifiedFileToEditor.get(t.line);
       if (editorLine == null) {
         console.warn(`[DiffPanel] thread ${t.id} line ${t.line} not in current diff; skipping zone`);
@@ -208,7 +221,7 @@ export function DiffPanel() {
     }
 
     for (const d of fileDrafts) {
-      if (d.side === "LEFT") continue;
+      // LEFT-side drafts are filtered out above (see fileDrafts memo).
       const editorLine = modifiedFileToEditor.get(d.line);
       if (editorLine == null) {
         console.warn(`[DiffPanel] draft ${d.id} line ${d.line} not in current diff; skipping zone`);
