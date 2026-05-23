@@ -139,24 +139,34 @@ export function useDiffViewZones(
   }, [diffEditor, specs]);
 
   // Cleanup on unmount or when the editor instance changes (PR/file switch).
+  //
+  // CRITICAL: snapshot the mounted set at cleanup time. `zonesRef.current` is
+  // a stable Map across renders, so by the time the deferred `queueMicrotask`
+  // runs the *new* effect has already populated the same Map with fresh roots
+  // for the new editor instance. Iterating `mounted.values()` inside the
+  // microtask would then unmount the freshly mounted roots, leaving empty
+  // view zones on screen.
   useEffect(() => {
     return () => {
       const mounted = zonesRef.current;
+      const snapshot = Array.from(mounted.values());
       if (diffEditor) {
         try {
           diffEditor.getModifiedEditor().changeViewZones((acc) => {
-            for (const m of mounted.values()) if (m.spec.side === "RIGHT") acc.removeZone(m.zoneId);
+            for (const m of snapshot) if (m.spec.side === "RIGHT") acc.removeZone(m.zoneId);
           });
           diffEditor.getOriginalEditor().changeViewZones((acc) => {
-            for (const m of mounted.values()) if (m.spec.side === "LEFT") acc.removeZone(m.zoneId);
+            for (const m of snapshot) if (m.spec.side === "LEFT") acc.removeZone(m.zoneId);
           });
         } catch { /* editor disposed already */ }
       }
+      // Clear the map synchronously so the next effect starts fresh; defer
+      // only the React unmount calls (those must escape the commit phase).
+      for (const m of snapshot) mounted.delete(m.spec.key);
       queueMicrotask(() => {
-        for (const m of mounted.values()) {
+        for (const m of snapshot) {
           try { m.root.unmount(); } catch { /* ignore */ }
         }
-        mounted.clear();
       });
     };
   }, [diffEditor]);
