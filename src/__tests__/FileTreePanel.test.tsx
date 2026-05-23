@@ -20,6 +20,8 @@ const baseUi = {
   filetree_width: 320,
   diff_render_mode: "auto" as const,
   compact_paths: true,
+  density: "comfortable" as const,
+  diff_font: { size: 13, family: "JetBrains Mono" },
 };
 
 beforeEach(() => {
