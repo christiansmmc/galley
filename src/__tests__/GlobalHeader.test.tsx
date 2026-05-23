@@ -32,7 +32,6 @@ describe("GlobalHeader", () => {
     expect(screen.getByText("#42")).toBeInTheDocument();
     expect(screen.getByText("Fix login bug")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Revisar/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Arquivos" })).toBeInTheDocument();
   });
 
   it("shows back arrow only when PR list is collapsed", () => {

@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Send, Settings, Files } from "lucide-react";
+import { ArrowLeft, ChevronRight, Send, Settings } from "lucide-react";
 import { Button } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
@@ -13,8 +13,6 @@ export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
   const currentPr = usePrsStore(s => s.currentPr);
   const prListCollapsed = useUiStore(s => s.prListCollapsed);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
-  const toggleFileTree = useUiStore(s => s.toggleFileTree);
-  const fileTreeCollapsed = useUiStore(s => s.fileTreeCollapsed);
   const draftCount = useDraftsStore(s => s.drafts.length);
 
   return (
@@ -77,19 +75,6 @@ export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
         }}>
           Pull Requests
         </span>
-      )}
-
-      {currentPr && (
-        <Button
-          variant="icon"
-          size="sm"
-          onClick={toggleFileTree}
-          title="Arquivos (Ctrl+2)"
-          aria-label="Arquivos"
-          aria-pressed={!fileTreeCollapsed}
-        >
-          <Files size={16} />
-        </Button>
       )}
 
       {currentPr && (
