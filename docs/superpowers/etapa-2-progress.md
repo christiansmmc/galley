@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Not started | — |
+| 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Ready for review | — |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — 2.1 approved 2026-05-23. Awaiting kickoff of 2.2 (PR list redesign).
+**Currently:** 2.2 ready for review on `feat/etapa-2-2-pr-list`. Awaiting smoke test + approval.
 
 ## Notes / decisions during execution
 
@@ -60,4 +60,13 @@ Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote
 - `common/Modal.tsx` deleted — only two import sites (`SettingsModal`, `ReviewSubmitModal`) were updated to consume `ui/Modal`. Banner + ToastStack moved to token-driven spacing while staying in `common/`.
 - Refactor pass touched: settings (Pat, Repos, Filters, SettingsModal), PR list (panel + item, EmptyState for the empty case), file tree (node + panel + group header), diff inline widgets (Editor, Draft, Thread — Thread now shows Avatars per comment), PanelHeader, App shell (FAB + gear).
 - Hidden gallery route: open the app with `#/__ui` to render `UiGallery.tsx` — every primitive in one page. Useful for smoke before approval.
+- `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, and `pnpm exec vite build` all clean.
+
+## 2026-05-23 — Sub-phase 2.2 ready for review
+
+- `PrSummary` extended with `changed_files: i64` and `ci_status: CiStatus` (passing/pending/failing/none). Search list endpoint doesn't expose either, so `list_prs` fans out per-PR concurrent fetches via `tokio::task::JoinSet`: one `/repos/{o}/{r}/pulls/{n}` (changed_files + head sha) and one `/commits/{sha}/status` (combined state). Errors are swallowed — affected rows fall back to defaults. List-cache TTL (60 s) absorbs the extra latency on warm fetches.
+- `get_pr` augments its `summary` with the same fields using the same helpers — keeps PR-detail consumers consistent.
+- Frontend: persistent search input at top of PR list panel (`Ctrl+P` focuses + selects), tab labels show counts (`Pra revisar (N)` / `Meus (N)`), repo group header shows repo name only with `owner/repo` tooltip on hover, PR title truncates to one line with ellipsis + tooltip, meta line is `author · age · N changed`, CI dot at left of each row. `formatAge` util added (`src/util/time.ts`) returning `30s` / `10m` / `2h` / `3d` / `2w` / `3mo` / `2y`.
+- Empty states branched: no repos, no PRs (inbox vazio), tab empty, and search-no-match — all via the `EmptyState` primitive.
+- Tests: new `formatAge.test.ts`, expanded `PrListPanel.test.tsx` to cover search filter, Ctrl+P focus, tab counts, and empty-search state. Existing fixtures updated to include the new `PrSummary` fields.
 - `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, and `pnpm exec vite build` all clean.
