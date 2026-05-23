@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
 import { Layout } from "./components/layout/Layout";
+import { GlobalHeader } from "./components/layout/GlobalHeader";
+import { useGlobalShortcuts } from "./components/layout/shortcuts";
 import { PatSection } from "./components/settings/PatSection";
 import { SettingsModal } from "./components/settings/SettingsModal";
 import { PrListPanel } from "./components/prs/PrListPanel";
-import { FileTreePanel } from "./components/files/FileTreePanel";
+import { PrMetaStrip } from "./components/prs/PrMetaStrip";
+import { FileTreeDrawer } from "./components/files/FileTreeDrawer";
 import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitModal } from "./components/review/ReviewSubmitModal";
 import { Banner } from "./components/common/Banner";
 import { ToastStack } from "./components/common/Toast";
-import { Button } from "./components/ui";
 import { useSettingsStore } from "./state/settingsStore";
 import { usePrsStore } from "./state/prsStore";
 import { useDraftsStore } from "./state/draftsStore";
@@ -21,10 +22,11 @@ export default function App() {
   const currentPr = usePrsStore(s => s.currentPr);
   const loadDrafts = useDraftsStore(s => s.load);
   const clearDrafts = useDraftsStore(s => s.clear);
-  const draftCount = useDraftsStore(s => s.drafts.length);
   const { authBanner, setAuthBanner } = useUiStore();
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useGlobalShortcuts();
 
   useEffect(() => { checkPat(); load(); }, [checkPat, load]);
   useEffect(() => {
@@ -45,44 +47,15 @@ export default function App() {
           Token inválido. Reautentique nas configurações.
         </Banner>
       )}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "flex-end",
-        padding: "var(--space-3) var(--space-6)",
-        borderBottom: "1px solid var(--c-surface0)",
-        background: "var(--c-mantle)",
-      }}>
-        <Button
-          variant="icon"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-          title="Configurações"
-          aria-label="Configurações"
-        >
-          <Settings size={16} />
-        </Button>
-      </div>
+      <GlobalHeader
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSubmit={() => setSubmitOpen(true)}
+      />
+      {currentPr && <PrMetaStrip pr={currentPr} />}
       <div style={{ flex: 1, minHeight: 0 }}>
-        <Layout prList={<PrListPanel />} fileTree={<FileTreePanel />} diff={<DiffPanel />} />
+        <Layout prList={<PrListPanel />} diff={<DiffPanel />} />
       </div>
-      {currentPr && (
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => setSubmitOpen(true)}
-          style={{
-            position: "fixed",
-            bottom: "var(--space-7)",
-            right: "var(--space-7)",
-            borderRadius: "var(--radius-pill)",
-            paddingLeft: "var(--space-7)",
-            paddingRight: "var(--space-7)",
-            boxShadow: "var(--shadow-md)",
-            zIndex: "var(--z-floating)" as unknown as number,
-          }}
-        >
-          Enviar review{draftCount > 0 ? ` (${draftCount})` : ""}
-        </Button>
-      )}
+      <FileTreeDrawer />
       <ReviewSubmitModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ToastStack />

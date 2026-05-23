@@ -16,6 +16,7 @@ beforeEach(() => {
     currentPr: {
       summary: { id: 1, owner: "x", repo: "y", number: 1, title: "t", author: "a", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true, changed_files: 0, ci_status: "none" },
       body: null, head_sha: "", base_sha: "", draft: false, mergeable: null,
+      additions: 0, deletions: 0, reviewers_count: 0,
     },
     diff: [
       { path: "src/main.rs", previous_path: null, status: "modified", additions: 1, deletions: 0, patch: null },
