@@ -34,12 +34,22 @@ impl GitHubClient {
         body: Option<&str>,
         drafts: &[CommentDraft],
     ) -> AppResult<ReviewResult> {
-        let comments: Vec<serde_json::Value> = drafts.iter().map(|d| serde_json::json!({
-            "path": d.path,
-            "line": d.line,
-            "side": d.side,
-            "body": d.body,
-        })).collect();
+        let comments: Vec<serde_json::Value> = drafts.iter().map(|d| {
+            let mut obj = serde_json::Map::new();
+            obj.insert("path".into(), serde_json::Value::String(d.path.clone()));
+            obj.insert("line".into(), serde_json::Value::from(d.line));
+            obj.insert("side".into(), serde_json::Value::String(d.side.clone()));
+            obj.insert("body".into(), serde_json::Value::String(d.body.clone()));
+            // GitHub requires both start_line and start_side together for
+            // multi-line range comments. Default start_side to `side` when
+            // start_line is set but start_side isn't.
+            if let Some(start_line) = d.start_line {
+                obj.insert("start_line".into(), serde_json::Value::from(start_line));
+                let ss = d.start_side.clone().unwrap_or_else(|| d.side.clone());
+                obj.insert("start_side".into(), serde_json::Value::String(ss));
+            }
+            serde_json::Value::Object(obj)
+        }).collect();
         let payload = serde_json::json!({
             "event": event.as_str(),
             "body": body.unwrap_or(""),

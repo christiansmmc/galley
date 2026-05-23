@@ -5,7 +5,15 @@ import type { CommentDraft } from "../ipc/types";
 interface DraftsState {
   drafts: CommentDraft[];
   load: (prId: number) => Promise<void>;
-  add: (prId: number, path: string, line: number, side: string, body: string) => Promise<void>;
+  add: (
+    prId: number,
+    path: string,
+    line: number,
+    side: string,
+    body: string,
+    startLine?: number | null,
+    startSide?: string | null,
+  ) => Promise<CommentDraft>;
   edit: (id: number, body: string) => Promise<void>;
   remove: (id: number) => Promise<void>;
   clear: () => void;
@@ -14,9 +22,10 @@ interface DraftsState {
 export const useDraftsStore = create<DraftsState>((set, get) => ({
   drafts: [],
   load: async (prId) => set({ drafts: await api.listDrafts(prId) }),
-  add: async (prId, path, line, side, body) => {
-    const d = await api.draftComment(prId, path, line, side, body);
+  add: async (prId, path, line, side, body, startLine = null, startSide = null) => {
+    const d = await api.draftComment(prId, path, line, side, body, startLine, startSide);
     set({ drafts: [...get().drafts, d] });
+    return d;
   },
   edit: async (id, body) => {
     const updated = await api.updateDraft(id, body);

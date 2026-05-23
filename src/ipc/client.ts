@@ -16,8 +16,24 @@ export const api = {
   refreshPr: (owner: string, repo: string, number: number) =>
     invoke<PrDetail>("refresh_pr", { owner, repo, number }),
 
-  draftComment: (prId: number, path: string, line: number, side: string, body: string) =>
-    invoke<CommentDraft>("draft_comment", { prId, path, line, side, body }),
+  draftComment: (
+    prId: number,
+    path: string,
+    line: number,
+    side: string,
+    body: string,
+    startLine?: number | null,
+    startSide?: string | null,
+  ) =>
+    invoke<CommentDraft>("draft_comment", {
+      prId,
+      path,
+      line,
+      side,
+      body,
+      startLine: startLine ?? null,
+      startSide: startSide ?? null,
+    }),
   listDrafts: (prId: number) =>
     invoke<CommentDraft[]>("list_drafts", { prId }),
   updateDraft: (draftId: number, body: string) =>

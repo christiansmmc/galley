@@ -4,8 +4,27 @@ use crate::AppState;
 use tauri::State;
 
 #[tauri::command]
-pub async fn draft_comment(pr_id: i64, path: String, line: i64, side: String, body: String, state: State<'_, AppState>) -> AppResult<CommentDraft> {
-    create(&state.cache, pr_id, &path, line, &side, &body)
+#[allow(clippy::too_many_arguments)]
+pub async fn draft_comment(
+    pr_id: i64,
+    path: String,
+    line: i64,
+    side: String,
+    body: String,
+    start_line: Option<i64>,
+    start_side: Option<String>,
+    state: State<'_, AppState>,
+) -> AppResult<CommentDraft> {
+    create(
+        &state.cache,
+        pr_id,
+        &path,
+        line,
+        &side,
+        &body,
+        start_line,
+        start_side.as_deref(),
+    )
 }
 
 #[tauri::command]

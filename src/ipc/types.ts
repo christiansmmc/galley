@@ -79,6 +79,8 @@ export interface CommentDraft {
   side: string;
   body: string;
   created_at: string;
+  start_line: number | null;
+  start_side: string | null;
 }
 
 export type ReviewEvent = "APPROVE" | "COMMENT" | "REQUEST_CHANGES";
