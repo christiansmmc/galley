@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { api } from "../ipc/client";
+import { isAppError, userMessage } from "../ipc/errors";
+import { useUiStore } from "./uiStore";
 import type { FileDiff, PrDetail, PrSummary, ReviewThread } from "../ipc/types";
 
 interface PrsState {
@@ -44,6 +46,8 @@ export const usePrsStore = create<PrsState>((set, get) => ({
       set({ mine, reviewRequested: rr });
     } catch (e) {
       set({ listError: e });
+      if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
+      else useUiStore.getState().pushToast("error", userMessage(e));
     } finally {
       set({ loadingLists: false });
     }
@@ -65,6 +69,8 @@ export const usePrsStore = create<PrsState>((set, get) => ({
       });
     } catch (e) {
       set({ prError: e });
+      if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
+      else useUiStore.getState().pushToast("error", userMessage(e));
     } finally {
       set({ loadingPr: false });
     }
