@@ -17,6 +17,8 @@ pub struct UiPrefs {
     pub filetree_collapsed: bool,
     pub sidebar_width: u32,
     pub filetree_width: u32,
+    #[serde(default)]
+    pub diff_render_mode: DiffRenderMode,
 }
 
 impl Default for UiPrefs {
@@ -27,6 +29,7 @@ impl Default for UiPrefs {
             filetree_collapsed: false,
             sidebar_width: 280,
             filetree_width: 320,
+            diff_render_mode: DiffRenderMode::default(),
         }
     }
 }
@@ -34,6 +37,15 @@ impl Default for UiPrefs {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeChoice { Light, Dark, System }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum DiffRenderMode {
+    SideBySide,
+    Inline,
+    #[default]
+    Auto,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RepoConfig {

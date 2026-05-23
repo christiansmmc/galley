@@ -7,6 +7,7 @@ pub mod github;
 pub mod logging;
 pub mod path_filter;
 pub mod secrets;
+pub mod viewed;
 
 use crate::cache::Cache;
 use crate::config::types::Settings;

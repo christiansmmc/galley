@@ -2,6 +2,7 @@ export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Input } from "./Input";
 export { Textarea } from "./Textarea";
 export { Modal } from "./Modal";
+export { SlidePanel } from "./SlidePanel";
 export { Dropdown } from "./Dropdown";
 export { Tabs } from "./Tabs";
 export { Tooltip } from "./Tooltip";

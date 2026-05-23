@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { ReviewSubmitModal } from "../components/review/ReviewSubmitModal";
+import { ReviewSubmitPanel } from "../components/review/ReviewSubmitPanel";
 import { useDraftsStore } from "../state/draftsStore";
 import { usePrsStore } from "../state/prsStore";
 
@@ -20,19 +20,24 @@ beforeEach(() => {
       body: null, head_sha: "", base_sha: "", draft: false, mergeable: null,
       additions: 0, deletions: 0, reviewers_count: 0,
     },
-    diff: [], threads: [], selectedFile: null,
+    diff: [], threads: [], selectedFile: null, viewedFiles: new Set(),
     refreshThreads: vi.fn().mockResolvedValue(undefined),
   } as never);
   useDraftsStore.setState({
-    drafts: [{ id: 9, pr_id: 1, path: "a", line: 1, side: "RIGHT", body: "hi", created_at: "" }],
+    drafts: [{ id: 9, pr_id: 1, path: "a", line: 1, side: "RIGHT", body: "hi", created_at: "", start_line: null, start_side: null }],
     clear: vi.fn(),
   } as never);
 });
 
-describe("ReviewSubmitModal", () => {
+describe("ReviewSubmitPanel", () => {
+  it("renders as a slide-in dialog with role=dialog", () => {
+    render(<ReviewSubmitPanel open onClose={vi.fn()} />);
+    expect(screen.getByRole("dialog", { name: /Enviar review/i })).toBeTruthy();
+  });
+
   it("submits with selected event and draft ids", async () => {
     const onClose = vi.fn();
-    render(<ReviewSubmitModal open onClose={onClose} />);
+    render(<ReviewSubmitPanel open onClose={onClose} />);
     fireEvent.click(screen.getByText("Aprovar"));
     fireEvent.click(screen.getByText("Enviar"));
     await waitFor(() => expect(submitReview).toHaveBeenCalled());

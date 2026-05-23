@@ -5,3 +5,4 @@ pub mod repos;
 pub mod reviews;
 pub mod secrets;
 pub mod settings;
+pub mod viewed;

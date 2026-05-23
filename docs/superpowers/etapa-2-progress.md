@@ -13,7 +13,7 @@
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
+| 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
 | 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — 2.3 approved 2026-05-23. Awaiting kickoff of 2.4 (Diff & comments redesign).
+**Currently:** none — 2.4 approved 2026-05-23. Next: 2.5 (File tree advanced — compact linear paths, flat mode, file name search).
 
 ## Notes / decisions during execution
 
@@ -100,3 +100,13 @@ Carry-forward for later sub-phases:
 
 - Smoke caught one gap: PRs on repos that only use GitHub Actions (Checks API) showed the gray "no checks" dot because the legacy combined-status endpoint returns `total_count = 0` for them. Fixed with a fallback to `/commits/{sha}/check-runs` that aggregates conclusions (`pending` if any run is non-completed, `failing` if any conclusion is failure-ish, otherwise `passing`).
 - Carry-forward: `list_prs` is cached for 60 s and the Refresh button doesn't invalidate the list cache — only the per-PR detail/diff/threads bundle. Re-testing CI-status fixes meant waiting out the TTL. Worth wiring a `force_refresh` path through `refreshLists` → `list_prs` in a later sub-phase (probably 2.6 when settings/repos touch the list invalidation anyway).
+
+## 2026-05-23 — Sub-phase 2.4 ready for review
+
+- **Submit review → slide-in panel.** New `ui/SlidePanel` primitive anchored to the right edge (420 px, max 92 vw, click-backdrop and Esc to close). `ReviewSubmitModal` deleted; `ReviewSubmitPanel` is the new component, same submit semantics. App.tsx + GlobalHeader still toggle it via `onOpenSubmit`.
+- **Mark viewed per file.** New SQLite `viewed_files (pr_id, path)` table with PK on the tuple + an index on pr_id. Rust module `viewed` exposes `list`/`mark`; Tauri commands `list_viewed_files` + `mark_viewed`. `prsStore.viewedFiles` is a `Set<string>` populated alongside diff/threads in `openPr`, reset by `closePr`. DiffPanel header shows a pill toggle "Marcar como visto" / "Visto" (green border + check icon when on). Persists across app restarts because it's row-based, not bound to the cache TTL.
+- **Diff render mode setting.** `UiPrefs.diff_render_mode` added Rust-side (`#[serde(default)]` for backward compat with older configs missing the key). New `Settings → Diff` section with three pill buttons. `useDiffRenderMode(pref)` hook resolves the pref into `renderSideBySide: boolean`, listening to `window.resize` only while pref is `auto`. Auto threshold = 1100 px (constant exported from the hook). The pre-2.4 DiffPanel never had a render-mode toggle in its header, so nothing to remove from there.
+- **Inline thread polish.** `InlineThreadWidget` reply textarea now grows from 2→4 rows on focus or when it has content. Resolve button surfaces in the thread header when `node_id` is present; click → GraphQL `resolveReviewThread` mutation → refresh threads → toast.
+- **GraphQL augmentation for threads.** `ReviewThread` gained `node_id: Option<String>` and `resolved: bool`. After the REST `/pulls/{n}/comments` fetch, `get_pr_threads` fires one GraphQL query (`reviewThreads(first:100){id isResolved comments(first:1){nodes{databaseId}}}`) to map each thread's root databaseId → `(node_id, isResolved)`. Resolved threads are dropped server-side from the returned vec. New `resolve_thread` Tauri command + `api.resolveThread` IPC binding. Threads cache invalidated after resolve.
+- **CommentLineModal / ThreadsSidebar:** already absent from the tree (2.0 deleted them ahead of schedule). Nothing left to remove for the spec's item 5.
+- **Tests:** added `ReviewSubmitPanel.test.tsx` (dialog role + submit roundtrip), `InlineThreadWidgetResolve.test.tsx` (resolve button visibility + IPC payload), `useDiffRenderMode.test.ts` (pref + width matrix), Rust `viewed_test.rs` (roundtrip + idempotent mark + unmark). Updated `InlineThreadWidget.test.tsx` fixtures for the new ReviewThread fields. `pnpm tsc --noEmit`, `pnpm test` (27/27), `cargo test` (15/15), `pnpm exec vite build` all clean.

@@ -1,11 +1,14 @@
 export type ThemeChoice = "light" | "dark" | "system";
 
+export type DiffRenderMode = "side-by-side" | "inline" | "auto";
+
 export interface UiPrefs {
   theme: ThemeChoice;
   sidebar_collapsed: boolean;
   filetree_collapsed: boolean;
   sidebar_width: number;
   filetree_width: number;
+  diff_render_mode: DiffRenderMode;
 }
 
 export interface RepoConfig { owner: string; name: string; }
@@ -79,6 +82,9 @@ export interface ReviewThread {
   start_line: number | null;
   /** For range threads: side of the range start (typically same as `side`). */
   start_side: string | null;
+  /** GraphQL node id — required to resolve the thread. */
+  node_id: string | null;
+  resolved: boolean;
   comments: ThreadComment[];
 }
 

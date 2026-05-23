@@ -56,3 +56,22 @@ pub async fn reply_to_thread(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn resolve_thread(
+    owner: String,
+    repo: String,
+    number: u64,
+    thread_node_id: String,
+    state: State<'_, AppState>,
+) -> AppResult<()> {
+    let client = state.client.read().await
+        .clone()
+        .ok_or_else(|| AppError::Auth("no GitHub client".into()))?;
+    client.resolve_thread(&thread_node_id).await?;
+
+    let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+
+    Ok(())
+}
