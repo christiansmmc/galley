@@ -47,7 +47,7 @@ export function PrListItem({ pr, selected, onClick }: Props) {
         gap: "var(--space-3)",
         width: "100%",
         textAlign: "left",
-        padding: "var(--space-4) var(--space-6)",
+        padding: "var(--density-row-pad-y) var(--density-row-pad-x)",
         border: 0,
         color: "var(--c-text)",
         cursor: "pointer",

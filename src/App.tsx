@@ -28,11 +28,14 @@ export default function App() {
 
   useGlobalShortcuts();
 
+  const density = useSettingsStore(s => s.settings?.ui.density ?? "comfortable");
+
   useEffect(() => { checkPat(); load(); }, [checkPat, load]);
   useEffect(() => {
     if (currentPr) loadDrafts(currentPr.summary.id);
     else clearDrafts();
   }, [currentPr, loadDrafts, clearDrafts]);
+  useEffect(() => { document.body.dataset.density = density; }, [density]);
 
   if (typeof window !== "undefined" && window.location.hash === "#/__ui") {
     return <UiGallery />;

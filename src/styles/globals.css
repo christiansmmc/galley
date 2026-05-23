@@ -22,6 +22,7 @@ html, body, #root {
 }
 
 body[data-theme="latte"] {
+  color-scheme: light;
   --c-base: #eff1f5; --c-mantle: #e6e9ef; --c-crust: #dce0e8;
   --c-text: #4c4f69; --c-subtext: #5c5f77;
   --c-surface0: #ccd0da; --c-surface1: #bcc0cc; --c-surface2: #acb0be;
@@ -31,12 +32,22 @@ body[data-theme="latte"] {
 }
 
 body[data-theme="mocha"] {
+  color-scheme: dark;
   --c-base: #1e1e2e; --c-mantle: #181825; --c-crust: #11111b;
   --c-text: #cdd6f4; --c-subtext: #bac2de;
   --c-surface0: #313244; --c-surface1: #45475a; --c-surface2: #585b70;
   --c-overlay: #7f849c;
   --c-accent: #cba6f7; --c-blue: #89b4fa;
   --c-green: #a6e3a1; --c-amber: #f9e2af; --c-red: #f38ba8;
+}
+
+/* Native <option> elements ignore the parent <select>'s background in
+   most engines and fall back to the OS palette — white-on-white in some
+   light/dark combos. Force them to the theme tokens. */
+.prr-input option,
+select.prr-input option {
+  background: var(--c-base);
+  color: var(--c-text);
 }
 
 /* Gutter glyph used by DiffPanel for the inline "+ comment" affordance. */

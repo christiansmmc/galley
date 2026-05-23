@@ -46,7 +46,7 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
         style={{
           display: "flex", alignItems: "center", gap: "var(--space-3)",
           width: "100%", textAlign: "left",
-          padding: `var(--space-2) var(--space-4) var(--space-2) ${pad}`,
+          padding: `var(--density-row-pad-y) var(--space-4) var(--density-row-pad-y) ${pad}`,
           border: 0,
           color: "var(--c-text)",
           cursor: "pointer",
@@ -76,7 +76,7 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
         style={{
           display: "flex", alignItems: "center", gap: "var(--space-2)",
           width: "100%", textAlign: "left",
-          padding: `var(--space-2) var(--space-4) var(--space-2) ${pad}`,
+          padding: `var(--density-row-pad-y) var(--space-4) var(--density-row-pad-y) ${pad}`,
           border: 0,
           color: "var(--c-subtext)",
           cursor: "pointer",

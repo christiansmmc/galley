@@ -155,6 +155,7 @@ export function DiffPanel() {
   const setViewed = usePrsStore(s => s.setViewed);
   const renderModePref = useSettingsStore(s => s.settings?.ui.diff_render_mode);
   const renderSideBySide = useDiffRenderMode(renderModePref);
+  const diffFont = useSettingsStore(s => s.settings?.ui.diff_font);
   const { resolved } = useTheme();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -501,8 +502,10 @@ export function DiffPanel() {
             originalEditable: false,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
-            fontFamily: "JetBrains Mono, Fira Code, monospace",
-            fontSize: 13,
+            fontFamily: diffFont?.family
+              ? `${diffFont.family}, "JetBrains Mono", "Fira Code", monospace`
+              : "JetBrains Mono, Fira Code, monospace",
+            fontSize: diffFont?.size ?? 13,
             glyphMargin: true,
           }}
           onMount={(ed) => { setDiffEd(ed); }}

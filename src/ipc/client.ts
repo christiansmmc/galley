@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-  CommentDraft, FileDiff, PathFilter, PrDetail, PrSummary, RepoConfig,
-  ReviewEvent, ReviewResult, ReviewThread, Settings,
+  CommentDraft, FileDiff, PathFilter, PrDetail, PrSummary, RemoteRepo,
+  RepoBrowseFilters, RepoConfig, ReviewEvent, ReviewResult, ReviewThread, Settings,
 } from "./types";
 
 export const api = {
@@ -56,6 +56,10 @@ export const api = {
   listRepos: () => invoke<RepoConfig[]>("list_repos"),
   addRepo: (owner: string, name: string) => invoke<RepoConfig>("add_repo", { owner, name }),
   removeRepo: (owner: string, name: string) => invoke<void>("remove_repo", { owner, name }),
+  setRepos: (repos: RepoConfig[]) => invoke<void>("set_repos", { repos }),
+  validateRepo: (input: string) => invoke<RepoConfig>("validate_repo", { input }),
+  listMyRepos: (page: number, filters: RepoBrowseFilters) =>
+    invoke<RemoteRepo[]>("list_my_repos", { page, filters }),
 
   getPathFilters: (repo: string) => invoke<PathFilter[]>("get_path_filters", { repo }),
   setPathFilters: (repo: string, filters: PathFilter[]) => invoke<void>("set_path_filters", { repo, filters }),
@@ -66,4 +70,5 @@ export const api = {
   setPat: (token: string) => invoke<void>("set_pat", { token }),
   clearPat: () => invoke<void>("clear_pat"),
   hasPat: () => invoke<boolean>("has_pat"),
+  currentUser: () => invoke<string | null>("current_user"),
 };

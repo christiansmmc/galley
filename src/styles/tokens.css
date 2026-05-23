@@ -67,6 +67,23 @@
   /* Layout limits. */
   --modal-min-w: 480px;
   --modal-max-w: 720px;
+
+  /* Row density (default = comfortable). */
+  --density-row-pad-y: var(--space-3);
+  --density-row-pad-x: var(--space-4);
+  --density-row-gap: var(--space-2);
+}
+
+body[data-density="compact"] {
+  --density-row-pad-y: var(--space-2);
+  --density-row-pad-x: var(--space-3);
+  --density-row-gap: var(--space-1);
+}
+
+body[data-density="spacious"] {
+  --density-row-pad-y: var(--space-5);
+  --density-row-pad-x: var(--space-6);
+  --density-row-gap: var(--space-3);
 }
 
 /* Accent soft variants per theme — used for focus rings. */

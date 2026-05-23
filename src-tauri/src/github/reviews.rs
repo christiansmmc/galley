@@ -1,28 +1,7 @@
 use crate::drafts::CommentDraft;
 use crate::error::{AppError, AppResult};
-use crate::github::GitHubClient;
+use crate::github::{extract_github_error, GitHubClient};
 use serde::{Deserialize, Serialize};
-
-/// Pull the human-readable message out of an octocrab error.
-///
-/// Octocrab's Debug-formatting includes the GitHub JSON body when the
-/// request hit a 4xx/5xx; Display often loses that detail.
-fn extract_github_error(e: &octocrab::Error) -> String {
-    let dbg = format!("{e:?}");
-    if let octocrab::Error::GitHub { source, .. } = e {
-        let msg = &source.message;
-        let mut out = msg.clone();
-        if !source.errors.as_ref().map(|v| v.is_empty()).unwrap_or(true) {
-            if let Ok(detail) = serde_json::to_string(&source.errors) {
-                out.push_str(" — ");
-                out.push_str(&detail);
-            }
-        }
-        return out;
-    }
-    // Fall back to debug repr so the caller still sees something useful.
-    dbg
-}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

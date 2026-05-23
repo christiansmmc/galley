@@ -1,7 +1,13 @@
 import { Button } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
-import type { ThemeChoice } from "../../ipc/types";
+import type { Density, ThemeChoice } from "../../ipc/types";
+
+const DENSITY_LABEL: Record<Density, string> = {
+  compact: "Compacta",
+  comfortable: "Confortável",
+  spacious: "Espaçosa",
+};
 
 export function AparenciaSection() {
   const { choice, setChoice } = useTheme();
@@ -9,13 +15,19 @@ export function AparenciaSection() {
   const save = useSettingsStore(s => s.save);
 
   const compactPaths = settings?.ui.compact_paths ?? true;
+  const density = settings?.ui.density ?? "comfortable";
+
   const toggleCompact = () => {
     if (!settings) return;
     save({ ...settings, ui: { ...settings.ui, compact_paths: !compactPaths } });
   };
+  const setDensity = (d: Density) => {
+    if (!settings) return;
+    save({ ...settings, ui: { ...settings.ui, density: d } });
+  };
 
   return (
-    <section style={{ marginBottom: "var(--space-7)" }}>
+    <section>
       <h4 style={{ margin: "0 0 var(--space-4)" }}>Aparência</h4>
 
       <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
@@ -33,9 +45,24 @@ export function AparenciaSection() {
         ))}
       </div>
 
+      <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginTop: "var(--space-6)", marginBottom: "var(--space-2)" }}>
+        Densidade
+      </label>
+      <div style={{ display: "flex", gap: "var(--space-3)" }}>
+        {(["compact", "comfortable", "spacious"] as Density[]).map(d => (
+          <Button
+            key={d}
+            variant={density === d ? "subtle" : "ghost"}
+            size="sm"
+            fullWidth
+            onClick={() => setDensity(d)}
+          >{DENSITY_LABEL[d]}</Button>
+        ))}
+      </div>
+
       <label style={{
         display: "flex", alignItems: "center", gap: "var(--space-3)",
-        marginTop: "var(--space-5)", cursor: "pointer",
+        marginTop: "var(--space-6)", cursor: "pointer",
         fontSize: "var(--text-base)",
       }}>
         <input
