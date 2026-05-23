@@ -362,14 +362,16 @@ export function DiffPanel() {
     // cursor-selection event doesn't fire reliably for drag-only selections
     // (no cursor activity → no event).
     //
-    // Gated on target type CONTENT_TEXT (6): mouseup events inside view zones
+    // Gated on target type CONTENT_TEXT: mouseup events inside view zones
     // (e.g. when the user clicks inside an inline editor/thread) shouldn't
-    // rebuild rangeSel. Monaco's MouseTargetType.CONTENT_TEXT === 6.
+    // rebuild rangeSel. We resolve the enum via monaco at runtime; fall back
+    // to the documented value 6 if monaco isn't loaded yet (shouldn't
+    // happen since the editor mounted, but defensive).
+    const CONTENT_TEXT = monacoNs?.editor.MouseTargetType.CONTENT_TEXT ?? 6;
     disposables.push(modified.onMouseUp((e) => {
-      const kind = e.target.type;
       // Only CONTENT_TEXT clicks count. Anything else (overlay widgets, view
       // zones, gutter, scrollbar, …) means the user isn't selecting code.
-      if (kind !== 6) return;
+      if (e.target.type !== CONTENT_TEXT) return;
       const sel = modified.getSelection();
       if (!sel || sel.startLineNumber === sel.endLineNumber) {
         setRangeSel(null);
