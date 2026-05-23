@@ -271,7 +271,11 @@ export function DiffPanel() {
           modifiedModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/mod/${file.path}`}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
-          theme={resolved === "mocha" ? "vs-dark" : "vs"}
+          theme={resolved === "mocha" ? "cat-mocha" : "cat-latte"}
+          beforeMount={(monaco) => {
+            monaco.editor.defineTheme("cat-latte", monacoLatte);
+            monaco.editor.defineTheme("cat-mocha", monacoMocha);
+          }}
           options={{
             renderSideBySide: true,
             readOnly: true,
