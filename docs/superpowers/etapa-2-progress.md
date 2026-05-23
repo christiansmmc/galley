@@ -9,7 +9,7 @@
 
 | Sub-phase | Branch | State | Reviewed at |
 |---|---|---|---|
-| 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | In progress (started 2026-05-23) | — |
+| 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Ready for review (2026-05-23) | — |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Not started | — |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Not started | — |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
@@ -28,4 +28,11 @@
 
 Append entries here as discoveries surface. Format: `## YYYY-MM-DD — short title` followed by 1-3 bullets.
 
-(Empty.)
+## 2026-05-23 — Sub-phase 2.0 ready for review
+
+- Cache module gained a `ttl.rs` helper layer with read-through / put / invalidate APIs. Diff and threads bundle into single rows keyed by a deterministic synthetic pr_id derived from (owner, repo, number) — sidesteps a race where `openPr` fetches PR + diff + threads concurrently.
+- Drafts table extended in-place with `start_line` / `start_side` columns (ALTER TABLE with column-presence probe; old DBs upgrade silently).
+- Monaco view zones: gutter `+` glyph, click → inline editor view zone; drag-select → floating "Comentar N linhas" button; existing threads + saved drafts render inline. Each zone owns its own React root via `createRoot`; tracked in a Map and unmounted on a deferred microtask to dodge React's commit-phase unmount warning.
+- ThreadsSidebar is no longer rendered in DiffPanel but the file is kept until sub-phase 2.4 removes it (along with `CommentLineModal`).
+- AppImage workaround: `NO_STRIP=true pnpm tauri build --bundles appimage` — linuxdeploy's bundled `strip` can't read the `SHT_RELR` section in modern host libs. Documented in `docs/appimage-bundle.md`. AppImage at ~105 MB.
+- Manual smoke items that need a GUI: gutter `+` hover, click → inline editor, range button position, inline thread reply, cache hit/miss in tracing logs.
