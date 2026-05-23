@@ -16,13 +16,13 @@
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
+| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Ready for review | — |
 
 **Possible states:** `Not started` · `In progress` · `Ready for review` · `Changes requested` · `Done (approved YYYY-MM-DD)`
 
 ## Active sub-phase
 
-**Currently:** none — 2.6 approved 2026-05-23. Next: 2.7 (Command palette + empty states).
+**Currently:** 2.7 — Command palette + empty states (includes custom titlebar per user opt-in 2026-05-23).
 
 ## Notes / decisions during execution
 
@@ -140,3 +140,21 @@ Carry-forward for later sub-phases:
 Single fix during smoke:
 
 - **Dropdown options unreadable.** Native `<option>` elements ignore the parent `<select>`'s inline `background` in most engines and fall back to the OS palette — white-on-white in some Linux theme combos. Fix: set `color-scheme: light` / `color-scheme: dark` on `body[data-theme]`, and add a `.prr-input option { background: var(--c-base); color: var(--c-text); }` rule in `globals.css`. Carry-forward: any future native form control (date picker, color picker) inherits `color-scheme` from the body now — no per-component patching needed.
+
+## 2026-05-23 — Sub-phase 2.7 ready for review
+
+- **Custom titlebar (frameless).** `tauri.conf.json` flips `decorations: false` and adds `minWidth/minHeight`. New `TitleBar.tsx` replaces the old `GlobalHeader` and folds breadcrumb + Revisar + palette shortcut + settings gear + min/max/close window buttons into a 36 px bar. Native-feel drag region via `data-tauri-drag-region` on the titlebar root + breadcrumb span; interactive children opt out with `data-tauri-drag-region="false"`. Window control buttons call into the new `src/util/window.ts` wrapper, which lazy-imports `@tauri-apps/api/window` inside try/catch so vitest/jsdom (where there is no Tauri IPC bridge) renders the bar without crashing. Maximize/restore icon swap reacts to `onResized` so OS-side maximize triggers also stay in sync. The OS smoke matrix is currently Linux/Wayland only (Fedora/Nobara dev env); Windows + macOS are untested — flag if any taskbar/snap behavior surfaces during review.
+- **Command palette (Ctrl+K).** `CommandPalette.tsx` with reusable `CommandGroup` + `CommandItem` sub-components. No new dep — custom subsequence fuzzy matcher in `src/util/fuzzy.ts` (`fuzzyScore` + `fuzzyFilter`) that scores by span tightness, earliest first-match, and word-boundary bonuses. Sources: PRs (mine ∪ reviewRequested, dedupe by id), files (current PR diff[].path, only when a PR is open), commands (Refresh, Open Settings, Cycle theme, Submit review). `>` prefix flips command-only mode. ↑↓ navigate, Enter dispatch, hover sets active, Esc + backdrop close. The Ctrl+K shortcut now lives alongside Ctrl+1/2 in `useGlobalShortcuts` (takes an `onOpenPalette` callback). Wired into App.tsx + the new TitleBar (the badge button is also the visual hint that Ctrl+K opens the palette).
+- **Empty-state polish.** Swapped the remaining ad-hoc copy for the `<EmptyState>` primitive:
+  - `FileTreePanel` "Selecione um PR" + "Nenhum arquivo" (flat view) cases.
+  - `DiffPanel` "Selecione um arquivo" placeholder when no file is selected.
+  - `ReposSection` empty-list state.
+  - `BrowseReposModal` no-results state.
+  PrListPanel already used `<EmptyState>` end-to-end (shipped in 2.2).
+- **AtalhosSection** picked up the Ctrl+K row and dropped the "future shortcuts" footnote.
+- **Tests:** new `TitleBar.test.tsx` (ports the old GlobalHeader assertions and adds window-controls dispatch via `vi.mock("../util/window")` + palette button), `CommandPalette.test.tsx` (dedupe, fuzzy filter, `>` mode, Enter selects file + closes, Esc closes, backdrop closes, `> refresh` surfaces command), `fuzzy.test.ts` (empty query, subsequence match, case insensitivity, ranking). Deleted `GlobalHeader.test.tsx` along with the component.
+- **Notes / quirks:**
+  - `el?.scrollIntoView?.({ block: "nearest" })` — jsdom lacks the method, so the optional call protects tests without changing browser behavior.
+  - Theme cycling in the palette mirrors the existing `useTheme().setChoice` flow used by AparenciaSection (no persistence to backend — pre-existing behavior, out of scope for 2.7).
+  - Window controls degrade gracefully in non-Tauri contexts (e.g. the `#/__ui` gallery): `getCurrentWindow()` throws → util catches → buttons become no-ops.
+- **Final matrix:** `pnpm tsc --noEmit`, `pnpm test` (61/61), `cargo test` (32/32), `pnpm exec vite build` all clean.
