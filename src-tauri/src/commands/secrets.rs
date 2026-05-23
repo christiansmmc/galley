@@ -32,3 +32,8 @@ pub async fn clear_pat(state: State<'_, AppState>) -> AppResult<()> {
 pub async fn has_pat() -> AppResult<bool> {
     Ok(secrets::get_pat()?.is_some())
 }
+
+#[tauri::command]
+pub async fn current_user(state: State<'_, AppState>) -> AppResult<Option<String>> {
+    Ok(state.client.read().await.as_ref().map(|c| c.user_login.clone()))
+}
