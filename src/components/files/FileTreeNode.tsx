@@ -1,5 +1,6 @@
-import { ChevronDown, ChevronRight, File } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, File } from "lucide-react";
 import { useState } from "react";
+import { usePrsStore } from "../../state/prsStore";
 
 interface DirNode {
   type: "dir";
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props) {
   const [open, setOpen] = useState(true);
+  const viewed = usePrsStore(s => node.type === "file" && s.viewedFiles.has(node.path));
   const pad = `calc(var(--space-4) + ${depth} * var(--space-6))`;
 
   if (node.type === "file") {
@@ -38,6 +40,8 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
         onClick={() => onSelect(node.path)}
         className="prr-row"
         data-selected={selected}
+        data-viewed={viewed}
+        title={viewed ? `${node.path} (visto)` : node.path}
         style={{
           display: "flex", alignItems: "center", gap: "var(--space-3)",
           width: "100%", textAlign: "left",
@@ -46,10 +50,14 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
           color: "var(--c-text)",
           cursor: "pointer",
           fontSize: "var(--text-base)",
-          transition: "background var(--transition-fast)",
+          opacity: viewed ? 0.55 : 1,
+          textDecoration: viewed ? "line-through" : "none",
+          transition: "background var(--transition-fast), opacity var(--transition-fast)",
         }}
       >
-        <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)" }} />
+        {viewed
+          ? <Check size={12} style={{ color: "var(--c-green)" }} />
+          : <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)" }} />}
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.path.split("/").pop()}</span>
         <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--c-subtext)" }}>
           +{node.additions} −{node.deletions}
