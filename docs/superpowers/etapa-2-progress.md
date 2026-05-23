@@ -14,7 +14,7 @@
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Ready for review | — |
+| 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
 | 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
 
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** 2.5 — File tree advanced. Branch `feat/etapa-2-5-file-tree`. Awaiting smoke.
+**Currently:** none — 2.5 approved 2026-05-23. Next: 2.6 (Settings refactor + repo add).
 
 ## Notes / decisions during execution
 
