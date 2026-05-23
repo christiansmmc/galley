@@ -33,6 +33,12 @@ export function Layout({ prList, fileTree, diff }: Props) {
 
   const showRail = !!currentPr && fileTreeCollapsed && prListCollapsed;
 
+  if (!currentPr) {
+    return (
+      <div style={{ height: "100%", background: "var(--c-base)" }}>{prList}</div>
+    );
+  }
+
   return (
     <div style={{ position: "relative", height: "100%" }}>
       <Group orientation="horizontal" style={{ height: "100%" }}>
