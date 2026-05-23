@@ -4,7 +4,7 @@ use crate::github::GitHubClient;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ReviewEvent { Approve, Comment, RequestChanges }
 
 impl ReviewEvent {
