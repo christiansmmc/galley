@@ -9,7 +9,7 @@
 
 | Sub-phase | Branch | State | Reviewed at |
 |---|---|---|---|
-| 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Not started | — |
+| 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | In progress (started 2026-05-23) | — |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Not started | — |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Not started | — |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — waiting for user to kick off sub-phase 2.0.
+**Currently:** **2.0** — dispatched to implementer agent on 2026-05-23.
 
 ## Notes / decisions during execution
 
