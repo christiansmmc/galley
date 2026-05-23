@@ -13,13 +13,12 @@ import type { CSSProperties } from "react";
  * glued to the visible editor area regardless of horizontal scroll.
  */
 /**
- * Right gutter big enough to clear Monaco's overview ruler (≈14 px) AND
- * the vertical scrollbar (≈14 px) plus breathing room. The previous
- * 32 px was only sized for the scrollbar and the rightmost button
- * (Salvar / Apagar / Responder / Resolver) ended up under the overview
- * ruler. 48 px covers both with ~6 px of breathing room.
+ * --diff-viewport-w is the modified editor's getLayoutInfo().contentWidth,
+ * so it already excludes the line-number gutter, vertical scrollbar, and
+ * overview ruler. Both gutters here are just visual breathing room
+ * inside the content area.
  */
-const RIGHT_GUTTER = "var(--space-12)";
+const RIGHT_GUTTER = "var(--space-9)";
 const LEFT_GUTTER = "var(--space-9)";
 
 export const inlineWidgetShell: CSSProperties = {

@@ -161,28 +161,25 @@ export function DiffPanel() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
   const renderSideBySide = useDiffRenderMode(renderModePref, panelEl);
+  const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
 
-  // Expose the per-side editor viewport width as --diff-viewport-w so
-  // inline comment/draft/thread widgets (rendered inside Monaco's
-  // horizontally-scrolling view zones) can cap their width and sticky-left
-  // to stay visible even when code lines are wider than the viewport.
+  // Expose the modified editor's content viewport width as --diff-viewport-w
+  // so inline comment/draft/thread widgets (rendered inside Monaco's
+  // horizontally-scrolling view zones) can sticky-left and cap their width
+  // to stay visible. Using Monaco's getLayoutInfo().contentWidth excludes
+  // the line-number gutter, vertical scrollbar, and overview ruler — the
+  // chrome that surrounds the actual code area.
   useEffect(() => {
-    if (!panelEl) return;
+    if (!panelEl || !diffEd) return;
+    const modified = diffEd.getModifiedEditor();
     const update = () => {
-      const w = panelEl.clientWidth;
-      const side = renderSideBySide ? Math.floor(w / 2) : w;
-      panelEl.style.setProperty("--diff-viewport-w", `${side}px`);
+      const info = modified.getLayoutInfo();
+      panelEl.style.setProperty("--diff-viewport-w", `${info.contentWidth}px`);
     };
     update();
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", update);
-      return () => window.removeEventListener("resize", update);
-    }
-    const ro = new ResizeObserver(update);
-    ro.observe(panelEl);
-    return () => ro.disconnect();
-  }, [panelEl, renderSideBySide]);
-  const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
+    const disposable = modified.onDidLayoutChange(update);
+    return () => disposable.dispose();
+  }, [panelEl, diffEd, renderSideBySide]);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
