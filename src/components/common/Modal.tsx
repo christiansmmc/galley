@@ -19,7 +19,7 @@ export function Modal({ title, open, onClose, children, footer }: Props) {
       <div
         onMouseDownCapture={e => e.stopPropagation()}
         onMouseUpCapture={e => e.stopPropagation()}
-        onClickCapture={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         style={{
           background: "var(--c-base)", color: "var(--c-text)",
           borderRadius: 6, minWidth: 480, maxWidth: 720,

@@ -61,7 +61,7 @@ export function InlineThreadWidget({ thread }: Props) {
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
-      onClickCapture={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
         Thread · L{thread.line ?? "?"} · {thread.side}

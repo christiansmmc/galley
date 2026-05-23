@@ -25,7 +25,7 @@ export function InlineDraftWidget({ draft }: Props) {
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
-      onClickCapture={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-amber)", marginBottom: 4, fontFamily: "var(--font-mono)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>

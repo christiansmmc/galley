@@ -48,7 +48,7 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
-      onClickCapture={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
         {isRange ? `Rascunho · L${startLine}–${line} · ${side === "RIGHT" ? "Depois" : "Antes"}` : `Rascunho · L${line} · ${side === "RIGHT" ? "Depois" : "Antes"}`}
