@@ -15,14 +15,14 @@
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Ready for review | — |
+| 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
 
 **Possible states:** `Not started` · `In progress` · `Ready for review` · `Changes requested` · `Done (approved YYYY-MM-DD)`
 
 ## Active sub-phase
 
-**Currently:** 2.6 ready for review.
+**Currently:** none — 2.6 approved 2026-05-23. Next: 2.7 (Command palette + empty states).
 
 ## Notes / decisions during execution
 
@@ -134,3 +134,9 @@ Carry-forward for later sub-phases:
 - **AtalhosSection**: static `<kbd>`-styled rows for Ctrl+1 / Ctrl+2 / Ctrl+P / Esc with a footnote about future shortcuts (Ctrl+K lands in 2.7).
 - **Tests:** new `SettingsModal.test.tsx` (sidebar present, section switch, paste success calls `addRepo`, NotFound maps to "Repo não acessível com seu PAT", Conta shows login, Atalhos lists shortcuts), `BrowseReposModal.test.tsx` (pre-checked configured rows + Save diff, filter-pill toggle resets pagination + re-fetches with updated filters). `FileTreePanel.test.tsx` fixture extended with the new `density` + `diff_font` fields.
 - **Final matrix:** `pnpm tsc --noEmit`, `pnpm test` (43/43), `cargo test` (32/32), `pnpm exec vite build` all clean.
+
+## 2026-05-23 — 2.6 approved
+
+Single fix during smoke:
+
+- **Dropdown options unreadable.** Native `<option>` elements ignore the parent `<select>`'s inline `background` in most engines and fall back to the OS palette — white-on-white in some Linux theme combos. Fix: set `color-scheme: light` / `color-scheme: dark` on `body[data-theme]`, and add a `.prr-input option { background: var(--c-base); color: var(--c-text); }` rule in `globals.css`. Carry-forward: any future native form control (date picker, color picker) inherits `color-scheme` from the body now — no per-component patching needed.
