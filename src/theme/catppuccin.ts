@@ -22,4 +22,4 @@ export const mocha = {
   blue: "#89b4fa", lavender: "#b4befe",
 } as const;
 
-export type Palette = typeof latte;
+export type Palette = { [K in keyof typeof latte]: string };
