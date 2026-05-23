@@ -6,9 +6,18 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn set_pat(token: String, state: State<'_, AppState>) -> AppResult<()> {
-    secrets::set_pat(&token)?;
-    let client = GitHubClient::new(&token).await?;
+    tracing::info!("set_pat: token len={}", token.len());
+    secrets::set_pat(&token).map_err(|e| {
+        tracing::error!("set_pat keyring write failed: {e:?}");
+        e
+    })?;
+    tracing::info!("set_pat: keyring saved, creating GitHub client");
+    let client = GitHubClient::new(&token).await.map_err(|e| {
+        tracing::error!("set_pat GitHubClient::new failed: {e:?}");
+        e
+    })?;
     *state.client.write().await = Some(client);
+    tracing::info!("set_pat: complete");
     Ok(())
 }
 
