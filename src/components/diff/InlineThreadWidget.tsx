@@ -21,6 +21,8 @@ export function InlineThreadWidget({ thread }: Props) {
   const pushToast = useUiStore(s => s.pushToast);
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const lastCommentId = thread.comments[thread.comments.length - 1]?.id ?? thread.id;
 
@@ -47,6 +49,25 @@ export function InlineThreadWidget({ thread }: Props) {
     }
   };
 
+  const resolve = async () => {
+    if (!currentPr || !thread.node_id) return;
+    setResolving(true);
+    try {
+      await api.resolveThread(
+        currentPr.summary.owner,
+        currentPr.summary.repo,
+        currentPr.summary.number,
+        thread.node_id,
+      );
+      await refreshThreads();
+      pushToast("info", "Thread resolvida.");
+    } catch (e) {
+      pushToast("error", userMessage(e));
+    } finally {
+      setResolving(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -69,10 +90,24 @@ export function InlineThreadWidget({ thread }: Props) {
         color: "var(--c-subtext)",
         marginBottom: "var(--space-3)",
         fontFamily: "var(--font-mono)",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)",
       }}>
-        {thread.start_line != null && thread.start_line !== thread.line
-          ? `Thread · L${thread.start_line}–${thread.line ?? "?"} · ${thread.side}`
-          : `Thread · L${thread.line ?? "?"} · ${thread.side}`}
+        <span>
+          {thread.start_line != null && thread.start_line !== thread.line
+            ? `Thread · L${thread.start_line}–${thread.line ?? "?"} · ${thread.side}`
+            : `Thread · L${thread.line ?? "?"} · ${thread.side}`}
+        </span>
+        {thread.node_id && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resolve}
+            disabled={resolving}
+            title="Marcar thread como resolvida"
+          >
+            {resolving ? "Resolvendo…" : "Resolver"}
+          </Button>
+        )}
       </div>
       {thread.comments.map((c, i) => (
         <div
@@ -95,10 +130,12 @@ export function InlineThreadWidget({ thread }: Props) {
       ))}
       <div style={{ marginTop: "var(--space-4)", paddingTop: "var(--space-4)", borderTop: "1px solid var(--c-surface0)" }}>
         <Textarea
-          rows={2}
+          rows={focused || reply.length > 0 ? 4 : 2}
           placeholder="Responder…"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitReply(); }
           }}

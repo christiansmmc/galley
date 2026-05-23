@@ -16,12 +16,15 @@ interface PrsState {
   selectedFile: string | null;
   loadingPr: boolean;
   prError: unknown | null;
+  /** Paths viewed for the current PR. Populated by openPr; mutated by setViewed. */
+  viewedFiles: Set<string>;
 
   refreshLists: () => Promise<void>;
   openPr: (owner: string, repo: string, number: number) => Promise<void>;
   closePr: () => void;
   selectFile: (path: string) => void;
   refreshThreads: () => Promise<void>;
+  setViewed: (path: string, viewed: boolean) => Promise<void>;
 }
 
 export const usePrsStore = create<PrsState>((set, get) => ({
@@ -36,6 +39,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   selectedFile: null,
   loadingPr: false,
   prError: null,
+  viewedFiles: new Set(),
 
   refreshLists: async () => {
     set({ loadingLists: true, listError: null });
@@ -55,22 +59,24 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   },
 
   openPr: async (owner, repo, number) => {
-    set({ loadingPr: true, prError: null, currentPr: null, diff: [], threads: [], selectedFile: null });
+    set({ loadingPr: true, prError: null, currentPr: null, diff: [], threads: [], selectedFile: null, viewedFiles: new Set() });
     try {
       // Always refresh on open — invalidates cached PR/diff/threads server
       // side so the user sees up-to-date data after external GitHub changes
       // (e.g. deleted reviews, new commits). Cache still helps within the
       // session for repeated file selections.
       const pr = await api.refreshPr(owner, repo, number);
-      const [diff, threads] = await Promise.all([
+      const [diff, threads, viewedList] = await Promise.all([
         api.getPrDiff(owner, repo, number),
         api.getPrThreads(owner, repo, number),
+        api.listViewedFiles(pr.summary.id),
       ]);
       set({
         currentPr: pr,
         diff,
         threads,
         selectedFile: diff[0]?.path ?? null,
+        viewedFiles: new Set(viewedList),
       });
       const ui = useUiStore.getState();
       ui.setPrListCollapsed(true);
@@ -85,7 +91,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   },
 
   closePr: () => {
-    set({ currentPr: null, diff: [], threads: [], selectedFile: null, prError: null });
+    set({ currentPr: null, diff: [], threads: [], selectedFile: null, prError: null, viewedFiles: new Set() });
   },
 
   selectFile: (path) => set({ selectedFile: path }),
@@ -95,5 +101,14 @@ export const usePrsStore = create<PrsState>((set, get) => ({
     if (!pr) return;
     const threads = await api.getPrThreads(pr.summary.owner, pr.summary.repo, pr.summary.number);
     set({ threads });
+  },
+
+  setViewed: async (path, viewed) => {
+    const pr = get().currentPr;
+    if (!pr) return;
+    await api.markViewed(pr.summary.id, path, viewed);
+    const next = new Set(get().viewedFiles);
+    if (viewed) next.add(path); else next.delete(path);
+    set({ viewedFiles: next });
   },
 }));

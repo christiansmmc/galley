@@ -1,14 +1,17 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Eye } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
+import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
 import { monacoLatte, monacoMocha } from "../../theme/monaco-themes";
 import { InlineCommentEditor } from "./InlineCommentEditor";
 import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
+import { useDiffRenderMode } from "./useDiffRenderMode";
 
 interface ParsedDiff {
   original: string;
@@ -148,6 +151,10 @@ export function DiffPanel() {
   const drafts = useDraftsStore(s => s.drafts);
   const addDraft = useDraftsStore(s => s.add);
   const currentPr = usePrsStore(s => s.currentPr);
+  const viewedFiles = usePrsStore(s => s.viewedFiles);
+  const setViewed = usePrsStore(s => s.setViewed);
+  const renderModePref = useSettingsStore(s => s.settings?.ui.diff_render_mode);
+  const renderSideBySide = useDiffRenderMode(renderModePref);
   const { resolved } = useTheme();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -435,6 +442,8 @@ export function DiffPanel() {
 
   if (!file) return <div style={{ padding: "var(--space-7)", color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
 
+  const isViewed = viewedFiles.has(file.path);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
@@ -446,11 +455,30 @@ export function DiffPanel() {
         fontFamily: "var(--font-mono)",
         display: "flex", alignItems: "center", gap: "var(--space-4)",
       }}>
-        <span style={{ flex: 1 }}>
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {file.path}
           <span style={{ marginLeft: "var(--space-4)", color: "var(--c-green)" }}>+{file.additions}</span>
           <span style={{ marginLeft: "var(--space-2)", color: "var(--c-red)" }}>−{file.deletions}</span>
         </span>
+        <button
+          onClick={() => setViewed(file.path, !isViewed)}
+          title={isViewed ? "Desmarcar como visto" : "Marcar como visto"}
+          aria-pressed={isViewed}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
+            padding: "var(--space-2) var(--space-4)",
+            border: `1px solid ${isViewed ? "var(--c-green)" : "var(--c-surface1)"}`,
+            borderRadius: "var(--radius-pill)",
+            background: isViewed ? "var(--c-green-bg, transparent)" : "transparent",
+            color: isViewed ? "var(--c-green)" : "var(--c-subtext)",
+            fontSize: "var(--text-sm)",
+            fontFamily: "var(--font-ui)",
+            cursor: "pointer",
+          }}
+        >
+          {isViewed ? <Check size={12} /> : <Eye size={12} />}
+          {isViewed ? "Visto" : "Marcar como visto"}
+        </button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
@@ -468,7 +496,7 @@ export function DiffPanel() {
             monaco.editor.defineTheme("cat-mocha", monacoMocha);
           }}
           options={{
-            renderSideBySide: true,
+            renderSideBySide,
             readOnly: true,
             originalEditable: false,
             minimap: { enabled: false },
