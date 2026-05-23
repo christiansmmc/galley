@@ -117,7 +117,6 @@ export function useDiffViewZones(
             afterLineNumber: spec.afterLineNumber,
             heightInLines: spec.heightInLines,
             domNode,
-            suppressMouseDown: true,
           });
           newlyMounted.push({ spec, domNode, zoneId });
         }
