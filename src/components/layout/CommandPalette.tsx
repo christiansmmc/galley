@@ -45,6 +45,9 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const [scope, setScope] = useState<RepoConfig | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  /** While >0, ignore hover-driven setActive — lets keyboard arrows win against accidental mouse twitches over the palette. */
+  const keyNavLockRef = useRef(0);
+  const hover = (idx: number) => { if (keyNavLockRef.current === 0) setActive(idx); };
 
   // Reset state on each open.
   useEffect(() => {
@@ -52,7 +55,10 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       setQuery("");
       setActive(0);
       setScope(null);
-      queueMicrotask(() => inputRef.current?.focus());
+      queueMicrotask(() => {
+        inputRef.current?.focus();
+        if (listRef.current) listRef.current.scrollTop = 0;
+      });
     }
   }, [open]);
 
@@ -203,6 +209,11 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
 
   if (!open) return null;
 
+  const armKeyNavLock = () => {
+    keyNavLockRef.current += 1;
+    window.setTimeout(() => { keyNavLockRef.current = Math.max(0, keyNavLockRef.current - 1); }, 300);
+  };
+
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -216,8 +227,8 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       setActive(0);
       return;
     }
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive(a => Math.min(filtered.length - 1, a + 1)); return; }
-    if (e.key === "ArrowUp") { e.preventDefault(); setActive(a => Math.max(0, a - 1)); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); armKeyNavLock(); setActive(a => Math.min(filtered.length - 1, a + 1)); return; }
+    if (e.key === "ArrowUp") { e.preventDefault(); armKeyNavLock(); setActive(a => Math.max(0, a - 1)); return; }
     if (e.key === "Enter") {
       e.preventDefault();
       const item = filtered[active];
@@ -339,7 +350,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
                       icon={it.icon}
                       label={it.label}
                       hint={it.hint}
-                      onHover={() => setActive(startIdx + i)}
+                      onHover={() => hover(startIdx + i)}
                       onClick={it.run}
                     />
                   ))}
@@ -400,7 +411,7 @@ export function CommandItem({
       data-cmd-row={rowIndex}
       role="option"
       aria-selected={active}
-      onMouseMove={onHover}
+      onMouseEnter={onHover}
       onClick={onClick}
       style={{
         display: "flex",
