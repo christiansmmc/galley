@@ -5,13 +5,13 @@ interface UiState {
   authBanner: boolean;
   toasts: Toast[];
   prListCollapsed: boolean;
-  fileTreeOpen: boolean;
+  fileTreeCollapsed: boolean;
   setAuthBanner: (b: boolean) => void;
   pushToast: (kind: Toast["kind"], message: string) => void;
   dismissToast: (id: number) => void;
   setPrListCollapsed: (b: boolean) => void;
   togglePrList: () => void;
-  setFileTreeOpen: (b: boolean) => void;
+  setFileTreeCollapsed: (b: boolean) => void;
   toggleFileTree: () => void;
 }
 
@@ -21,7 +21,7 @@ export const useUiStore = create<UiState>((set, get) => ({
   authBanner: false,
   toasts: [],
   prListCollapsed: false,
-  fileTreeOpen: false,
+  fileTreeCollapsed: false,
   setAuthBanner: (b) => set({ authBanner: b }),
   pushToast: (kind, message) => {
     const t = { id: nextId++, kind, message };
@@ -31,6 +31,6 @@ export const useUiStore = create<UiState>((set, get) => ({
   dismissToast: (id) => set({ toasts: get().toasts.filter(t => t.id !== id) }),
   setPrListCollapsed: (b) => set({ prListCollapsed: b }),
   togglePrList: () => set({ prListCollapsed: !get().prListCollapsed }),
-  setFileTreeOpen: (b) => set({ fileTreeOpen: b }),
-  toggleFileTree: () => set({ fileTreeOpen: !get().fileTreeOpen }),
+  setFileTreeCollapsed: (b) => set({ fileTreeCollapsed: b }),
+  toggleFileTree: () => set({ fileTreeCollapsed: !get().fileTreeCollapsed }),
 }));

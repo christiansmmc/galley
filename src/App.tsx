@@ -6,7 +6,7 @@ import { PatSection } from "./components/settings/PatSection";
 import { SettingsModal } from "./components/settings/SettingsModal";
 import { PrListPanel } from "./components/prs/PrListPanel";
 import { PrMetaStrip } from "./components/prs/PrMetaStrip";
-import { FileTreeDrawer } from "./components/files/FileTreeDrawer";
+import { FileTreePanel } from "./components/files/FileTreePanel";
 import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitModal } from "./components/review/ReviewSubmitModal";
 import { Banner } from "./components/common/Banner";
@@ -53,9 +53,12 @@ export default function App() {
       />
       {currentPr && <PrMetaStrip pr={currentPr} />}
       <div style={{ flex: 1, minHeight: 0 }}>
-        <Layout prList={<PrListPanel />} diff={<DiffPanel />} />
+        <Layout
+          prList={<PrListPanel />}
+          fileTree={<FileTreePanel />}
+          diff={<DiffPanel />}
+        />
       </div>
-      <FileTreeDrawer />
       <ReviewSubmitModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ToastStack />

@@ -14,7 +14,7 @@ export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
   const prListCollapsed = useUiStore(s => s.prListCollapsed);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
   const toggleFileTree = useUiStore(s => s.toggleFileTree);
-  const fileTreeOpen = useUiStore(s => s.fileTreeOpen);
+  const fileTreeCollapsed = useUiStore(s => s.fileTreeCollapsed);
   const draftCount = useDraftsStore(s => s.drafts.length);
 
   return (
@@ -86,7 +86,7 @@ export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
           onClick={toggleFileTree}
           title="Arquivos (Ctrl+2)"
           aria-label="Arquivos"
-          aria-pressed={fileTreeOpen}
+          aria-pressed={!fileTreeCollapsed}
         >
           <Files size={16} />
         </Button>

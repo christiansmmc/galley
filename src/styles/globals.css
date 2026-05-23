@@ -101,11 +101,3 @@ body[data-theme="mocha"] {
 .prr-row[data-selected="true"],
 .prr-row[data-selected="true"]:hover { background: var(--c-surface0); }
 
-@keyframes prr-drawer-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-@keyframes prr-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}

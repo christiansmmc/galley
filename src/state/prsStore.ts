@@ -71,7 +71,9 @@ export const usePrsStore = create<PrsState>((set, get) => ({
         threads,
         selectedFile: diff[0]?.path ?? null,
       });
-      useUiStore.getState().setPrListCollapsed(true);
+      const ui = useUiStore.getState();
+      ui.setPrListCollapsed(true);
+      ui.setFileTreeCollapsed(false);
     } catch (e) {
       set({ prError: e });
       if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);

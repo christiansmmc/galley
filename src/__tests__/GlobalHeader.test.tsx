@@ -7,7 +7,7 @@ import { useDraftsStore } from "../state/draftsStore";
 
 beforeEach(() => {
   usePrsStore.setState({ currentPr: null, diff: [], threads: [], selectedFile: null });
-  useUiStore.setState({ prListCollapsed: false, fileTreeOpen: false });
+  useUiStore.setState({ prListCollapsed: false, fileTreeCollapsed: false });
   useDraftsStore.setState({ drafts: [] } as never);
 });
 
