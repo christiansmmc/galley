@@ -155,11 +155,12 @@ export function DiffPanel() {
   const viewedFiles = usePrsStore(s => s.viewedFiles);
   const setViewed = usePrsStore(s => s.setViewed);
   const renderModePref = useSettingsStore(s => s.settings?.ui.diff_render_mode);
-  const renderSideBySide = useDiffRenderMode(renderModePref);
   const diffFont = useSettingsStore(s => s.settings?.ui.diff_font);
   const { resolved } = useTheme();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
+  const renderSideBySide = useDiffRenderMode(renderModePref, panelEl);
   const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
@@ -453,7 +454,7 @@ export function DiffPanel() {
   const isViewed = viewedFiles.has(file.path);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div ref={setPanelEl} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
         padding: "var(--space-4) var(--space-6)",
         borderBottom: "1px solid var(--c-surface0)",
