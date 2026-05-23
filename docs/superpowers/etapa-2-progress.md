@@ -15,14 +15,14 @@
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
+| 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Ready for review | — |
 | 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
 
 **Possible states:** `Not started` · `In progress` · `Ready for review` · `Changes requested` · `Done (approved YYYY-MM-DD)`
 
 ## Active sub-phase
 
-**Currently:** none — 2.5 approved 2026-05-23. Next: 2.6 (Settings refactor + repo add).
+**Currently:** 2.6 ready for review.
 
 ## Notes / decisions during execution
 
@@ -118,3 +118,19 @@ Carry-forward for later sub-phases:
 - **Settings → Aparência**: new section combining the pre-existing Theme picker and a new `Caminhos compactos` checkbox bound to `settings.ui.compact_paths`. The inline Tema section in `SettingsModal` was removed; the modal order is now Repos / Filtros / Diff / Aparência / Token.
 - **UiPrefs**: `compact_paths: bool` added (Rust + TS). Rust default is `true` via `#[serde(default = "default_true")]` so older configs missing the key still get compact mode ON.
 - **Tests:** new `treeBuild.test.ts` (compact off keeps per-segment; chain merged with `/` for non-Java; Java-root splits chain and joins package with `.`; sibling stops chain; file stops chain; `buildFlat` sort + dir extraction). Extended `FileTreePanel.test.tsx` to cover search filter and the Tree → Flat toggle (dir column visible, group header gone). `pnpm tsc --noEmit`, `pnpm test` (35/35), `cargo test` (15/15), `pnpm exec vite build` all clean.
+
+## 2026-05-23 — Sub-phase 2.6 ready for review
+
+- **`repo_input::parse`** (`src-tauri/src/repo_input.rs`): pure Rust parser returning `Option<(owner, name)>` for `https://github.com/owner/repo[/...]`, `http://…`, `git@github.com:owner/repo.git`, `owner/repo`, and `owner repo`. Validates char sets (owner: alphanum + `-`, no leading/trailing dash, ≤39 chars; repo: alphanum + `-_.` ≤100 chars) and strips a trailing `.git`. 17 unit tests cover each form + invalid inputs.
+- **`validate_repo` Tauri command** (`commands::repos`): parses input → calls `GET /repos/{o}/{r}` → returns `RepoConfig` on success. Errors flow through a new `github::map_status_error` that maps 404/403→`NotFound` and 401→`Auth`; ReposSection translates those into Portuguese ("Repo não acessível com seu PAT", "Formato inválido"). `extract_github_error` lifted out of `github::reviews` into `github::mod` so both flows share it.
+- **`list_my_repos` + `set_repos`** (`github::repos` + `commands::repos`): paginated `GET /user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member`. Client-side filters: `include_orgs` (default true; false drops `owner.type == Organization`), `include_forks`, `include_archived`. `set_repos` is a flat overwrite used by the Browse modal Save (diff is computed client-side; rusqlite + config TOML are happier with a single write).
+- **`current_user` Tauri command**: returns the GitHub login held by `AppState.client.user_login`. Conta section uses it to render an Avatar + name strip.
+- **Settings two-column shell** (`SettingsModal.tsx`): 720-920 px modal with a left nav (Aparência / Repositórios / Filtros / Diff / Conta / Atalhos) and a content pane. Default section: Aparência. Switching is local component state — no router, no URL hash. Old single-column SettingsModal removed; section components stay as the building blocks.
+- **AparenciaSection** picked up a **Densidade** picker (Compacta / Confortável / Espaçosa, default Confortável). The pick is persisted as `UiPrefs.density` (Rust enum, `#[serde(default)]`); App.tsx writes `body.dataset.density = density`. CSS exposes `--density-row-pad-y / -x` from `tokens.css`, overridden per `body[data-density]`; PR list rows + file-tree rows consume them.
+- **DiffSection** gained a font family dropdown (8 monospace presets) and a numeric size input (8–32 px clamp). `DiffPanel` reads `settings.ui.diff_font` and forwards to Monaco's `fontFamily` / `fontSize` (falls back to JetBrains Mono / 13 if settings haven't loaded).
+- **ReposSection rewrite**: paste field calls `validate_repo` (Enter or click) → on success, only adds via `addRepo` if not already configured. Old `owner` + `name` inputs are gone — paste is the single entry point, paired with a "Procurar meus repos no GitHub" CTA that opens the Browse modal.
+- **BrowseReposModal** (`components/settings/BrowseReposModal.tsx`): Modal-based, 720 px. Filter pills toggle the Rust-side filter struct + reset pagination to page 1. Search field is a substring match on `full_name` (client-side). Checkboxes pre-checked for already-configured repos; Save = `api.setRepos([...selected])`. Lazy pagination on scroll (`scrollTop + clientHeight >= scrollHeight - 80`). Pages exhaust when GitHub returns <100 rows.
+- **ContaSection**: Avatar + login + helper text + Substituir-token inline form (reuses `api.setPat` + `checkPat`) + Sair (`api.clearPat`). Inline form shows password input, error surface, Save/Cancel.
+- **AtalhosSection**: static `<kbd>`-styled rows for Ctrl+1 / Ctrl+2 / Ctrl+P / Esc with a footnote about future shortcuts (Ctrl+K lands in 2.7).
+- **Tests:** new `SettingsModal.test.tsx` (sidebar present, section switch, paste success calls `addRepo`, NotFound maps to "Repo não acessível com seu PAT", Conta shows login, Atalhos lists shortcuts), `BrowseReposModal.test.tsx` (pre-checked configured rows + Save diff, filter-pill toggle resets pagination + re-fetches with updated filters). `FileTreePanel.test.tsx` fixture extended with the new `density` + `diff_font` fields.
+- **Final matrix:** `pnpm tsc --noEmit`, `pnpm test` (43/43), `cargo test` (32/32), `pnpm exec vite build` all clean.
