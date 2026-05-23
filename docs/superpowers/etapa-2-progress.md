@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Ready for review | — |
+| 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** 2.2 ready for review on `feat/etapa-2-2-pr-list`. Awaiting smoke test + approval.
+**Currently:** none — 2.2 approved 2026-05-23. Awaiting kickoff of 2.3 (Layout global).
 
 ## Notes / decisions during execution
 
@@ -70,3 +70,8 @@ Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote
 - Empty states branched: no repos, no PRs (inbox vazio), tab empty, and search-no-match — all via the `EmptyState` primitive.
 - Tests: new `formatAge.test.ts`, expanded `PrListPanel.test.tsx` to cover search filter, Ctrl+P focus, tab counts, and empty-search state. Existing fixtures updated to include the new `PrSummary` fields.
 - `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, and `pnpm exec vite build` all clean.
+
+## 2026-05-23 — 2.2 approved
+
+- Smoke caught one gap: PRs on repos that only use GitHub Actions (Checks API) showed the gray "no checks" dot because the legacy combined-status endpoint returns `total_count = 0` for them. Fixed with a fallback to `/commits/{sha}/check-runs` that aggregates conclusions (`pending` if any run is non-completed, `failing` if any conclusion is failure-ish, otherwise `passing`).
+- Carry-forward: `list_prs` is cached for 60 s and the Refresh button doesn't invalidate the list cache — only the per-PR detail/diff/threads bundle. Re-testing CI-status fixes meant waiting out the TTL. Worth wiring a `force_refresh` path through `refreshLists` → `list_prs` in a later sub-phase (probably 2.6 when settings/repos touch the list invalidation anyway).
