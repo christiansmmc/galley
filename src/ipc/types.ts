@@ -48,6 +48,9 @@ export interface PrDetail {
   base_sha: string;
   draft: boolean;
   mergeable: boolean | null;
+  additions: number;
+  deletions: number;
+  reviewers_count: number;
 }
 
 export interface FileDiff {

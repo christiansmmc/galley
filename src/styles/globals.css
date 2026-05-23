@@ -100,3 +100,4 @@ body[data-theme="mocha"] {
 .prr-row:hover { background: var(--c-mantle); }
 .prr-row[data-selected="true"],
 .prr-row[data-selected="true"]:hover { background: var(--c-surface0); }
+

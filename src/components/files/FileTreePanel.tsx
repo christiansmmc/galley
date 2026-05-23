@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { PanelLeftClose } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { FileDiff, PathFilter } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
+import { useUiStore } from "../../state/uiStore";
 import { FileTreeNode, TreeNode } from "./FileTreeNode";
+import { Button } from "../ui";
 
 function matchesGlob(pattern: string, path: string): boolean {
   const re = "^" + pattern
@@ -50,6 +53,7 @@ function buildTree(files: FileDiff[]): TreeNode[] {
 
 export function FileTreePanel() {
   const { diff, currentPr, selectedFile, selectFile } = usePrsStore();
+  const setFileTreeCollapsed = useUiStore(s => s.setFileTreeCollapsed);
   const [filters, setFilters] = useState<PathFilter[]>([]);
   const [showHidden, setShowHidden] = useState(false);
 
@@ -65,22 +69,48 @@ export function FileTreePanel() {
   if (!currentPr) return <div style={{ padding: "var(--space-6)", color: "var(--c-subtext)", fontSize: "var(--text-base)" }}>Selecione um PR.</div>;
 
   return (
-    <div style={{ padding: "var(--space-3) 0" }}>
-      {unmatchedTree.map((n, i) => (
-        <FileTreeNode key={i} node={n} selectedPath={selectedFile} onSelect={selectFile} />
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "var(--space-3) var(--space-5)",
+        borderBottom: "1px solid var(--c-surface0)",
+        background: "var(--c-mantle)",
+      }}>
+        <span style={{
+          fontWeight: "var(--weight-semibold)" as unknown as number,
+          fontSize: "var(--text-md)",
+        }}>
+          Arquivos
+        </span>
+        <Button
+          variant="icon"
+          size="sm"
+          onClick={() => setFileTreeCollapsed(true)}
+          title="Esconder (Ctrl+2)"
+          aria-label="Esconder arquivos"
+        >
+          <PanelLeftClose size={14} />
+        </Button>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-3) 0" }}>
+        {unmatchedTree.map((n, i) => (
+          <FileTreeNode key={i} node={n} selectedPath={selectedFile} onSelect={selectFile} />
+        ))}
 
-      {Object.entries(matched).map(([label, files]) => (
-        <GroupNode
-          key={label}
-          label={label}
-          files={files}
-          open={showHidden}
-          onToggle={() => setShowHidden(s => !s)}
-          selectedFile={selectedFile}
-          onSelect={selectFile}
-        />
-      ))}
+        {Object.entries(matched).map(([label, files]) => (
+          <GroupNode
+            key={label}
+            label={label}
+            files={files}
+            open={showHidden}
+            onToggle={() => setShowHidden(s => !s)}
+            selectedFile={selectedFile}
+            onSelect={selectFile}
+          />
+        ))}
+      </div>
     </div>
   );
 }

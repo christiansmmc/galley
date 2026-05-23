@@ -48,6 +48,12 @@ pub struct PrDetail {
     pub base_sha: String,
     pub draft: bool,
     pub mergeable: Option<bool>,
+    #[serde(default)]
+    pub additions: i64,
+    #[serde(default)]
+    pub deletions: i64,
+    #[serde(default)]
+    pub reviewers_count: i64,
 }
 
 impl GitHubClient {
@@ -114,6 +120,12 @@ impl GitHubClient {
         let mergeable = pr.get("mergeable").and_then(|v| v.as_bool());
         let html_url = pr.get("html_url").and_then(|v| v.as_str()).unwrap_or("").to_string();
         let changed_files = pr.get("changed_files").and_then(|v| v.as_i64()).unwrap_or(0);
+        let additions = pr.get("additions").and_then(|v| v.as_i64()).unwrap_or(0);
+        let deletions = pr.get("deletions").and_then(|v| v.as_i64()).unwrap_or(0);
+        let reviewers_count = pr.get("requested_reviewers")
+            .and_then(|v| v.as_array())
+            .map(|a| a.len() as i64)
+            .unwrap_or(0);
         let ci_status = if head_sha.is_empty() {
             CiStatus::None
         } else {
@@ -127,6 +139,7 @@ impl GitHubClient {
                 changed_files, ci_status,
             },
             body, head_sha, base_sha, draft, mergeable,
+            additions, deletions, reviewers_count,
         })
     }
 }

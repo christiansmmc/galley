@@ -19,6 +19,7 @@ interface PrsState {
 
   refreshLists: () => Promise<void>;
   openPr: (owner: string, repo: string, number: number) => Promise<void>;
+  closePr: () => void;
   selectFile: (path: string) => void;
   refreshThreads: () => Promise<void>;
 }
@@ -71,6 +72,9 @@ export const usePrsStore = create<PrsState>((set, get) => ({
         threads,
         selectedFile: diff[0]?.path ?? null,
       });
+      const ui = useUiStore.getState();
+      ui.setPrListCollapsed(true);
+      ui.setFileTreeCollapsed(false);
     } catch (e) {
       set({ prError: e });
       if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
@@ -78,6 +82,10 @@ export const usePrsStore = create<PrsState>((set, get) => ({
     } finally {
       set({ loadingPr: false });
     }
+  },
+
+  closePr: () => {
+    set({ currentPr: null, diff: [], threads: [], selectedFile: null, prError: null });
   },
 
   selectFile: (path) => set({ selectedFile: path }),
