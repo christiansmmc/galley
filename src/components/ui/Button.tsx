@@ -47,9 +47,9 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
     border: "1px solid var(--c-surface1)",
   },
   danger: {
-    background: "var(--c-red)",
+    background: "var(--c-danger)",
     color: "white",
-    border: "1px solid var(--c-red)",
+    border: "1px solid var(--c-danger)",
   },
   subtle: {
     background: "var(--c-surface0)",

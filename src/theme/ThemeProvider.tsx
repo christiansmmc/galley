@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ThemeChoice } from "../ipc/types";
 
-type ResolvedTheme = "latte" | "mocha";
+type ResolvedTheme = "paper" | "linen";
 
 interface Ctx {
   choice: ThemeChoice;
@@ -23,8 +23,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const resolved: ResolvedTheme = useMemo(() => {
-    if (choice === "system") return systemDark ? "mocha" : "latte";
-    return choice === "dark" ? "mocha" : "latte";
+    if (choice === "system") return systemDark ? "linen" : "paper";
+    return choice === "dark" ? "linen" : "paper";
   }, [choice, systemDark]);
 
   useEffect(() => {

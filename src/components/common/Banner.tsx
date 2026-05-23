@@ -8,7 +8,7 @@ export function Banner({ children, kind = "warn", onAction }: {
   return (
     <div style={{
       padding: "var(--space-4) var(--space-6)",
-      background: kind === "error" ? "var(--c-red)" : "var(--c-amber)",
+      background: kind === "error" ? "var(--c-danger)" : "var(--c-warn)",
       color: "var(--c-base)",
       fontSize: "var(--text-base)",
       display: "flex", alignItems: "center", gap: "var(--space-4)",

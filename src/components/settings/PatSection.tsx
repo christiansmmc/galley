@@ -37,7 +37,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
         placeholder="ghp_..."
         invalid={Boolean(err)}
       />
-      {err && <div style={{ color: "var(--c-red)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
+      {err && <div style={{ color: "var(--c-danger)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
       <div style={{ marginTop: "var(--space-6)" }}>
         <Button
           variant="primary"

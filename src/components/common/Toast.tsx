@@ -19,7 +19,7 @@ export function ToastStack() {
           style={{
             padding: "var(--space-4) var(--space-6)",
             borderRadius: "var(--radius-md)",
-            background: t.kind === "error" ? "var(--c-red)" : "var(--c-surface0)",
+            background: t.kind === "error" ? "var(--c-danger)" : "var(--c-surface0)",
             color: t.kind === "error" ? "white" : "var(--c-text)",
             cursor: "pointer",
             fontSize: "var(--text-base)",

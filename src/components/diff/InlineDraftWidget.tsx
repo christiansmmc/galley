@@ -15,7 +15,7 @@ export function InlineDraftWidget({ draft }: Props) {
     <div
       style={{
         ...inlineWidgetShell,
-        border: "1px solid var(--c-amber)",
+        border: "1px solid var(--c-warn)",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
@@ -23,7 +23,7 @@ export function InlineDraftWidget({ draft }: Props) {
     >
       <div style={{
         fontSize: "var(--text-sm)",
-        color: "var(--c-amber)",
+        color: "var(--c-warn)",
         marginBottom: "var(--space-2)",
         fontFamily: "var(--font-mono)",
         display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -38,7 +38,7 @@ export function InlineDraftWidget({ draft }: Props) {
           style={{
             background: "transparent",
             border: 0,
-            color: "var(--c-red)",
+            color: "var(--c-danger)",
             cursor: "pointer",
             fontSize: "var(--text-sm)",
             padding: 0,

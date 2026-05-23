@@ -1,5 +1,5 @@
 import type { editor } from "monaco-editor";
-import { latte, mocha, type Palette } from "./catppuccin";
+import { paper, linen, type Palette } from "./palette";
 
 function build(p: Palette, base: "vs" | "vs-dark"): editor.IStandaloneThemeData {
   return {
@@ -7,26 +7,26 @@ function build(p: Palette, base: "vs" | "vs-dark"): editor.IStandaloneThemeData 
     inherit: true,
     rules: [
       { token: "", foreground: p.text.slice(1), background: p.base.slice(1) },
-      { token: "comment", foreground: p.overlay1.slice(1), fontStyle: "italic" },
-      { token: "string", foreground: p.green.slice(1) },
-      { token: "number", foreground: p.peach.slice(1) },
-      { token: "keyword", foreground: p.mauve.slice(1) },
-      { token: "type", foreground: p.yellow.slice(1) },
-      { token: "function", foreground: p.blue.slice(1) },
+      { token: "comment", foreground: p.overlay.slice(1), fontStyle: "italic" },
+      { token: "string", foreground: p.success.slice(1) },
+      { token: "number", foreground: p.warn.slice(1) },
+      { token: "keyword", foreground: p.info.slice(1) },
+      { token: "type", foreground: p.warn.slice(1) },
+      { token: "function", foreground: p.accent.slice(1) },
     ],
     colors: {
       "editor.background": p.base,
       "editor.foreground": p.text,
-      "editorLineNumber.foreground": p.overlay0,
+      "editorLineNumber.foreground": p.overlay,
       "editorLineNumber.activeForeground": p.text,
-      "editorCursor.foreground": p.rosewater,
+      "editorCursor.foreground": p.accent,
       "editor.selectionBackground": p.surface2,
       "editor.lineHighlightBackground": p.mantle,
-      "diffEditor.insertedTextBackground": "#a6e3a133",
-      "diffEditor.removedTextBackground": "#f38ba833",
+      "diffEditor.insertedTextBackground": p.success + "26",
+      "diffEditor.removedTextBackground": p.danger + "26",
     },
   };
 }
 
-export const monacoLatte = build(latte, "vs");
-export const monacoMocha = build(mocha, "vs-dark");
+export const monacoPaper = build(paper, "vs");
+export const monacoLinen = build(linen, "vs-dark");

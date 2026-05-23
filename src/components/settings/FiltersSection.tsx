@@ -48,7 +48,7 @@ export function FiltersSection() {
             size="sm"
             aria-label="Remover"
             onClick={() => remove(i)}
-            style={{ color: "var(--c-red)" }}
+            style={{ color: "var(--c-danger)" }}
           >
             <Trash2 size={14} />
           </Button>

@@ -1,5 +1,20 @@
 @import "./tokens.css";
 
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/source-serif-4-italic-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/source-serif-4-italic-500.woff2") format("woff2");
+}
+
 :root {
   --font-ui: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
@@ -21,25 +36,53 @@ html, body, #root {
   background: var(--c-base);
 }
 
-body[data-theme="latte"] {
+/* Paper (warm light) — default light theme. */
+body[data-theme="paper"] {
   color-scheme: light;
-  --c-base: #eff1f5; --c-mantle: #e6e9ef; --c-crust: #dce0e8;
-  --c-text: #4c4f69; --c-subtext: #5c5f77;
-  --c-surface0: #ccd0da; --c-surface1: #bcc0cc; --c-surface2: #acb0be;
-  --c-overlay: #8c8fa1;
-  --c-accent: #8839ef; --c-blue: #1e66f5;
-  --c-green: #40a02b; --c-amber: #df8e1d; --c-red: #d20f39;
+  --c-base: #F4F1EA; --c-mantle: #EDE9DF; --c-crust: #E5DFD0;
+  --c-surface0: #FAF7F0; --c-surface1: #FFFFFF; --c-surface2: #EDE9DF;
+  --c-line: #D9D2C2; --c-line-soft: #E5DFD0;
+  --c-text: #2A2723; --c-subtext: #6B6358;
+  --c-overlay: #A09787;
+  --c-accent: #5E7556; --c-accent-soft: rgba(94, 117, 86, 0.12);
+  --c-success: #4F7A3E;
+  --c-warn: #B8853A;
+  --c-danger: #A64A3A;
+  --c-info: #3B5C7E;
+  --c-diff-add:    rgba(79, 122, 62, 0.10);
+  --c-diff-add-ln: rgba(79, 122, 62, 0.22);
+  --c-diff-del:    rgba(166, 74, 58, 0.10);
+  --c-diff-del-ln: rgba(166, 74, 58, 0.22);
 }
 
-body[data-theme="mocha"] {
+/* Linen (true-neutral dark). */
+body[data-theme="linen"] {
   color-scheme: dark;
-  --c-base: #1e1e2e; --c-mantle: #181825; --c-crust: #11111b;
-  --c-text: #cdd6f4; --c-subtext: #bac2de;
-  --c-surface0: #313244; --c-surface1: #45475a; --c-surface2: #585b70;
-  --c-overlay: #7f849c;
-  --c-accent: #cba6f7; --c-blue: #89b4fa;
-  --c-green: #a6e3a1; --c-amber: #f9e2af; --c-red: #f38ba8;
+  --c-base: #16161A; --c-mantle: #1B1B1F; --c-crust: #0F0F12;
+  --c-surface0: #222226; --c-surface1: #2A2A2F; --c-surface2: #313137;
+  --c-line: #2E2E33; --c-line-soft: #26262B;
+  --c-text: #DCD8CF; --c-subtext: #8E887D;
+  --c-overlay: #5B564E;
+  --c-accent: #8FA888; --c-accent-soft: rgba(143, 168, 136, 0.12);
+  --c-success: #7CA664;
+  --c-warn: #C9A35A;
+  --c-danger: #C77863;
+  --c-info: #7AA5C9;
+  --c-diff-add:    rgba(124, 166, 100, 0.10);
+  --c-diff-add-ln: rgba(124, 166, 100, 0.32);
+  --c-diff-del:    rgba(199, 120, 99, 0.10);
+  --c-diff-del-ln: rgba(199, 120, 99, 0.32);
 }
+
+/* Accent overrides — applies on top of theme tokens. */
+body[data-theme="paper"][data-accent="sage"]  { --c-accent: #5E7556; --c-accent-soft: rgba(94, 117, 86, 0.12); }
+body[data-theme="paper"][data-accent="ochre"] { --c-accent: #8E6A2C; --c-accent-soft: rgba(142, 106, 44, 0.12); }
+body[data-theme="paper"][data-accent="ink"]   { --c-accent: #3B5570; --c-accent-soft: rgba(59, 85, 112, 0.12); }
+body[data-theme="paper"][data-accent="rust"]  { --c-accent: #8B4A38; --c-accent-soft: rgba(139, 74, 56, 0.12); }
+body[data-theme="linen"][data-accent="sage"]  { --c-accent: #8FA888; --c-accent-soft: rgba(143, 168, 136, 0.12); }
+body[data-theme="linen"][data-accent="ochre"] { --c-accent: #C9A35A; --c-accent-soft: rgba(201, 163, 90, 0.12); }
+body[data-theme="linen"][data-accent="ink"]   { --c-accent: #7AA5C9; --c-accent-soft: rgba(122, 165, 201, 0.12); }
+body[data-theme="linen"][data-accent="rust"]  { --c-accent: #C78866; --c-accent-soft: rgba(199, 136, 102, 0.12); }
 
 /* Native <option> elements ignore the parent <select>'s background in
    most engines and fall back to the OS palette — white-on-white in some

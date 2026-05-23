@@ -6,7 +6,7 @@ import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
-import { monacoLatte, monacoMocha } from "../../theme/monaco-themes";
+import { monacoPaper, monacoLinen } from "../../theme/monaco-themes";
 import { InlineCommentEditor } from "./InlineCommentEditor";
 import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
@@ -340,9 +340,9 @@ export function DiffPanel() {
     if (!diffEd) return;
     const monaco = (window as unknown as { monaco?: typeof import("monaco-editor") }).monaco;
     if (!monaco) return;
-    monaco.editor.defineTheme("cat-latte", monacoLatte);
-    monaco.editor.defineTheme("cat-mocha", monacoMocha);
-    monaco.editor.setTheme(resolved === "mocha" ? "cat-mocha" : "cat-latte");
+    monaco.editor.defineTheme("workshop-paper", monacoPaper);
+    monaco.editor.defineTheme("workshop-linen", monacoLinen);
+    monaco.editor.setTheme(resolved === "linen" ? "workshop-linen" : "workshop-paper");
   }, [resolved, diffEd]);
 
   // Gutter hover affordance + range selection listener. Bound to the
@@ -496,8 +496,8 @@ export function DiffPanel() {
       }}>
         <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {file.path}
-          <span style={{ marginLeft: "var(--space-4)", color: "var(--c-green)" }}>+{file.additions}</span>
-          <span style={{ marginLeft: "var(--space-2)", color: "var(--c-red)" }}>−{file.deletions}</span>
+          <span style={{ marginLeft: "var(--space-4)", color: "var(--c-success)" }}>+{file.additions}</span>
+          <span style={{ marginLeft: "var(--space-2)", color: "var(--c-danger)" }}>−{file.deletions}</span>
         </span>
         <button
           onClick={() => setViewed(file.path, !isViewed)}
@@ -506,10 +506,10 @@ export function DiffPanel() {
           style={{
             display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
             padding: "var(--space-2) var(--space-4)",
-            border: `1px solid ${isViewed ? "var(--c-green)" : "var(--c-surface1)"}`,
+            border: `1px solid ${isViewed ? "var(--c-success)" : "var(--c-surface1)"}`,
             borderRadius: "var(--radius-pill)",
-            background: isViewed ? "var(--c-green-bg, transparent)" : "transparent",
-            color: isViewed ? "var(--c-green)" : "var(--c-subtext)",
+            background: isViewed ? "var(--c-accent-soft, transparent)" : "transparent",
+            color: isViewed ? "var(--c-success)" : "var(--c-subtext)",
             fontSize: "var(--text-sm)",
             fontFamily: "var(--font-ui)",
             cursor: "pointer",
@@ -529,10 +529,10 @@ export function DiffPanel() {
           modifiedModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/mod/${file.path}`}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
-          theme={resolved === "mocha" ? "cat-mocha" : "cat-latte"}
+          theme={resolved === "linen" ? "workshop-linen" : "workshop-paper"}
           beforeMount={(monaco) => {
-            monaco.editor.defineTheme("cat-latte", monacoLatte);
-            monaco.editor.defineTheme("cat-mocha", monacoMocha);
+            monaco.editor.defineTheme("workshop-paper", monacoPaper);
+            monaco.editor.defineTheme("workshop-linen", monacoLinen);
           }}
           options={{
             renderSideBySide,

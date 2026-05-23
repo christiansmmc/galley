@@ -39,6 +39,7 @@ export default function App() {
     else clearDrafts();
   }, [currentPr, loadDrafts, clearDrafts]);
   useEffect(() => { document.body.dataset.density = density; }, [density]);
+  useEffect(() => { document.body.dataset.accent = "sage"; }, []);
 
   if (typeof window !== "undefined" && window.location.hash === "#/__ui") {
     return <UiGallery />;

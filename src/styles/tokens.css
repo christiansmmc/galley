@@ -35,6 +35,10 @@
   --weight-semibold: 600;
   --weight-bold: 700;
 
+  /* Serif voice — used sparingly for section titles, empty-state lines,
+     status-line creed. Max ~3 appearances per session. */
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+
   /* Radius. */
   --radius-sm: 3px;
   --radius-md: 5px;
@@ -86,10 +90,3 @@ body[data-density="spacious"] {
   --density-row-gap: var(--space-3);
 }
 
-/* Accent soft variants per theme — used for focus rings. */
-body[data-theme="latte"] {
-  --c-accent-soft: rgba(136, 57, 239, 0.28);
-}
-body[data-theme="mocha"] {
-  --c-accent-soft: rgba(203, 166, 247, 0.35);
-}

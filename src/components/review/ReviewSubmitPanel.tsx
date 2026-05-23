@@ -76,7 +76,7 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
       <div style={{ marginTop: "var(--space-5)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
         {drafts.length} rascunho{drafts.length === 1 ? "" : "s"} inline.
       </div>
-      {err && <div style={{ color: "var(--c-red)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
+      {err && <div style={{ color: "var(--c-danger)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
     </SlidePanel>
   );
 }
