@@ -1,6 +1,5 @@
 import type { CiStatus, PrSummary } from "../../ipc/types";
 import { formatAge } from "../../util/time";
-import { Spinner } from "../ui";
 
 interface Props { pr: PrSummary; selected: boolean; loading?: boolean; onClick: () => void; }
 
@@ -24,12 +23,11 @@ function CiDot({ status }: { status: CiStatus }) {
       title={CI_LABEL[status]}
       aria-label={CI_LABEL[status]}
       style={{
-        flex: "0 0 auto",
-        width: 8,
-        height: 8,
+        width: 7,
+        height: 7,
         borderRadius: "var(--radius-pill)",
         background: CI_COLOR[status],
-        marginTop: 6,
+        alignSelf: "center",
       }}
     />
   );
@@ -37,50 +35,59 @@ function CiDot({ status }: { status: CiStatus }) {
 
 export function PrListItem({ pr, selected, loading, onClick }: Props) {
   const age = formatAge(pr.updated_at);
-  const changed = `${pr.changed_files} changed`;
   return (
     <button
       onClick={onClick}
       disabled={loading}
       className="prr-row"
+      data-kind="pr"
       data-selected={selected}
       data-loading={loading || undefined}
       aria-busy={loading || undefined}
       style={{
-        display: "flex",
-        gap: "var(--space-3)",
+        display: "grid",
+        gridTemplateColumns: "14px 1fr auto",
+        alignItems: "center",
+        gap: 10,
         width: "100%",
         textAlign: "left",
-        padding: "var(--density-row-pad-y) var(--density-row-pad-x)",
+        padding: "var(--density-row-pad-y) var(--space-7)",
         border: 0,
         color: "var(--c-text)",
         cursor: loading ? "progress" : "pointer",
-        borderBottom: "1px solid var(--c-mantle)",
         transition: "background var(--transition-fast)",
         opacity: loading ? 0.75 : 1,
       }}
     >
-      {loading
-        ? <span style={{ flex: "0 0 auto", width: 8, height: 8, marginTop: 4, display: "inline-flex" }} title="Carregando"><Spinner size={10} /></span>
-        : <CiDot status={pr.ci_status} />}
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div
-          title={pr.title}
-          style={{
-            fontSize: "var(--text-md)",
-            fontWeight: "var(--weight-medium)" as unknown as number,
-            marginBottom: "var(--space-1)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {pr.title}
-        </div>
-        <div style={{ fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-          {pr.author} · {age} · {changed}
-        </div>
-      </div>
+      <span style={{ display: "inline-flex", justifyContent: "center" }}>
+        <CiDot status={pr.ci_status} />
+      </span>
+      <span
+        title={pr.title}
+        style={{
+          fontSize: 12.5,
+          fontWeight: 400,
+          lineHeight: 1.3,
+          color: "var(--c-text)",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          minWidth: 0,
+        }}
+      >
+        {pr.title}
+      </span>
+      <span
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10.5,
+          fontWeight: 400,
+          color: "var(--c-subtext)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {pr.changed_files}f <span style={{ color: "var(--c-overlay)" }}>·</span> {age}
+      </span>
     </button>
   );
 }
