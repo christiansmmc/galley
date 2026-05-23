@@ -148,21 +148,62 @@ async fn fetch_pull_meta(oct: &Octocrab, owner: &str, repo: &str, number: u64) -
     }
 }
 
-/// Resolve a commit's combined status into a CiStatus dot.
+/// Resolve a commit's CI state into a CiStatus dot.
+///
+/// Tries the legacy combined-status endpoint first; when it reports
+/// `total_count == 0` (typical for repos that use the Checks API — e.g.
+/// GitHub Actions, which doesn't publish to commit statuses), falls back
+/// to `/check-runs` and aggregates conclusions.
 async fn fetch_ci_status(oct: &Octocrab, owner: &str, repo: &str, sha: &str) -> CiStatus {
-    let route = format!("/repos/{owner}/{repo}/commits/{sha}/status");
+    let status_route = format!("/repos/{owner}/{repo}/commits/{sha}/status");
+    if let Ok(v) = oct.get::<serde_json::Value, _, _>(status_route, None::<&()>).await {
+        let total = v.get("total_count").and_then(|x| x.as_i64()).unwrap_or(0);
+        if total > 0 {
+            return match v.get("state").and_then(|x| x.as_str()).unwrap_or("") {
+                "success" => CiStatus::Passing,
+                "pending" => CiStatus::Pending,
+                "failure" | "error" => CiStatus::Failing,
+                _ => CiStatus::None,
+            };
+        }
+    }
+    fetch_check_runs_status(oct, owner, repo, sha).await
+}
+
+/// Aggregate the Checks API for a commit. Returns:
+/// - `Pending` if any run is still queued/in_progress
+/// - `Failing` if any completed run conclusion is failure-ish
+/// - `Passing` if every completed run is success/neutral/skipped
+/// - `None` if there are no runs (or the request fails)
+async fn fetch_check_runs_status(oct: &Octocrab, owner: &str, repo: &str, sha: &str) -> CiStatus {
+    let route = format!("/repos/{owner}/{repo}/commits/{sha}/check-runs?per_page=100");
     let v: serde_json::Value = match oct.get(route, None::<&()>).await {
         Ok(v) => v,
         Err(_) => return CiStatus::None,
     };
-    let total = v.get("total_count").and_then(|x| x.as_i64()).unwrap_or(0);
-    if total == 0 { return CiStatus::None; }
-    match v.get("state").and_then(|x| x.as_str()).unwrap_or("") {
-        "success" => CiStatus::Passing,
-        "pending" => CiStatus::Pending,
-        "failure" | "error" => CiStatus::Failing,
-        _ => CiStatus::None,
+    let runs = match v.get("check_runs").and_then(|x| x.as_array()) {
+        Some(a) if !a.is_empty() => a,
+        _ => return CiStatus::None,
+    };
+    let mut any_failing = false;
+    let mut any_pending = false;
+    for run in runs {
+        let status = run.get("status").and_then(|x| x.as_str()).unwrap_or("");
+        if status != "completed" {
+            any_pending = true;
+            continue;
+        }
+        match run.get("conclusion").and_then(|x| x.as_str()).unwrap_or("") {
+            "success" | "neutral" | "skipped" => {}
+            "failure" | "timed_out" | "action_required" | "cancelled" | "stale" => {
+                any_failing = true;
+            }
+            _ => {}
+        }
     }
+    if any_failing { CiStatus::Failing }
+    else if any_pending { CiStatus::Pending }
+    else { CiStatus::Passing }
 }
 
 /// Concurrently fill `changed_files` + `ci_status` on every PrSummary.
