@@ -15,6 +15,20 @@ const mkPr = (over: Partial<{ id: number; number: number; title: string; owner: 
   ...over,
 });
 
+const baseSettings = (over: Partial<{ repos: Array<{ owner: string; name: string }>; palette_sources: { prs: boolean; files: boolean; repos: boolean; commands: boolean } }> = {}) => ({
+  settings: {
+    ui: {
+      theme: "system", sidebar_collapsed: false, filetree_collapsed: false,
+      sidebar_width: 22, filetree_width: 22, diff_render_mode: "auto",
+      compact_paths: true, density: "comfortable",
+      diff_font: { family: "JetBrains Mono", size: 13 },
+      palette_sources: over.palette_sources ?? { prs: true, files: true, repos: true, commands: true },
+    },
+    repos: over.repos ?? [],
+    path_filters: [],
+  },
+});
+
 beforeEach(() => {
   usePrsStore.setState({
     mine: [],
@@ -23,18 +37,7 @@ beforeEach(() => {
     diff: [],
     selectedFile: null,
   } as never);
-  useSettingsStore.setState({
-    settings: {
-      ui: {
-        theme: "system", sidebar_collapsed: false, filetree_collapsed: false,
-        sidebar_width: 22, filetree_width: 22, diff_render_mode: "auto",
-        compact_paths: true, density: "comfortable",
-        diff_font: { family: "JetBrains Mono", size: 13 },
-      },
-      repos: [],
-      path_filters: [],
-    },
-  } as never);
+  useSettingsStore.setState(baseSettings() as never);
 });
 
 describe("CommandPalette", () => {
@@ -132,21 +135,12 @@ describe("CommandPalette", () => {
 
 describe("CommandPalette repo scope", () => {
   beforeEach(() => {
-    useSettingsStore.setState({
-      settings: {
-        ui: {
-          theme: "system", sidebar_collapsed: false, filetree_collapsed: false,
-          sidebar_width: 22, filetree_width: 22, diff_render_mode: "auto",
-          compact_paths: true, density: "comfortable",
-          diff_font: { family: "JetBrains Mono", size: 13 },
-        },
-        repos: [
-          { owner: "esparta", name: "scorehub-api" },
-          { owner: "esparta", name: "scorehub-dashboard" },
-        ],
-        path_filters: [],
-      },
-    } as never);
+    useSettingsStore.setState(baseSettings({
+      repos: [
+        { owner: "esparta", name: "scorehub-api" },
+        { owner: "esparta", name: "scorehub-dashboard" },
+      ],
+    }) as never);
     usePrsStore.setState({
       reviewRequested: [
         mkPr({ id: 1, number: 1, title: "API one", owner: "esparta", repo: "scorehub-api" }),
@@ -214,5 +208,56 @@ describe("CommandPalette dedupe", () => {
     const list = screen.getByRole("dialog", { name: "Paleta de comandos" });
     expect(within(list).getByText("#1 A")).toBeInTheDocument();
     expect(within(list).getByText("#2 B")).toBeInTheDocument();
+  });
+});
+
+describe("CommandPalette source toggles", () => {
+  beforeEach(() => {
+    usePrsStore.setState({
+      reviewRequested: [mkPr({ id: 1, number: 1, title: "A PR", owner: "esparta", repo: "scorehub-api" })],
+      currentPr: {
+        summary: mkPr({ id: 1 }),
+        body: null, head_sha: "", base_sha: "", draft: false, mergeable: null,
+        additions: 0, deletions: 0, reviewers_count: 0,
+      },
+      diff: [{ path: "src/a.ts", previous_path: null, status: "modified", additions: 1, deletions: 0, patch: null }],
+    } as never);
+  });
+
+  it("hides PRs when sources.prs is false", () => {
+    useSettingsStore.setState(baseSettings({
+      repos: [{ owner: "esparta", name: "scorehub-api" }],
+      palette_sources: { prs: false, files: true, repos: true, commands: true },
+    }) as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    expect(screen.queryByText("#1 A PR")).not.toBeInTheDocument();
+  });
+
+  it("hides files when sources.files is false", () => {
+    useSettingsStore.setState(baseSettings({
+      palette_sources: { prs: true, files: false, repos: true, commands: true },
+    }) as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    expect(screen.queryByText("src/a.ts")).not.toBeInTheDocument();
+  });
+
+  it("hides repo entries when sources.repos is false", () => {
+    useSettingsStore.setState(baseSettings({
+      repos: [{ owner: "esparta", name: "scorehub-api" }],
+      palette_sources: { prs: true, files: true, repos: false, commands: true },
+    }) as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    const repoLikeOption = screen.queryAllByRole("option").find(el => (el.textContent ?? "").match(/^esparta\/scorehub-api\d* PRs?$/));
+    expect(repoLikeOption).toBeUndefined();
+  });
+
+  it("hides commands by default but still shows them in > mode", () => {
+    useSettingsStore.setState(baseSettings({
+      palette_sources: { prs: true, files: true, repos: true, commands: false },
+    }) as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    expect(screen.queryByText("Abrir configurações")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Buscar"), { target: { value: ">" } });
+    expect(screen.getByText("Abrir configurações")).toBeInTheDocument();
   });
 });

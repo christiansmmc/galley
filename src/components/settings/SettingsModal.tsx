@@ -6,8 +6,9 @@ import { DiffSection } from "./DiffSection";
 import { AparenciaSection } from "./AparenciaSection";
 import { ContaSection } from "./ContaSection";
 import { AtalhosSection } from "./AtalhosSection";
+import { PaletteSection } from "./PaletteSection";
 
-type SectionId = "aparencia" | "repos" | "filtros" | "diff" | "conta" | "atalhos";
+type SectionId = "aparencia" | "repos" | "filtros" | "diff" | "palette" | "conta" | "atalhos";
 
 interface NavItem { id: SectionId; label: string; }
 
@@ -16,6 +17,7 @@ const NAV: NavItem[] = [
   { id: "repos", label: "Repositórios" },
   { id: "filtros", label: "Filtros" },
   { id: "diff", label: "Diff" },
+  { id: "palette", label: "Paleta" },
   { id: "conta", label: "Conta" },
   { id: "atalhos", label: "Atalhos" },
 ];
@@ -26,6 +28,7 @@ function renderSection(id: SectionId) {
     case "repos":     return <ReposSection />;
     case "filtros":   return <FiltersSection />;
     case "diff":      return <DiffSection />;
+    case "palette":   return <PaletteSection />;
     case "conta":     return <ContaSection />;
     case "atalhos":   return <AtalhosSection />;
   }

@@ -37,6 +37,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const selectFile = usePrsStore(s => s.selectFile);
   const refreshLists = usePrsStore(s => s.refreshLists);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
+  const sources = useSettingsStore(s => s.settings?.ui.palette_sources) ?? { prs: true, files: true, repos: true, commands: true };
   const theme = useTheme();
 
   const [query, setQuery] = useState("");
@@ -78,35 +79,40 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         allPrs.push(p);
       }
 
-      // Scoped: only show PRs of `scope`. Otherwise show all + repo entries.
+      // Scoped: only show PRs of `scope`. Otherwise show repo entries + all PRs.
       if (scope) {
-        for (const p of allPrs) {
-          if (p.owner === scope.owner && p.repo === scope.name) {
-            out.push(prItem(p, openPr, onClose));
+        if (sources.prs) {
+          for (const p of allPrs) {
+            if (p.owner === scope.owner && p.repo === scope.name) {
+              out.push(prItem(p, openPr, onClose));
+            }
           }
         }
       } else {
-        // Repo entries — clicking enters scope, not opens.
-        for (const r of repos) {
-          const count = allPrs.filter(p => p.owner === r.owner && p.repo === r.name).length;
-          out.push({
-            id: `repo:${r.owner}/${r.name}`,
-            kind: "repo",
-            group: "Repositórios",
-            label: `${r.owner}/${r.name}`,
-            hint: count > 0 ? `${count} PR${count === 1 ? "" : "s"}` : undefined,
-            icon: <FolderGit2 size={14} />,
-            match: `${r.owner}/${r.name} ${r.name} ${r.owner}`,
-            run: () => { enterScope(r); return true; },
-          });
+        if (sources.repos) {
+          for (const r of repos) {
+            const count = allPrs.filter(p => p.owner === r.owner && p.repo === r.name).length;
+            out.push({
+              id: `repo:${r.owner}/${r.name}`,
+              kind: "repo",
+              group: "Repositórios",
+              label: `${r.owner}/${r.name}`,
+              hint: count > 0 ? `${count} PR${count === 1 ? "" : "s"}` : undefined,
+              icon: <FolderGit2 size={14} />,
+              match: `${r.owner}/${r.name} ${r.name} ${r.owner}`,
+              run: () => { enterScope(r); return true; },
+            });
+          }
         }
-        for (const p of allPrs) {
-          out.push(prItem(p, openPr, onClose));
+        if (sources.prs) {
+          for (const p of allPrs) {
+            out.push(prItem(p, openPr, onClose));
+          }
         }
       }
 
-      // Files within the open PR — always available when a PR is open.
-      if (currentPr) {
+      // Files within the open PR.
+      if (currentPr && sources.files) {
         for (const f of diff) {
           out.push({
             id: `file:${f.path}`,
@@ -122,56 +128,59 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       }
     }
 
-    // Commands always available.
-    out.push({
-      id: "cmd:refresh",
-      kind: "command",
-      group: "Comandos",
-      label: "Atualizar lista de PRs",
-      hint: "refresh",
-      icon: <RefreshCw size={14} />,
-      match: "atualizar lista prs refresh",
-      run: () => { refreshLists(); onClose(); },
-    });
-    out.push({
-      id: "cmd:settings",
-      kind: "command",
-      group: "Comandos",
-      label: "Abrir configurações",
-      hint: "settings",
-      icon: <Settings size={14} />,
-      match: "abrir configurações settings",
-      run: () => { onOpenSettings(); onClose(); },
-    });
-    out.push({
-      id: "cmd:theme",
-      kind: "command",
-      group: "Comandos",
-      label: `Alternar tema (atual: ${theme.choice})`,
-      hint: "theme",
-      icon: <Sun size={14} />,
-      match: "alternar tema theme",
-      run: () => {
-        const next = theme.choice === "system" ? "dark" : theme.choice === "dark" ? "light" : "system";
-        theme.setChoice(next);
-        onClose();
-      },
-    });
-    if (currentPr) {
+    // Commands appear when the source toggle is on OR when the user is in
+    // `>` command-only mode (escape hatch even if they hid commands).
+    if (commandOnly || sources.commands) {
       out.push({
-        id: "cmd:submit",
+        id: "cmd:refresh",
         kind: "command",
         group: "Comandos",
-        label: "Enviar review",
-        hint: "submit review",
-        icon: <Send size={14} />,
-        match: "enviar review submit",
-        run: () => { onOpenSubmit(); onClose(); },
+        label: "Atualizar lista de PRs",
+        hint: "refresh",
+        icon: <RefreshCw size={14} />,
+        match: "atualizar lista prs refresh",
+        run: () => { refreshLists(); onClose(); },
       });
+      out.push({
+        id: "cmd:settings",
+        kind: "command",
+        group: "Comandos",
+        label: "Abrir configurações",
+        hint: "settings",
+        icon: <Settings size={14} />,
+        match: "abrir configurações settings",
+        run: () => { onOpenSettings(); onClose(); },
+      });
+      out.push({
+        id: "cmd:theme",
+        kind: "command",
+        group: "Comandos",
+        label: `Alternar tema (atual: ${theme.choice})`,
+        hint: "theme",
+        icon: <Sun size={14} />,
+        match: "alternar tema theme",
+        run: () => {
+          const next = theme.choice === "system" ? "dark" : theme.choice === "dark" ? "light" : "system";
+          theme.setChoice(next);
+          onClose();
+        },
+      });
+      if (currentPr) {
+        out.push({
+          id: "cmd:submit",
+          kind: "command",
+          group: "Comandos",
+          label: "Enviar review",
+          hint: "submit review",
+          icon: <Send size={14} />,
+          match: "enviar review submit",
+          run: () => { onOpenSubmit(); onClose(); },
+        });
+      }
     }
 
     return out;
-  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit]);
+  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, sources, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit]);
 
   const filtered = useMemo(() => {
     if (!effectiveQuery) return items;

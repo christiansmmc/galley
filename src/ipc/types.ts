@@ -19,6 +19,14 @@ export interface UiPrefs {
   compact_paths: boolean;
   density: Density;
   diff_font: DiffFont;
+  palette_sources: PaletteSources;
+}
+
+export interface PaletteSources {
+  prs: boolean;
+  files: boolean;
+  repos: boolean;
+  commands: boolean;
 }
 
 export interface RemoteRepo {
