@@ -223,10 +223,13 @@ export function DiffPanel() {
     }));
 
     // Range selection listener — surface the floating button when the user
-    // drags across multiple lines.
-    disposables.push(modified.onDidChangeCursorSelection((e) => {
-      const sel = e.selection;
-      if (sel.startLineNumber === sel.endLineNumber) {
+    // drags across multiple lines. We listen on mouseup rather than
+    // onDidChangeCursorSelection because in a read-only DiffEditor the
+    // cursor-selection event doesn't fire reliably for drag-only selections
+    // (no cursor activity → no event).
+    disposables.push(modified.onMouseUp(() => {
+      const sel = modified.getSelection();
+      if (!sel || sel.startLineNumber === sel.endLineNumber) {
         setRangeSel(null);
         return;
       }
