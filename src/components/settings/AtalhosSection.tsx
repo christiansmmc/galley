@@ -1,6 +1,7 @@
 interface Shortcut { keys: string[]; desc: string; }
 
 const SHORTCUTS: Shortcut[] = [
+  { keys: ["Ctrl", "K"], desc: "Paleta de comandos (PRs, arquivos, comandos)" },
   { keys: ["Ctrl", "1"], desc: "Mostrar / esconder lista de PRs" },
   { keys: ["Ctrl", "2"], desc: "Mostrar / esconder árvore de arquivos" },
   { keys: ["Ctrl", "P"], desc: "Focar busca na lista de PRs" },
@@ -44,7 +45,7 @@ export function AtalhosSection() {
         ))}
       </div>
       <p style={{ marginTop: "var(--space-4)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-        Outros atalhos serão expostos quando forem ligados (Ctrl+K, etc.).
+        Mais atalhos serão adicionados conforme novas ações ganharem hotkeys.
       </p>
     </section>
   );
