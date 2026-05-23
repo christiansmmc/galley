@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Layout } from "./components/layout/Layout";
 import { TitleBar } from "./components/layout/TitleBar";
+import { ResizeHandles } from "./components/layout/ResizeHandles";
 import { useGlobalShortcuts } from "./components/layout/shortcuts";
 import { CommandPalette } from "./components/layout/CommandPalette";
 import { PatSection } from "./components/settings/PatSection";
@@ -74,6 +75,7 @@ export default function App() {
         onOpenSubmit={() => setSubmitOpen(true)}
       />
       <ToastStack />
+      <ResizeHandles />
     </div>
   );
 }

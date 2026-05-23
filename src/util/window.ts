@@ -11,8 +11,13 @@ type WindowLike = {
   close: () => Promise<void>;
   isMaximized: () => Promise<boolean>;
   startDragging: () => Promise<void>;
+  startResizeDragging: (direction: ResizeDirection) => Promise<void>;
   onResized: (cb: () => void) => Promise<() => void>;
 };
+
+export type ResizeDirection =
+  | "North" | "South" | "East" | "West"
+  | "NorthEast" | "NorthWest" | "SouthEast" | "SouthWest";
 
 let cachedPromise: Promise<WindowLike | null> | null = null;
 
@@ -60,4 +65,10 @@ export async function subscribeWindowResized(cb: () => void): Promise<() => void
 export async function startWindowDrag(): Promise<void> {
   const w = await getWindow();
   try { await w?.startDragging(); } catch { /* noop outside Tauri */ }
+}
+
+/** Begin a resize drag from the given edge/corner. No-op outside Tauri. */
+export async function startWindowResize(direction: ResizeDirection): Promise<void> {
+  const w = await getWindow();
+  try { await w?.startResizeDragging(direction); } catch { /* noop outside Tauri */ }
 }
