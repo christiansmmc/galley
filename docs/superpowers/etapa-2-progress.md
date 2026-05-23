@@ -12,7 +12,7 @@
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.3 — Layout global | `feat/etapa-2-3-layout` | Ready for review | — |
+| 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** 2.3 (Layout global) — ready for review.
+**Currently:** none — 2.3 approved 2026-05-23. Awaiting kickoff of 2.4 (Diff & comments redesign).
 
 ## Notes / decisions during execution
 
@@ -81,6 +81,20 @@ Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote
 - Shortcuts refactor: `useGlobalShortcuts` now in App (was in Layout). Ctrl/Cmd+1 toggles PR list via uiStore; Ctrl/Cmd+2 toggles file tree drawer. `PanelHeader` deleted — no longer used.
 - New tests: `GlobalHeader.test.tsx`, `PrMetaStrip.test.tsx` (breadcrumb assertions, draft count in Revisar label, reviewer singular/plural, body toggle). Existing PrDetail fixtures updated to include the new fields.
 - `pnpm tsc --noEmit`, `pnpm test` (21/21), `cargo test` (14/14), `pnpm exec vite build` all clean.
+
+## 2026-05-23 — 2.3 approved
+
+Approved after several layout-feel tweaks during smoke:
+
+- **Overlay drawer → resizable Panel.** The original 2.3 plan had the file tree as a Ctrl+2 drawer floating over the diff. In practice the user wanted it visible by default once a PR opens, with a regular collapse affordance. Drawer code (`FileTreeDrawer.tsx` + test) was deleted; file tree is back as a 3rd Panel with collapse button in its own header.
+- **Back arrow closes the PR.** It used to only re-expand the PR list; the diff editor stayed mounted and could only be dismissed by re-clicking the same PR. Added `prsStore.closePr` (clears currentPr, diff, threads, selectedFile, prError) and wired the back arrow to call it.
+- **No PR → no split.** When `currentPr` is null, Layout renders the PR list at 22% with a blank right pane — no file-tree placeholder, no diff placeholder, no inner separator.
+- **File tree opens at PR-list width.** Setting `defaultSize={22}` was not enough because the Group re-normalizes after PR list `.collapse()` (PR list goes to 0, the remaining 22+56 grow to fill 100, so the tree visually swelled to ~28%). Fix: after collapsing PR list, imperatively `fileTreeRef.resize(22)` so the tree stays at 22% of the parent group and the diff absorbs the slack.
+- **Files toggle removed from GlobalHeader.** Re-open affordance is a 22 px rail flush to the left edge that appears when both side panels are collapsed.
+
+Carry-forward for later sub-phases:
+- The Panel API has no `onCollapse`/`onExpand` props (only `onResize`). We sync `uiStore.prListCollapsed` / `fileTreeCollapsed` via `onResize` with a 0.5% threshold. If 2.4+ adds more panels (e.g. drafts slide-in), reuse this pattern rather than reaching for an external state library.
+- `useGlobalShortcuts` is the single owner of Ctrl+1 / Ctrl+2. Add new global shortcuts there, not scattered.
 
 ## 2026-05-23 — 2.2 approved
 
