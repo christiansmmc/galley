@@ -12,7 +12,7 @@
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
+| 2.3 — Layout global | `feat/etapa-2-3-layout` | Ready for review | — |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — 2.2 approved 2026-05-23. Awaiting kickoff of 2.3 (Layout global).
+**Currently:** 2.3 (Layout global) — ready for review.
 
 ## Notes / decisions during execution
 
@@ -70,6 +70,17 @@ Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote
 - Empty states branched: no repos, no PRs (inbox vazio), tab empty, and search-no-match — all via the `EmptyState` primitive.
 - Tests: new `formatAge.test.ts`, expanded `PrListPanel.test.tsx` to cover search filter, Ctrl+P focus, tab counts, and empty-search state. Existing fixtures updated to include the new `PrSummary` fields.
 - `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, and `pnpm exec vite build` all clean.
+
+## 2026-05-23 — Sub-phase 2.3 ready for review
+
+- `PrDetail` gained `additions`, `deletions`, `reviewers_count` (parsed from `/pulls/{n}` — `requested_reviewers` array length). Frontend types + 3 test fixtures updated.
+- `GlobalHeader` replaces the bare gear bar. No PR open → "Pull Requests" title + gear. PR open → breadcrumb `owner/repo › #N title` + back arrow (only when PR list is collapsed) + file-tree toggle + `Revisar (N)` primary button + gear. FAB removed; Revisar lives in the header now.
+- PR list autocollapse: `openPr` success sets `uiStore.prListCollapsed = true`; Layout's PR Panel reacts imperatively (`.collapse()/.expand()`) via the panel ref. `onResize` keeps the flag in sync when the user drags the separator.
+- File tree no longer occupies a Group panel — rendered as a fixed-position drawer (320 px, slides in from the left, semi-transparent backdrop). `Ctrl+2` toggles. ESC + click-outside close. Picking a file in the drawer also closes it (tracks initial `selectedFile` per open).
+- `PrMetaStrip` under the header: `author · age · N files · +X −Y · CI dot+label · N reviewer(s)` with a Draft badge when `pr.draft`. PR body is a collapsible block below the meta line (plaintext for now; `<pre>` with `pre-wrap` + 240 px scroll cap).
+- Shortcuts refactor: `useGlobalShortcuts` now in App (was in Layout). Ctrl/Cmd+1 toggles PR list via uiStore; Ctrl/Cmd+2 toggles file tree drawer. `PanelHeader` deleted — no longer used.
+- New tests: `GlobalHeader.test.tsx`, `PrMetaStrip.test.tsx`, `FileTreeDrawer.test.tsx` (12 new tests; close-on-file-select, close-on-ESC, close-on-X, breadcrumb assertions, draft count in Revisar label, reviewer singular/plural). Existing PrDetail fixtures updated to include the new fields.
+- `pnpm tsc --noEmit`, `pnpm test` (25/25), `cargo test` (14/14), `pnpm exec vite build` all clean.
 
 ## 2026-05-23 — 2.2 approved
 
