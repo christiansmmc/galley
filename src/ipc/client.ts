@@ -27,6 +27,8 @@ export const api = {
 
   submitReview: (owner: string, repo: string, number: number, event: ReviewEvent, body: string | null, prId: number, draftIds: number[]) =>
     invoke<ReviewResult>("submit_review", { owner, repo, number, event, body, prId, draftIds }),
+  replyToThread: (owner: string, repo: string, number: number, inReplyTo: number, body: string) =>
+    invoke<void>("reply_to_thread", { owner, repo, number, inReplyTo, body }),
 
   listRepos: () => invoke<RepoConfig[]>("list_repos"),
   addRepo: (owner: string, name: string) => invoke<RepoConfig>("add_repo", { owner, name }),

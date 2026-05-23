@@ -26,3 +26,18 @@ pub async fn submit_review(
     for d in &selected { let _ = crate::drafts::delete(&state.cache, d.id); }
     Ok(result)
 }
+
+#[tauri::command]
+pub async fn reply_to_thread(
+    owner: String,
+    repo: String,
+    number: u64,
+    in_reply_to: i64,
+    body: String,
+    state: State<'_, AppState>,
+) -> AppResult<()> {
+    let client = state.client.read().await
+        .clone()
+        .ok_or_else(|| AppError::Auth("no GitHub client".into()))?;
+    client.reply_to_thread(&owner, &repo, number, in_reply_to, &body).await
+}
