@@ -34,7 +34,7 @@ describe("GlobalHeader", () => {
     expect(screen.getByRole("button", { name: /Revisar/ })).toBeInTheDocument();
   });
 
-  it("shows back arrow only when PR list is collapsed", () => {
+  it("back arrow closes PR and re-expands list", () => {
     usePrsStore.setState({
       currentPr: {
         summary: { id: 1, owner: "x", repo: "y", number: 1, title: "t", author: "a", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true, changed_files: 0, ci_status: "none" },
@@ -45,8 +45,8 @@ describe("GlobalHeader", () => {
     useUiStore.setState({ prListCollapsed: true });
 
     render(<GlobalHeader onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
-    const back = screen.getByRole("button", { name: "Voltar para a lista" });
-    fireEvent.click(back);
+    fireEvent.click(screen.getByRole("button", { name: "Voltar para a lista" }));
+    expect(usePrsStore.getState().currentPr).toBeNull();
     expect(useUiStore.getState().prListCollapsed).toBe(false);
   });
 

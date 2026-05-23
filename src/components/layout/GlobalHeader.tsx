@@ -11,7 +11,7 @@ interface Props {
 
 export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
   const currentPr = usePrsStore(s => s.currentPr);
-  const prListCollapsed = useUiStore(s => s.prListCollapsed);
+  const closePr = usePrsStore(s => s.closePr);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
   const draftCount = useDraftsStore(s => s.drafts.length);
 
@@ -25,12 +25,12 @@ export function GlobalHeader({ onOpenSettings, onOpenSubmit }: Props) {
       background: "var(--c-mantle)",
       minHeight: 44,
     }}>
-      {currentPr && prListCollapsed && (
+      {currentPr && (
         <Button
           variant="icon"
           size="sm"
-          onClick={() => setPrListCollapsed(false)}
-          title="Voltar para a lista (Ctrl+1)"
+          onClick={() => { closePr(); setPrListCollapsed(false); }}
+          title="Voltar para a lista"
           aria-label="Voltar para a lista"
         >
           <ArrowLeft size={16} />
