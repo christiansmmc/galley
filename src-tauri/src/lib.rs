@@ -6,6 +6,7 @@ pub mod error;
 pub mod github;
 pub mod logging;
 pub mod path_filter;
+pub mod repo_input;
 pub mod secrets;
 pub mod viewed;
 
