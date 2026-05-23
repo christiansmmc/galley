@@ -56,8 +56,12 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   openPr: async (owner, repo, number) => {
     set({ loadingPr: true, prError: null, currentPr: null, diff: [], threads: [], selectedFile: null });
     try {
-      const [pr, diff, threads] = await Promise.all([
-        api.getPr(owner, repo, number),
+      // Always refresh on open — invalidates cached PR/diff/threads server
+      // side so the user sees up-to-date data after external GitHub changes
+      // (e.g. deleted reviews, new commits). Cache still helps within the
+      // session for repeated file selections.
+      const pr = await api.refreshPr(owner, repo, number);
+      const [diff, threads] = await Promise.all([
         api.getPrDiff(owner, repo, number),
         api.getPrThreads(owner, repo, number),
       ]);
