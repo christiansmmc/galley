@@ -35,3 +35,32 @@ body[data-theme="mocha"] {
   --c-accent: #cba6f7; --c-blue: #89b4fa;
   --c-green: #a6e3a1; --c-amber: #f9e2af; --c-red: #f38ba8;
 }
+
+/* Gutter glyph used by DiffPanel for the inline "+ comment" affordance. */
+.prr-comment-glyph {
+  background: var(--c-accent);
+  border-radius: 3px;
+  margin-left: 2px;
+  width: 14px !important;
+  height: 14px !important;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.prr-comment-glyph::before {
+  content: "+";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+}
+.prr-comment-glyph:hover { opacity: 1; }
+
+/* View zone wrapper — keeps the React subtree clear of Monaco's own
+   background color and borders. */
+.prr-view-zone {
+  background: transparent;
+  width: 100%;
+}
