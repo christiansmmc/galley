@@ -16,13 +16,13 @@
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Ready for review | — |
+| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Done (approved 2026-05-23) | 2026-05-23 |
 
 **Possible states:** `Not started` · `In progress` · `Ready for review` · `Changes requested` · `Done (approved YYYY-MM-DD)`
 
 ## Active sub-phase
 
-**Currently:** 2.7 — Command palette + empty states (includes custom titlebar per user opt-in 2026-05-23).
+**Currently:** none — Etapa 2 complete (2.7 approved 2026-05-23). 🎉
 
 ## Notes / decisions during execution
 
@@ -165,3 +165,20 @@ Single fix during smoke:
 - **Palette repo scope.** Added a "Repositórios" group listing every configured repo with its current PR count. Picking a repo enters scope mode: input row gets a `[owner/name ×]` chip, placeholder becomes "PRs em owner/name…", PR list narrows to that repo, repo entries themselves disappear. Esc on a scoped palette exits the scope (does not close); Backspace on an empty scoped query does the same. List container gained `role="listbox"` so `getAllByRole("option")` works for tests.
 - **Settings → Paleta toggles.** New `UiPrefs.palette_sources { prs, files, repos, commands }` (Rust + TS), each defaulted true via `#[serde(default = "default_true")]` for backward compat. New `PaletteSection` (between Diff and Conta) gives a checkbox per source. CommandPalette consumes the toggles and skips disabled source items. Commands remain reachable via `>` mode even when their toggle is off (explicit escape hatch).
 - **Bumped matrix:** `pnpm test` (71/71), `cargo test` (32/32), tsc + vite still clean.
+
+## 2026-05-23 — 2.7 approved
+
+Smoke uncovered several real bugs that became carry-forward notes:
+
+- **Tauri v2 `core:default` does NOT auto-include sensitive window ops.** Capabilities had to explicitly allow `core:window:allow-minimize / allow-toggle-maximize / allow-close / allow-start-dragging / allow-start-resize-dragging / allow-is-maximized` and `core:event:allow-listen / allow-unlisten`. Without these the custom titlebar's buttons, drag region, AND the edge resize handles are all dead. Future sensitive Tauri ops will need the same explicit allow-* line — `core:default` is the *minimum* surface, not "everything safe".
+- **Frameless windows lose native resize.** `decorations: false` strips the OS-managed resize handles, so we re-added them via `ResizeHandles.tsx`: eight absolute-positioned div strips (4 px edges, 10 px corners) calling Tauri's `startResizeDragging` on mousedown. Hidden when maximized (no-op state). Visible cursor changes (`ns-resize`, `ew-resize`, etc.) make the affordance obvious.
+- **Palette repo scope.** Picking a repo in Ctrl+K enters a scope mode (chip in input row, PR list narrows). Esc / Backspace-on-empty-query exits the scope.
+- **Settings → Paleta source toggles.** New `UiPrefs.palette_sources { prs, files, repos, commands }`, all default true. `>` prefix still surfaces commands even when their toggle is off — explicit escape hatch.
+- **Palette UX gotchas (CommandPalette.tsx):**
+  - `onMouseMove` refires on micro-twitches and clobbers `setActive` from keyboard nav. Switched to `onMouseEnter` + a `mouseMovedRef` that only becomes true after a real mousemove inside the listbox; without it the initial render under-cursor would override `active=0`. Plus a 300 ms keyboard-nav lock on ArrowUp/Down that any hover respects.
+  - After fuzzy sorting, identical group headers (e.g. "Pull Requests") rendered multiple times because the old consolidator only merged *adjacent* same-group items. Now bucketed by group into a fixed display order (Repositórios → Pull Requests → Arquivos → Comandos), and `visualOrder` is the linear traversal the keyboard navigates instead of the unbucketed `filtered`.
+  - `active` snaps back to 0 on every `effectiveQuery` / `scope` change so the user doesn't see a stale highlight buried inside a re-sorted list.
+- **`useDiffRenderMode` was measuring `window.innerWidth` instead of the diff panel.** Side panels squeeze the diff to ~56–78 % of the window, so a 1280 px window with both panels open gave the diff only ~700 px — but auto mode kept rendering side-by-side because it only looked at `window.innerWidth`. Refactored to take a container element and observe it via `ResizeObserver`, falling back to window width when no container is provided. Threshold (1100 px) unchanged but now applied to the actual diff content area.
+- **Inline widgets escaped the editor viewport.** Comment editor / thread / draft widgets live inside Monaco's horizontally-scrolling view zones, so long code lines pushed the right-aligned actions (Salvar / Apagar / Resolver) off the visible editor area. New `inlineWidgetShell` style + a `--diff-viewport-w` CSS var (published on the panel root via the **modified editor's `getLayoutInfo().contentWidth`** — *not* `panelEl.clientWidth`, which inflates the value with the line-number gutter + scrollbar + overview ruler) give the widgets `position: sticky; left: var(--space-9)` with `width = var(--diff-viewport-w) - 2 * gutter`. They now hug the visible editor area's left edge and stay buttoned regardless of horizontal scroll. Updated via `onDidLayoutChange` so panel resizes + render-mode flips both stay in sync.
+- **Default window size bumped to 1520×960.** 1520 is the minimum width that keeps auto-mode in side-by-side (`1520 × 0.78 - ~78 px Monaco chrome ≈ 1108 px ≥ 1100`); 960 height gives ~16:10 ratio so the app doesn't open flat. `minWidth: 720 / minHeight: 480` unchanged — user can shrink below and auto-mode will fall back to inline.
+- **Final matrix at approval:** `pnpm test` (74/74), `cargo test` (32/32), `pnpm tsc --noEmit` + `pnpm exec vite build` all clean.
