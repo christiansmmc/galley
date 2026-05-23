@@ -5,6 +5,7 @@ import { usePrsStore } from "../../state/prsStore";
 interface DirNode {
   type: "dir";
   name: string;
+  originalName?: string;
   children: TreeNode[];
 }
 interface FileNode {
@@ -71,6 +72,7 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
       <button
         onClick={() => setOpen(o => !o)}
         className="prr-row"
+        title={node.originalName && node.originalName !== node.name ? node.originalName : undefined}
         style={{
           display: "flex", alignItems: "center", gap: "var(--space-2)",
           width: "100%", textAlign: "left",
