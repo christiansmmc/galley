@@ -83,7 +83,7 @@ export function ReposSection() {
           invalid={Boolean(err)}
           aria-label="Adicionar repositório"
         />
-        <Button variant="primary" size="sm" onClick={submit} disabled={busy || !paste.trim()}>
+        <Button variant="subtle" size="sm" onClick={submit} disabled={busy || !paste.trim()}>
           {busy ? "Validando…" : "Adicionar"}
         </Button>
       </div>

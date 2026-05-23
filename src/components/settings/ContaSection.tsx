@@ -103,7 +103,7 @@ export function ContaSection() {
             <div role="alert" style={{ color: "var(--c-danger)", marginTop: "var(--space-3)", fontSize: "var(--text-sm)" }}>{err}</div>
           )}
           <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
-            <Button variant="primary" size="sm" onClick={replace} disabled={busy || !token.trim()}>
+            <Button variant="subtle" size="sm" onClick={replace} disabled={busy || !token.trim()}>
               {busy ? "Salvando…" : "Salvar"}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => { setReplacing(false); setToken(""); setErr(null); }}>

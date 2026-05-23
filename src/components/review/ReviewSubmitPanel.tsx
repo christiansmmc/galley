@@ -43,7 +43,7 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={busy}>Cancelar</Button>
-          <Button variant="primary" onClick={submit} disabled={busy}>{busy ? "Enviando…" : "Enviar"}</Button>
+          <Button variant="subtle" onClick={submit} disabled={busy}>{busy ? "Enviando…" : "Enviar"}</Button>
         </>
       }
     >

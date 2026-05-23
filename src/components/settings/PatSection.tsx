@@ -40,7 +40,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
       {err && <div style={{ color: "var(--c-danger)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
       <div style={{ marginTop: "var(--space-6)" }}>
         <Button
-          variant="primary"
+          variant="subtle"
           onClick={submit}
           disabled={busy || !token.trim()}
         >

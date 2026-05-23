@@ -113,7 +113,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={save}>Salvar ({selected.size})</Button>
+          <Button variant="subtle" onClick={save}>Salvar ({selected.size})</Button>
         </>
       }
     >
