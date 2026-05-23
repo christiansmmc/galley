@@ -35,7 +35,15 @@ export function Layout({ prList, fileTree, diff }: Props) {
 
   if (!currentPr) {
     return (
-      <div style={{ height: "100%", background: "var(--c-base)" }}>{prList}</div>
+      <Group orientation="horizontal" style={{ height: "100%" }}>
+        <Panel defaultSize={22} minSize={15}>
+          <div style={{ height: "100%", background: "var(--c-base)" }}>{prList}</div>
+        </Panel>
+        <Separator style={{ width: 1, background: "var(--c-surface0)", cursor: "col-resize" }} />
+        <Panel defaultSize={78} minSize={30}>
+          <div style={{ height: "100%", background: "var(--c-base)" }} />
+        </Panel>
+      </Group>
     );
   }
 
