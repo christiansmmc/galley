@@ -23,6 +23,8 @@ export interface Settings {
   path_filters: PathFilter[];
 }
 
+export type CiStatus = "passing" | "pending" | "failing" | "none";
+
 export interface PrSummary {
   id: number;
   owner: string;
@@ -35,6 +37,8 @@ export interface PrSummary {
   html_url: string;
   is_mine: boolean;
   review_requested: boolean;
+  changed_files: number;
+  ci_status: CiStatus;
 }
 
 export interface PrDetail {

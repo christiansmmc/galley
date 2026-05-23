@@ -19,7 +19,7 @@ beforeEach(() => {
   refreshThreads.mockClear();
   usePrsStore.setState({
     currentPr: {
-      summary: { id: 1, owner: "x", repo: "y", number: 42, title: "t", author: "a", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true },
+      summary: { id: 1, owner: "x", repo: "y", number: 42, title: "t", author: "a", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true, changed_files: 0, ci_status: "none" },
       body: null, head_sha: "", base_sha: "", draft: false, mergeable: null,
     },
     diff: [], threads: [], selectedFile: null,
