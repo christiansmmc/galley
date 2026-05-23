@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Layout } from "./components/layout/Layout";
-import { GlobalHeader } from "./components/layout/GlobalHeader";
+import { TitleBar } from "./components/layout/TitleBar";
 import { useGlobalShortcuts } from "./components/layout/shortcuts";
+import { CommandPalette } from "./components/layout/CommandPalette";
 import { PatSection } from "./components/settings/PatSection";
 import { SettingsModal } from "./components/settings/SettingsModal";
 import { PrListPanel } from "./components/prs/PrListPanel";
@@ -25,8 +26,9 @@ export default function App() {
   const { authBanner, setAuthBanner } = useUiStore();
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
-  useGlobalShortcuts();
+  useGlobalShortcuts({ onOpenPalette: () => setPaletteOpen(true) });
 
   const density = useSettingsStore(s => s.settings?.ui.density ?? "comfortable");
 
@@ -50,9 +52,10 @@ export default function App() {
           Token inválido. Reautentique nas configurações.
         </Banner>
       )}
-      <GlobalHeader
+      <TitleBar
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenSubmit={() => setSubmitOpen(true)}
+        onOpenPalette={() => setPaletteOpen(true)}
       />
       {currentPr && <PrMetaStrip pr={currentPr} />}
       <div style={{ flex: 1, minHeight: 0 }}>
@@ -64,6 +67,12 @@ export default function App() {
       </div>
       <ReviewSubmitPanel open={submitOpen} onClose={() => setSubmitOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSubmit={() => setSubmitOpen(true)}
+      />
       <ToastStack />
     </div>
   );
