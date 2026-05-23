@@ -69,15 +69,16 @@ function parseDiff(patch: string | null): ParsedDiff {
       commentableOrig.add(orig.length);
       origLine++;
     } else if (raw.startsWith(" ") || raw.length === 0) {
+      // Context lines: shown in both panes for context, but NOT commentable —
+      // GitHub accepts comments on context lines in theory, but the user
+      // model is "only lines I modified can be commented".
       const content = raw.startsWith(" ") ? raw.slice(1) : raw;
       orig.push(content);
       origMap.set(orig.length, origLine);
       origFileToEditor.set(origLine, orig.length);
-      commentableOrig.add(orig.length);
       mod.push(content);
       modMap.set(mod.length, modLine);
       modFileToEditor.set(modLine, mod.length);
-      commentableMod.add(mod.length);
       origLine++;
       modLine++;
     }
@@ -158,9 +159,22 @@ export function DiffPanel() {
   const parsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
   const {
     original, modified,
-    modifiedLineMap, modifiedFileToEditor,
+    modifiedLineMap, originalLineMap, modifiedFileToEditor,
     commentableModified,
   } = parsed;
+
+  // Replace Monaco's gutter numbers (1, 2, 3... editor lines) with real file
+  // lines from the patch hunks. Empty for hunk-separator rows. Two side maps
+  // → two updateOptions calls.
+  useEffect(() => {
+    if (!diffEd) return;
+    const fmt = (map: Map<number, number | null>) => (n: number) => {
+      const v = map.get(n);
+      return v == null ? "" : String(v);
+    };
+    diffEd.getModifiedEditor().updateOptions({ lineNumbers: fmt(modifiedLineMap) });
+    diffEd.getOriginalEditor().updateOptions({ lineNumbers: fmt(originalLineMap) });
+  }, [diffEd, modifiedLineMap, originalLineMap]);
 
   // Clear transient editor state when the file changes — otherwise an inline
   // editor or range button can outlive its file.
