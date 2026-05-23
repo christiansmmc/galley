@@ -1,4 +1,4 @@
-import { Modal } from "../common/Modal";
+import { Modal, Button } from "../ui";
 import { ReposSection } from "./ReposSection";
 import { FiltersSection } from "./FiltersSection";
 import { PatSection } from "./PatSection";
@@ -12,25 +12,22 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
     <Modal title="Configurações" open={open} onClose={onClose}>
       <ReposSection />
       <FiltersSection />
-      <section style={{ marginBottom: 16 }}>
-        <h4 style={{ margin: "0 0 8px" }}>Tema</h4>
-        <div style={{ display: "flex", gap: 6 }}>
+      <section style={{ marginBottom: "var(--space-7)" }}>
+        <h4 style={{ margin: "0 0 var(--space-4)" }}>Tema</h4>
+        <div style={{ display: "flex", gap: "var(--space-3)" }}>
           {(["system", "light", "dark"] as ThemeChoice[]).map(t => (
-            <button
+            <Button
               key={t}
+              variant={choice === t ? "subtle" : "ghost"}
+              size="sm"
+              fullWidth
               onClick={() => setChoice(t)}
-              style={{
-                flex: 1, padding: 8, borderRadius: 4,
-                border: "1px solid var(--c-surface1)",
-                background: choice === t ? "var(--c-surface0)" : "transparent",
-                color: "var(--c-text)", cursor: "pointer", fontSize: 12,
-              }}
-            >{t}</button>
+            >{t}</Button>
           ))}
         </div>
       </section>
       <section>
-        <h4 style={{ margin: "0 0 8px" }}>Token</h4>
+        <h4 style={{ margin: "0 0 var(--space-4)" }}>Token</h4>
         <PatSection />
       </section>
     </Modal>

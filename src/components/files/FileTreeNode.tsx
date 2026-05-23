@@ -29,23 +29,30 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props) {
   const [open, setOpen] = useState(true);
-  const pad = 8 + depth * 12;
+  const pad = `calc(var(--space-4) + ${depth} * var(--space-6))`;
 
   if (node.type === "file") {
+    const selected = selectedPath === node.path;
     return (
       <button
         onClick={() => onSelect(node.path)}
+        className="prr-row"
+        data-selected={selected}
         style={{
-          display: "flex", alignItems: "center", gap: 6,
+          display: "flex", alignItems: "center", gap: "var(--space-3)",
           width: "100%", textAlign: "left",
-          padding: `4px 8px 4px ${pad}px`, border: 0,
-          background: selectedPath === node.path ? "var(--c-surface0)" : "transparent",
-          color: "var(--c-text)", cursor: "pointer", fontSize: 12,
+          padding: `var(--space-2) var(--space-4) var(--space-2) ${pad}`,
+          border: 0,
+          background: "transparent",
+          color: "var(--c-text)",
+          cursor: "pointer",
+          fontSize: "var(--text-base)",
+          transition: "background var(--transition-fast)",
         }}
       >
         <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)" }} />
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.path.split("/").pop()}</span>
-        <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--c-subtext)" }}>
+        <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--c-subtext)" }}>
           +{node.additions} −{node.deletions}
         </span>
       </button>
@@ -56,12 +63,17 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
     <div>
       <button
         onClick={() => setOpen(o => !o)}
+        className="prr-row"
         style={{
-          display: "flex", alignItems: "center", gap: 4,
+          display: "flex", alignItems: "center", gap: "var(--space-2)",
           width: "100%", textAlign: "left",
-          padding: `4px 8px 4px ${pad}px`, border: 0,
-          background: "transparent", color: "var(--c-subtext)",
-          cursor: "pointer", fontSize: 12, fontWeight: 500,
+          padding: `var(--space-2) var(--space-4) var(--space-2) ${pad}`,
+          border: 0,
+          background: "transparent",
+          color: "var(--c-subtext)",
+          cursor: "pointer",
+          fontSize: "var(--text-base)",
+          fontWeight: "var(--weight-medium)" as unknown as number,
         }}
       >
         {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}

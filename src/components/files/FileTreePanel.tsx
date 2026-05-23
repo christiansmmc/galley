@@ -62,10 +62,10 @@ export function FileTreePanel() {
   const { matched, unmatched } = useMemo(() => classify(diff, filters), [diff, filters]);
   const unmatchedTree = useMemo(() => buildTree(unmatched), [unmatched]);
 
-  if (!currentPr) return <div style={{ padding: 12, color: "var(--c-subtext)", fontSize: 12 }}>Selecione um PR.</div>;
+  if (!currentPr) return <div style={{ padding: "var(--space-6)", color: "var(--c-subtext)", fontSize: "var(--text-base)" }}>Selecione um PR.</div>;
 
   return (
-    <div style={{ padding: "6px 0" }}>
+    <div style={{ padding: "var(--space-3) 0" }}>
       {unmatchedTree.map((n, i) => (
         <FileTreeNode key={i} node={n} selectedPath={selectedFile} onSelect={selectFile} />
       ))}
@@ -94,13 +94,20 @@ function GroupNode({ label, files, open, onToggle, selectedFile, onSelect }: {
   onSelect: (p: string) => void;
 }) {
   return (
-    <div style={{ borderTop: "1px solid var(--c-mantle)", marginTop: 6, paddingTop: 6 }}>
-      <button onClick={onToggle} style={{
-        display: "flex", width: "100%", textAlign: "left", border: 0,
-        padding: "6px 10px", background: "transparent",
-        color: "var(--c-subtext)", fontSize: 11, fontWeight: 600,
-        cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.4,
-      }}>
+    <div style={{ borderTop: "1px solid var(--c-mantle)", marginTop: "var(--space-3)", paddingTop: "var(--space-3)" }}>
+      <button
+        onClick={onToggle}
+        className="prr-row"
+        style={{
+          display: "flex", width: "100%", textAlign: "left", border: 0,
+          padding: "var(--space-3) var(--space-5)",
+          background: "transparent",
+          color: "var(--c-subtext)",
+          fontSize: "var(--text-sm)",
+          fontWeight: "var(--weight-semibold)" as unknown as number,
+          cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.4,
+        }}
+      >
         {open ? "▾" : "▸"} {label} ({files.length})
       </button>
       {open && files.map(f => (

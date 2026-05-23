@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, Textarea } from "../ui";
 
 interface Props {
   line: number;
@@ -34,26 +35,31 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
   return (
     <div
       style={{
-        padding: 10,
-        margin: "4px 24px",
-        borderRadius: 6,
+        padding: "var(--space-5)",
+        margin: "var(--space-2) var(--space-9)",
+        borderRadius: "var(--radius-lg)",
         border: "1px solid var(--c-surface1)",
         background: "var(--c-mantle)",
         color: "var(--c-text)",
         fontFamily: "var(--font-ui)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+        boxShadow: "var(--shadow-md)",
         position: "relative",
-        zIndex: 1,
+        zIndex: "var(--z-base)" as unknown as number,
         pointerEvents: "auto",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
+      <div style={{
+        fontSize: "var(--text-sm)",
+        color: "var(--c-subtext)",
+        marginBottom: "var(--space-3)",
+        fontFamily: "var(--font-mono)",
+      }}>
         {isRange ? `Rascunho · L${startLine}–${line} · ${side === "RIGHT" ? "Depois" : "Antes"}` : `Rascunho · L${line} · ${side === "RIGHT" ? "Depois" : "Antes"}`}
       </div>
-      <textarea
+      <Textarea
         autoFocus
         rows={3}
         placeholder="Comentário (Markdown)…"
@@ -63,39 +69,12 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
           if (e.key === "Escape") { e.preventDefault(); onCancel(); }
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); }
         }}
-        style={{
-          width: "100%",
-          padding: 8,
-          borderRadius: 5,
-          border: "1px solid var(--c-surface1)",
-          background: "var(--c-base)",
-          color: "var(--c-text)",
-          fontFamily: "var(--font-ui)",
-          fontSize: 13,
-          resize: "vertical",
-        }}
       />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
-        <button
-          onClick={onCancel}
-          disabled={busy}
-          style={{
-            padding: "6px 10px", borderRadius: 5,
-            border: "1px solid var(--c-surface1)",
-            background: "transparent", color: "var(--c-subtext)",
-            cursor: "pointer", fontSize: 12,
-          }}
-        >Cancelar</button>
-        <button
-          onClick={submit}
-          disabled={busy || !body.trim()}
-          style={{
-            padding: "6px 12px", borderRadius: 5, border: 0,
-            background: "var(--c-accent)", color: "white",
-            cursor: busy || !body.trim() ? "default" : "pointer",
-            fontSize: 12, opacity: busy || !body.trim() ? 0.6 : 1,
-          }}
-        >{busy ? "Salvando…" : "Salvar rascunho"}</button>
+      <div style={{ display: "flex", gap: "var(--space-4)", justifyContent: "flex-end", marginTop: "var(--space-3)" }}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={busy}>Cancelar</Button>
+        <Button variant="primary" size="sm" onClick={submit} disabled={busy || !body.trim()}>
+          {busy ? "Salvando…" : "Salvar rascunho"}
+        </Button>
       </div>
     </div>
   );

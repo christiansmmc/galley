@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "../ui";
 
 interface Props {
   title: string;
@@ -11,17 +12,20 @@ export function PanelHeader({ title, onCollapse, side }: Props) {
   return (
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "var(--pad)", borderBottom: "1px solid var(--c-surface0)",
+      padding: "var(--space-3) var(--space-6)",
+      borderBottom: "1px solid var(--c-surface0)",
       background: "var(--c-mantle)",
     }}>
-      <span style={{ fontWeight: 600, fontSize: 13 }}>{title}</span>
+      <span style={{ fontWeight: "var(--weight-semibold)" as unknown as number, fontSize: "var(--text-md)" }}>{title}</span>
       {onCollapse && (
-        <button onClick={onCollapse} style={{
-          background: "transparent", border: 0, color: "var(--c-subtext)",
-          cursor: "pointer", padding: 4, borderRadius: 4,
-        }}>
-          <Icon size={16} />
-        </button>
+        <Button
+          variant="icon"
+          size="sm"
+          onClick={onCollapse}
+          aria-label="Recolher painel"
+        >
+          <Icon size={14} />
+        </Button>
       )}
     </div>
   );

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { PathFilter, RepoConfig } from "../../ipc/types";
-import { Trash2 } from "lucide-react";
+import { Button, Dropdown, Input } from "../ui";
 
 export function FiltersSection() {
   const [repos, setRepos] = useState<RepoConfig[]>([]);
@@ -24,31 +25,38 @@ export function FiltersSection() {
   const update = (i: number, patch: Partial<PathFilter>) => save(filters.map((f, idx) => idx === i ? { ...f, ...patch } : f));
 
   return (
-    <section style={{ marginBottom: 16 }}>
-      <h4 style={{ margin: "0 0 8px" }}>Filtros de path</h4>
-      <select value={selectedRepo} onChange={e => setSelectedRepo(e.target.value)} style={{ marginBottom: 8, padding: 6, background: "var(--c-base)", color: "var(--c-text)", border: "1px solid var(--c-surface1)", borderRadius: 4 }}>
+    <section style={{ marginBottom: "var(--space-7)" }}>
+      <h4 style={{ margin: "0 0 var(--space-4)" }}>Filtros de path</h4>
+      <Dropdown
+        value={selectedRepo}
+        onChange={e => setSelectedRepo(e.target.value)}
+        size="sm"
+        style={{ marginBottom: "var(--space-4)" }}
+      >
         {repos.map(r => <option key={`${r.owner}/${r.name}`} value={`${r.owner}/${r.name}`}>{r.owner}/{r.name}</option>)}
-      </select>
+      </Dropdown>
       {filters.map((f, i) => (
-        <div key={i} style={{ display: "flex", gap: 6, marginBottom: 4 }}>
-          <input value={f.pattern} onChange={e => update(i, { pattern: e.target.value })} placeholder="glob" style={inp()} />
-          <input value={f.label} onChange={e => update(i, { label: e.target.value })} placeholder="rótulo" style={inp()} />
-          <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--c-subtext)" }}>
+        <div key={i} style={{ display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-2)", alignItems: "center" }}>
+          <Input value={f.pattern} onChange={e => update(i, { pattern: e.target.value })} placeholder="glob" mono size="sm" />
+          <Input value={f.label} onChange={e => update(i, { label: e.target.value })} placeholder="rótulo" size="sm" />
+          <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
             <input type="checkbox" checked={f.default_hidden} onChange={e => update(i, { default_hidden: e.target.checked })} />
             esconder
           </label>
-          <button onClick={() => remove(i)} style={{ border: 0, background: "transparent", color: "var(--c-red)", cursor: "pointer" }}>
+          <Button
+            variant="icon"
+            size="sm"
+            aria-label="Remover"
+            onClick={() => remove(i)}
+            style={{ color: "var(--c-red)" }}
+          >
             <Trash2 size={14} />
-          </button>
+          </Button>
         </div>
       ))}
-      <button onClick={add} disabled={!selectedRepo} style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid var(--c-surface1)", background: "transparent", color: "var(--c-text)", cursor: "pointer", fontSize: 12 }}>
+      <Button variant="ghost" size="sm" onClick={add} disabled={!selectedRepo}>
         + Filtro
-      </button>
+      </Button>
     </section>
   );
-}
-
-function inp(): React.CSSProperties {
-  return { flex: 1, padding: "6px 8px", borderRadius: 4, border: "1px solid var(--c-surface1)", background: "var(--c-base)", color: "var(--c-text)", fontFamily: "var(--font-mono)", fontSize: 12 };
 }

@@ -9,10 +9,12 @@ import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitModal } from "./components/review/ReviewSubmitModal";
 import { Banner } from "./components/common/Banner";
 import { ToastStack } from "./components/common/Toast";
+import { Button } from "./components/ui";
 import { useSettingsStore } from "./state/settingsStore";
 import { usePrsStore } from "./state/prsStore";
 import { useDraftsStore } from "./state/draftsStore";
 import { useUiStore } from "./state/uiStore";
+import { UiGallery } from "./components/ui/UiGallery";
 
 export default function App() {
   const { hasPat, checkPat, load } = useSettingsStore();
@@ -30,6 +32,10 @@ export default function App() {
     else clearDrafts();
   }, [currentPr, loadDrafts, clearDrafts]);
 
+  if (typeof window !== "undefined" && window.location.hash === "#/__ui") {
+    return <UiGallery />;
+  }
+
   if (!hasPat) return <PatSection onDone={checkPat} />;
 
   return (
@@ -41,31 +47,41 @@ export default function App() {
       )}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "flex-end",
-        padding: "6px 12px", borderBottom: "1px solid var(--c-surface0)",
+        padding: "var(--space-3) var(--space-6)",
+        borderBottom: "1px solid var(--c-surface0)",
         background: "var(--c-mantle)",
       }}>
-        <button onClick={() => setSettingsOpen(true)} title="Configurações" style={{
-          background: "transparent", border: 0, color: "var(--c-subtext)", cursor: "pointer",
-        }}>
+        <Button
+          variant="icon"
+          size="sm"
+          onClick={() => setSettingsOpen(true)}
+          title="Configurações"
+          aria-label="Configurações"
+        >
           <Settings size={16} />
-        </button>
+        </Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <Layout prList={<PrListPanel />} fileTree={<FileTreePanel />} diff={<DiffPanel />} />
       </div>
       {currentPr && (
-        <button
+        <Button
+          variant="primary"
+          size="lg"
           onClick={() => setSubmitOpen(true)}
           style={{
-            position: "fixed", bottom: 16, right: 16, padding: "10px 16px",
-            borderRadius: 999, border: 0, background: "var(--c-accent)",
-            color: "white", cursor: "pointer", fontWeight: 500,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-            zIndex: 50,
+            position: "fixed",
+            bottom: "var(--space-7)",
+            right: "var(--space-7)",
+            borderRadius: "var(--radius-pill)",
+            paddingLeft: "var(--space-7)",
+            paddingRight: "var(--space-7)",
+            boxShadow: "var(--shadow-md)",
+            zIndex: "var(--z-floating)" as unknown as number,
           }}
         >
           Enviar review{draftCount > 0 ? ` (${draftCount})` : ""}
-        </button>
+        </Button>
       )}
       <ReviewSubmitModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />

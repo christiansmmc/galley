@@ -1,3 +1,5 @@
+import { Button } from "../ui";
+
 export function Banner({ children, kind = "warn", onAction }: {
   children: React.ReactNode;
   kind?: "warn" | "error";
@@ -5,19 +7,22 @@ export function Banner({ children, kind = "warn", onAction }: {
 }) {
   return (
     <div style={{
-      padding: "8px 12px",
+      padding: "var(--space-4) var(--space-6)",
       background: kind === "error" ? "var(--c-red)" : "var(--c-amber)",
-      color: "var(--c-base)", fontSize: 12, display: "flex", alignItems: "center", gap: 8,
+      color: "var(--c-base)",
+      fontSize: "var(--text-base)",
+      display: "flex", alignItems: "center", gap: "var(--space-4)",
     }}>
       <span style={{ flex: 1 }}>{children}</span>
       {onAction && (
-        <button onClick={onAction.onClick} style={{
-          background: "transparent", border: "1px solid currentColor",
-          color: "inherit", borderRadius: 4, padding: "2px 8px",
-          cursor: "pointer", fontSize: 11,
-        }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onAction.onClick}
+          style={{ borderColor: "currentColor", color: "inherit", background: "transparent" }}
+        >
           {onAction.label}
-        </button>
+        </Button>
       )}
     </div>
   );

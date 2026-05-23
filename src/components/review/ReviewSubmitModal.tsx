@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal } from "../common/Modal";
+import { Modal, Button, Textarea } from "../ui";
 import { api } from "../../ipc/client";
 import { userMessage } from "../../ipc/errors";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -42,46 +42,42 @@ export function ReviewSubmitModal({ open, onClose }: Props) {
       onClose={onClose}
       footer={
         <>
-          <button onClick={onClose} disabled={busy} style={ghost()}>Cancelar</button>
-          <button onClick={submit} disabled={busy} style={primary()}>{busy ? "Enviando…" : "Enviar"}</button>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancelar</Button>
+          <Button variant="primary" onClick={submit} disabled={busy}>{busy ? "Enviando…" : "Enviar"}</Button>
         </>
       }
     >
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "flex", gap: "var(--space-4)", marginBottom: "var(--space-6)" }}>
         {(["APPROVE", "COMMENT", "REQUEST_CHANGES"] as ReviewEvent[]).map(ev => (
-          <label key={ev} style={{
-            flex: 1, padding: 10, border: "1px solid var(--c-surface1)",
-            borderRadius: 5, cursor: "pointer", fontSize: 13, textAlign: "center",
-            background: event === ev ? "var(--c-surface0)" : "transparent",
-          }}>
+          <label
+            key={ev}
+            style={{
+              flex: 1,
+              padding: "var(--space-5)",
+              border: "1px solid var(--c-surface1)",
+              borderRadius: "var(--radius-md)",
+              cursor: "pointer",
+              fontSize: "var(--text-md)",
+              textAlign: "center",
+              background: event === ev ? "var(--c-surface0)" : "transparent",
+              transition: "background var(--transition-fast)",
+            }}
+          >
             <input type="radio" name="event" checked={event === ev} onChange={() => setEvent(ev)} style={{ display: "none" }} />
             {ev === "APPROVE" ? "Aprovar" : ev === "COMMENT" ? "Comentar" : "Pedir mudanças"}
           </label>
         ))}
       </div>
-      <textarea
+      <Textarea
         value={body}
         onChange={e => setBody(e.target.value)}
         rows={4}
         placeholder="Resumo (opcional)"
-        style={{
-          width: "100%", padding: 8, borderRadius: 5,
-          border: "1px solid var(--c-surface1)",
-          background: "var(--c-mantle)", color: "var(--c-text)",
-          fontFamily: "var(--font-ui)", fontSize: 13, resize: "vertical",
-        }}
       />
-      <div style={{ marginTop: 12, fontSize: 12, color: "var(--c-subtext)" }}>
+      <div style={{ marginTop: "var(--space-6)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
         {drafts.length} rascunho{drafts.length === 1 ? "" : "s"} inline.
       </div>
-      {err && <div style={{ color: "var(--c-red)", marginTop: 8, fontSize: 12 }}>{err}</div>}
+      {err && <div style={{ color: "var(--c-red)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
     </Modal>
   );
-}
-
-function ghost(): React.CSSProperties {
-  return { padding: "8px 12px", borderRadius: 5, border: "1px solid var(--c-surface1)", background: "transparent", color: "var(--c-subtext)", cursor: "pointer" };
-}
-function primary(): React.CSSProperties {
-  return { padding: "8px 14px", borderRadius: 5, border: 0, background: "var(--c-accent)", color: "white", cursor: "pointer" };
 }

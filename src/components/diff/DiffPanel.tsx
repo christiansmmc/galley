@@ -433,19 +433,23 @@ export function DiffPanel() {
     return () => { for (const d of disposables) d.dispose(); };
   }, [diffEd, modifiedLineMap, commentableModified]);
 
-  if (!file) return <div style={{ padding: 16, color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
+  if (!file) return <div style={{ padding: "var(--space-7)", color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
-        padding: "8px 12px", borderBottom: "1px solid var(--c-surface0)",
-        background: "var(--c-mantle)", fontSize: 12, color: "var(--c-subtext)",
-        fontFamily: "var(--font-mono)", display: "flex", alignItems: "center", gap: 8,
+        padding: "var(--space-4) var(--space-6)",
+        borderBottom: "1px solid var(--c-surface0)",
+        background: "var(--c-mantle)",
+        fontSize: "var(--text-base)",
+        color: "var(--c-subtext)",
+        fontFamily: "var(--font-mono)",
+        display: "flex", alignItems: "center", gap: "var(--space-4)",
       }}>
         <span style={{ flex: 1 }}>
           {file.path}
-          <span style={{ marginLeft: 8, color: "var(--c-green)" }}>+{file.additions}</span>
-          <span style={{ marginLeft: 4, color: "var(--c-red)" }}>−{file.deletions}</span>
+          <span style={{ marginLeft: "var(--space-4)", color: "var(--c-green)" }}>+{file.additions}</span>
+          <span style={{ marginLeft: "var(--space-2)", color: "var(--c-red)" }}>−{file.deletions}</span>
         </span>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
@@ -495,15 +499,15 @@ export function DiffPanel() {
               // modified side on the right half, so center the button there.
               right: 24,
               top: Math.max(rangeSel.anchor.topPx + 18, 4),
-              padding: "6px 12px",
-              borderRadius: 5,
+              padding: "var(--space-3) var(--space-6)",
+              borderRadius: "var(--radius-md)",
               border: 0,
               background: "var(--c-accent)",
               color: "white",
               cursor: "pointer",
-              fontSize: 12,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              zIndex: 10,
+              fontSize: "var(--text-base)",
+              boxShadow: "var(--shadow-md)",
+              zIndex: "var(--z-overlay-widget)" as unknown as number,
             }}
           >
             Comentar {rangeSel.target.endLine - rangeSel.target.startLine + 1} linhas

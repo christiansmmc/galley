@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Inbox, RefreshCw } from "lucide-react";
 import type { PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
 import { PrListItem } from "./PrListItem";
+import { Button, EmptyState, Spinner, Tabs } from "../ui";
 
 type Tab = "mine" | "review_requested";
 
@@ -27,41 +28,37 @@ export function PrListPanel() {
 
   return (
     <div>
-      <div style={{ display: "flex", borderBottom: "1px solid var(--c-surface0)" }}>
-        {(["review_requested", "mine"] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1, padding: "8px 0", border: 0,
-              background: tab === t ? "var(--c-base)" : "var(--c-mantle)",
-              color: tab === t ? "var(--c-text)" : "var(--c-subtext)",
-              cursor: "pointer", fontSize: 12, fontWeight: 500,
-              borderBottom: tab === t ? "2px solid var(--c-accent)" : "2px solid transparent",
-            }}
+      <Tabs<Tab>
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { id: "review_requested", label: "Pra revisar" },
+          { id: "mine", label: "Meus" },
+        ]}
+        trailing={
+          <Button
+            variant="icon"
+            size="md"
+            onClick={refreshLists}
+            disabled={loadingLists}
+            title="Atualizar"
+            aria-label="Atualizar"
           >
-            {t === "mine" ? "Meus" : "Pra revisar"}
-          </button>
-        ))}
-        <button
-          onClick={refreshLists}
-          disabled={loadingLists}
-          title="Refresh"
-          style={{
-            padding: "0 10px", border: 0, background: "var(--c-mantle)",
-            color: "var(--c-subtext)", cursor: "pointer",
-          }}
-        >
-          <RefreshCw size={14} />
-        </button>
-      </div>
+            {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
+          </Button>
+        }
+      />
 
       {Object.entries(groups).map(([repo, prs]) => (
         <div key={repo}>
           <div style={{
-            padding: "6px 12px", fontSize: 11, fontWeight: 600,
-            color: "var(--c-subtext)", background: "var(--c-mantle)",
-            textTransform: "uppercase", letterSpacing: 0.4,
+            padding: "var(--space-3) var(--space-6)",
+            fontSize: "var(--text-sm)",
+            fontWeight: "var(--weight-semibold)" as unknown as number,
+            color: "var(--c-subtext)",
+            background: "var(--c-mantle)",
+            textTransform: "uppercase",
+            letterSpacing: 0.4,
           }}>{repo}</div>
           {prs.map(p => (
             <PrListItem
@@ -75,9 +72,12 @@ export function PrListPanel() {
       ))}
 
       {!loadingLists && list.length === 0 && (
-        <div style={{ padding: 24, color: "var(--c-subtext)", fontSize: 12 }}>
-          Nenhum PR. Adicione repos em Configurações.
-        </div>
+        <EmptyState
+          icon={<Inbox size={20} />}
+          title="Nenhum PR"
+          description="Adicione repositórios em Configurações para começar."
+          compact
+        />
       )}
     </div>
   );

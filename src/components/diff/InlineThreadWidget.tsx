@@ -4,6 +4,7 @@ import { api } from "../../ipc/client";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { userMessage } from "../../ipc/errors";
+import { Avatar, Button, Textarea } from "../ui";
 
 interface Props {
   thread: ReviewThread;
@@ -49,21 +50,26 @@ export function InlineThreadWidget({ thread }: Props) {
   return (
     <div
       style={{
-        margin: "4px 24px",
-        padding: 10,
-        borderRadius: 6,
+        margin: "var(--space-2) var(--space-9)",
+        padding: "var(--space-5)",
+        borderRadius: "var(--radius-lg)",
         border: "1px solid var(--c-surface1)",
         background: "var(--c-mantle)",
         fontFamily: "var(--font-ui)",
         position: "relative",
-        zIndex: 1,
+        zIndex: "var(--z-base)" as unknown as number,
         pointerEvents: "auto",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
+      <div style={{
+        fontSize: "var(--text-sm)",
+        color: "var(--c-subtext)",
+        marginBottom: "var(--space-3)",
+        fontFamily: "var(--font-mono)",
+      }}>
         {thread.start_line != null && thread.start_line !== thread.line
           ? `Thread · L${thread.start_line}–${thread.line ?? "?"} · ${thread.side}`
           : `Thread · L${thread.line ?? "?"} · ${thread.side}`}
@@ -72,17 +78,23 @@ export function InlineThreadWidget({ thread }: Props) {
         <div
           key={c.id}
           style={{
-            paddingTop: i === 0 ? 0 : 6,
-            marginTop: i === 0 ? 0 : 6,
+            paddingTop: i === 0 ? 0 : "var(--space-3)",
+            marginTop: i === 0 ? 0 : "var(--space-3)",
             borderTop: i === 0 ? "none" : "1px solid var(--c-surface0)",
+            display: "flex",
+            gap: "var(--space-4)",
+            alignItems: "flex-start",
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--c-subtext)" }}>{c.author}</div>
-          <div style={{ fontSize: 13, color: "var(--c-text)", whiteSpace: "pre-wrap", marginTop: 2 }}>{c.body}</div>
+          <Avatar login={c.author} size={20} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "var(--text-sm)", fontWeight: "var(--weight-semibold)" as unknown as number, color: "var(--c-subtext)" }}>{c.author}</div>
+            <div style={{ fontSize: "var(--text-md)", color: "var(--c-text)", whiteSpace: "pre-wrap", marginTop: "var(--space-1)" }}>{c.body}</div>
+          </div>
         </div>
       ))}
-      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--c-surface0)" }}>
-        <textarea
+      <div style={{ marginTop: "var(--space-4)", paddingTop: "var(--space-4)", borderTop: "1px solid var(--c-surface0)" }}>
+        <Textarea
           rows={2}
           placeholder="Responder…"
           value={reply}
@@ -90,29 +102,11 @@ export function InlineThreadWidget({ thread }: Props) {
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitReply(); }
           }}
-          style={{
-            width: "100%",
-            padding: 6,
-            borderRadius: 5,
-            border: "1px solid var(--c-surface1)",
-            background: "var(--c-base)",
-            color: "var(--c-text)",
-            fontFamily: "var(--font-ui)",
-            fontSize: 13,
-            resize: "vertical",
-          }}
         />
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-          <button
-            onClick={submitReply}
-            disabled={busy || !reply.trim()}
-            style={{
-              padding: "4px 10px", borderRadius: 5, border: 0,
-              background: "var(--c-accent)", color: "white",
-              cursor: busy || !reply.trim() ? "default" : "pointer",
-              fontSize: 12, opacity: busy || !reply.trim() ? 0.6 : 1,
-            }}
-          >{busy ? "Enviando…" : "Responder"}</button>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--space-2)" }}>
+          <Button variant="primary" size="sm" onClick={submitReply} disabled={busy || !reply.trim()}>
+            {busy ? "Enviando…" : "Responder"}
+          </Button>
         </div>
       </div>
     </div>
