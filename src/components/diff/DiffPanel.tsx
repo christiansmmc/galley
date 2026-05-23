@@ -266,9 +266,14 @@ export function DiffPanel() {
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
+          key={`${currentPr?.summary.id ?? "_"}-${file.path}`}
           original={original}
           modified={modified}
           language={languageFor(file.path)}
+          originalModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/orig/${file.path}`}
+          modifiedModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/mod/${file.path}`}
+          keepCurrentOriginalModel
+          keepCurrentModifiedModel
           theme={resolved === "mocha" ? "vs-dark" : "vs"}
           options={{
             renderSideBySide: true,

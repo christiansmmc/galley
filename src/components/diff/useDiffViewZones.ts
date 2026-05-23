@@ -87,11 +87,16 @@ export function useDiffViewZones(
     // Removal pass per editor.
     const removeFromEditor = (ed: editor.IStandaloneCodeEditor, removals: MountedZone[]) => {
       if (removals.length === 0) return;
-      ed.changeViewZones((accessor) => {
-        for (const m of removals) {
-          accessor.removeZone(m.zoneId);
-        }
-      });
+      try {
+        ed.changeViewZones((accessor) => {
+          for (const m of removals) {
+            accessor.removeZone(m.zoneId);
+          }
+        });
+      } catch {
+        // Editor disposed mid-update — view zones are already gone with it.
+        return;
+      }
       // Deferred unmount to escape React's commit phase.
       queueMicrotask(() => {
         for (const m of removals) {
@@ -107,20 +112,25 @@ export function useDiffViewZones(
     const addToEditor = (ed: editor.IStandaloneCodeEditor, adds: ViewZoneSpec[]) => {
       if (adds.length === 0) return;
       const newlyMounted: Array<{ spec: ViewZoneSpec; domNode: HTMLDivElement; zoneId: string }> = [];
-      ed.changeViewZones((accessor) => {
-        for (const spec of adds) {
-          const domNode = document.createElement("div");
-          domNode.className = "prr-view-zone";
-          // Let Monaco own positioning; we only style the inner content.
-          domNode.style.background = "transparent";
-          const zoneId = accessor.addZone({
-            afterLineNumber: spec.afterLineNumber,
-            heightInLines: spec.heightInLines,
-            domNode,
-          });
-          newlyMounted.push({ spec, domNode, zoneId });
-        }
-      });
+      try {
+        ed.changeViewZones((accessor) => {
+          for (const spec of adds) {
+            const domNode = document.createElement("div");
+            domNode.className = "prr-view-zone";
+            // Let Monaco own positioning; we only style the inner content.
+            domNode.style.background = "transparent";
+            const zoneId = accessor.addZone({
+              afterLineNumber: spec.afterLineNumber,
+              heightInLines: spec.heightInLines,
+              domNode,
+            });
+            newlyMounted.push({ spec, domNode, zoneId });
+          }
+        });
+      } catch {
+        // Editor disposed mid-update — drop the additions and bail.
+        return;
+      }
       for (const { spec, domNode, zoneId } of newlyMounted) {
         const root = createRoot(domNode);
         root.render(spec.render());
