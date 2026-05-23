@@ -161,6 +161,27 @@ export function DiffPanel() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
   const renderSideBySide = useDiffRenderMode(renderModePref, panelEl);
+
+  // Expose the per-side editor viewport width as --diff-viewport-w so
+  // inline comment/draft/thread widgets (rendered inside Monaco's
+  // horizontally-scrolling view zones) can cap their width and sticky-left
+  // to stay visible even when code lines are wider than the viewport.
+  useEffect(() => {
+    if (!panelEl) return;
+    const update = () => {
+      const w = panelEl.clientWidth;
+      const side = renderSideBySide ? Math.floor(w / 2) : w;
+      panelEl.style.setProperty("--diff-viewport-w", `${side}px`);
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
+    const ro = new ResizeObserver(update);
+    ro.observe(panelEl);
+    return () => ro.disconnect();
+  }, [panelEl, renderSideBySide]);
   const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
