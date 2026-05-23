@@ -11,8 +11,8 @@ interface Props {
 
 /**
  * Inline draft editor mounted inside a Monaco view zone via createRoot.
- * Styling intentionally mirrors `CommentLineModal` so the two paths feel
- * the same; CommentLineModal will be removed in sub-phase 2.4.
+ * This is the only path for creating a new draft comment — the modal
+ * fallback was removed once the inline flow stabilised.
  */
 export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }: Props) {
   const [body, setBody] = useState("");

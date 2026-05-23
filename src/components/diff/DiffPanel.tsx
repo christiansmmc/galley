@@ -1,12 +1,10 @@
 import { DiffEditor } from "@monaco-editor/react";
-import { MessageSquarePlus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
 import { useTheme } from "../../theme/ThemeProvider";
 import { monacoLatte, monacoMocha } from "../../theme/monaco-themes";
-import { CommentLineModal } from "./CommentLineModal";
 import { InlineCommentEditor } from "./InlineCommentEditor";
 import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
@@ -153,7 +151,6 @@ export function DiffPanel() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
-  const [commentOpen, setCommentOpen] = useState(false);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
@@ -409,13 +406,6 @@ export function DiffPanel() {
           <span style={{ marginLeft: 8, color: "var(--c-green)" }}>+{file.additions}</span>
           <span style={{ marginLeft: 4, color: "var(--c-red)" }}>−{file.deletions}</span>
         </span>
-        <button
-          onClick={() => setCommentOpen(true)}
-          title="Comentar (fallback)"
-          style={{ background: "transparent", border: 0, color: "var(--c-subtext)", cursor: "pointer", padding: 4 }}
-        >
-          <MessageSquarePlus size={14} />
-        </button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
@@ -479,7 +469,6 @@ export function DiffPanel() {
           </button>
         )}
       </div>
-      <CommentLineModal open={commentOpen} onClose={() => setCommentOpen(false)} path={file.path} />
     </div>
   );
 }
