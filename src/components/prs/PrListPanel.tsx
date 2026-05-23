@@ -129,17 +129,27 @@ export function PrListPanel() {
                   title={repo}
                   aria-label={repo}
                   style={{
-                    padding: "var(--space-3) var(--space-6)",
-                    fontSize: "var(--text-sm)",
-                    fontWeight: "var(--weight-semibold)" as unknown as number,
-                    color: "var(--c-subtext)",
-                    background: "var(--c-mantle)",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "14px 14px 4px",
                     cursor: "default",
                   }}
                 >
-                  {name ?? owner}
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontWeight: 400,
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase",
+                      color: "var(--c-overlay)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {name ?? owner}
+                  </span>
+                  <span style={{ flex: 1, height: 1, background: "var(--c-line-soft)" }} />
                 </div>
                 {prs.map(p => {
                   const loading =
