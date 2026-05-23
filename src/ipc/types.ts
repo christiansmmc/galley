@@ -2,6 +2,13 @@ export type ThemeChoice = "light" | "dark" | "system";
 
 export type DiffRenderMode = "side-by-side" | "inline" | "auto";
 
+export type Density = "compact" | "comfortable" | "spacious";
+
+export interface DiffFont {
+  size: number;
+  family: string;
+}
+
 export interface UiPrefs {
   theme: ThemeChoice;
   sidebar_collapsed: boolean;
@@ -10,6 +17,27 @@ export interface UiPrefs {
   filetree_width: number;
   diff_render_mode: DiffRenderMode;
   compact_paths: boolean;
+  density: Density;
+  diff_font: DiffFont;
+}
+
+export interface RemoteRepo {
+  owner: string;
+  name: string;
+  full_name: string;
+  description: string | null;
+  fork: boolean;
+  archived: boolean;
+  private: boolean;
+  owner_type: "user" | "organization";
+  updated_at: string;
+  stargazers_count: number;
+}
+
+export interface RepoBrowseFilters {
+  include_orgs: boolean;
+  include_forks: boolean;
+  include_archived: boolean;
 }
 
 export interface RepoConfig { owner: string; name: string; }
