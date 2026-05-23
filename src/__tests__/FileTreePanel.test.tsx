@@ -22,6 +22,7 @@ const baseUi = {
   compact_paths: true,
   density: "comfortable" as const,
   diff_font: { size: 13, family: "JetBrains Mono" },
+  palette_sources: { prs: true, files: true, repos: true, commands: true },
 };
 
 beforeEach(() => {

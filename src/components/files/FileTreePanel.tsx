@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { PanelLeftClose, List as ListIcon, FolderTree, Search, File } from "lucide-react";
+import { PanelLeftClose, List as ListIcon, FolderTree, Search, File, FolderOpen, FileSearch } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { FileDiff, PathFilter } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
@@ -7,7 +7,7 @@ import { useUiStore } from "../../state/uiStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import { FileTreeNode } from "./FileTreeNode";
 import { buildTree, buildFlat, FlatRow } from "./treeBuild";
-import { Button, Input } from "../ui";
+import { Button, EmptyState, Input } from "../ui";
 
 function matchesGlob(pattern: string, path: string): boolean {
   const re = "^" + pattern
@@ -59,7 +59,14 @@ export function FileTreePanel() {
   const unmatchedTree = useMemo(() => buildTree(unmatched, compactPaths), [unmatched, compactPaths]);
   const flatRows = useMemo(() => buildFlat(filteredDiff), [filteredDiff]);
 
-  if (!currentPr) return <div style={{ padding: "var(--space-6)", color: "var(--c-subtext)", fontSize: "var(--text-base)" }}>Selecione um PR.</div>;
+  if (!currentPr) return (
+    <EmptyState
+      icon={<FolderOpen size={20} />}
+      title="Nenhum PR selecionado"
+      description="Abra um PR pra ver os arquivos modificados."
+      compact
+    />
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -158,9 +165,14 @@ function FlatView({ rows, selectedFile, onSelect }: {
 }) {
   const viewedFiles = usePrsStore(s => s.viewedFiles);
   if (rows.length === 0) {
-    return <div style={{ padding: "var(--space-5)", color: "var(--c-subtext)", fontSize: "var(--text-sm)" }}>
-      Nenhum arquivo.
-    </div>;
+    return (
+      <EmptyState
+        icon={<FileSearch size={20} />}
+        title="Nenhum arquivo"
+        description="Nada bate com esse filtro."
+        compact
+      />
+    );
   }
   return (
     <>

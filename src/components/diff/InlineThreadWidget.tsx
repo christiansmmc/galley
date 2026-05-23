@@ -5,6 +5,7 @@ import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { userMessage } from "../../ipc/errors";
 import { Avatar, Button, Textarea } from "../ui";
+import { inlineWidgetShell } from "./inlineWidgetStyle";
 
 interface Props {
   thread: ReviewThread;
@@ -71,15 +72,8 @@ export function InlineThreadWidget({ thread }: Props) {
   return (
     <div
       style={{
-        margin: "var(--space-2) var(--space-9)",
-        padding: "var(--space-5)",
-        borderRadius: "var(--radius-lg)",
+        ...inlineWidgetShell,
         border: "1px solid var(--c-surface1)",
-        background: "var(--c-mantle)",
-        fontFamily: "var(--font-ui)",
-        position: "relative",
-        zIndex: "var(--z-base)" as unknown as number,
-        pointerEvents: "auto",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}

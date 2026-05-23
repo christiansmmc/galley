@@ -57,7 +57,7 @@ export function DiffSection() {
         ))}
       </div>
       <p style={{ marginTop: "var(--space-3)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-        Auto: lado a lado acima de 1100&nbsp;px, inline abaixo.
+        Auto: lado a lado quando o painel do diff tem ≥&nbsp;1100&nbsp;px de largura, inline abaixo. A largura é medida no próprio painel (não na janela), então abrir a lista de PRs ou a árvore de arquivos pode disparar o modo inline.
       </p>
 
       <div style={{ display: "flex", gap: "var(--space-4)", marginTop: "var(--space-6)" }}>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Textarea } from "../ui";
+import { inlineWidgetShell } from "./inlineWidgetStyle";
 
 interface Props {
   line: number;
@@ -35,17 +36,9 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
   return (
     <div
       style={{
-        padding: "var(--space-5)",
-        margin: "var(--space-2) var(--space-9)",
-        borderRadius: "var(--radius-lg)",
+        ...inlineWidgetShell,
         border: "1px solid var(--c-surface1)",
-        background: "var(--c-mantle)",
-        color: "var(--c-text)",
-        fontFamily: "var(--font-ui)",
         boxShadow: "var(--shadow-md)",
-        position: "relative",
-        zIndex: "var(--z-base)" as unknown as number,
-        pointerEvents: "auto",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}

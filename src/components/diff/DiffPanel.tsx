@@ -1,6 +1,6 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye } from "lucide-react";
+import { Check, Eye, FileText } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -12,6 +12,7 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
+import { EmptyState } from "../ui";
 
 interface ParsedDiff {
   original: string;
@@ -154,12 +155,31 @@ export function DiffPanel() {
   const viewedFiles = usePrsStore(s => s.viewedFiles);
   const setViewed = usePrsStore(s => s.setViewed);
   const renderModePref = useSettingsStore(s => s.settings?.ui.diff_render_mode);
-  const renderSideBySide = useDiffRenderMode(renderModePref);
   const diffFont = useSettingsStore(s => s.settings?.ui.diff_font);
   const { resolved } = useTheme();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
+  const renderSideBySide = useDiffRenderMode(renderModePref, panelEl);
   const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
+
+  // Expose the modified editor's content viewport width as --diff-viewport-w
+  // so inline comment/draft/thread widgets (rendered inside Monaco's
+  // horizontally-scrolling view zones) can sticky-left and cap their width
+  // to stay visible. Using Monaco's getLayoutInfo().contentWidth excludes
+  // the line-number gutter, vertical scrollbar, and overview ruler — the
+  // chrome that surrounds the actual code area.
+  useEffect(() => {
+    if (!panelEl || !diffEd) return;
+    const modified = diffEd.getModifiedEditor();
+    const update = () => {
+      const info = modified.getLayoutInfo();
+      panelEl.style.setProperty("--diff-viewport-w", `${info.contentWidth}px`);
+    };
+    update();
+    const disposable = modified.onDidLayoutChange(update);
+    return () => disposable.dispose();
+  }, [panelEl, diffEd, renderSideBySide]);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
@@ -441,12 +461,18 @@ export function DiffPanel() {
     return () => { for (const d of disposables) d.dispose(); };
   }, [diffEd, modifiedLineMap, commentableModified]);
 
-  if (!file) return <div style={{ padding: "var(--space-7)", color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
+  if (!file) return (
+    <EmptyState
+      icon={<FileText size={20} />}
+      title="Selecione um arquivo"
+      description="Escolha um item na árvore pra começar a revisar."
+    />
+  );
 
   const isViewed = viewedFiles.has(file.path);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div ref={setPanelEl} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
         padding: "var(--space-4) var(--space-6)",
         borderBottom: "1px solid var(--c-surface0)",

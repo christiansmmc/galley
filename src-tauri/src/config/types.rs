@@ -25,6 +25,8 @@ pub struct UiPrefs {
     pub density: Density,
     #[serde(default)]
     pub diff_font: DiffFont,
+    #[serde(default)]
+    pub palette_sources: PaletteSources,
 }
 
 fn default_true() -> bool { true }
@@ -41,7 +43,29 @@ impl Default for UiPrefs {
             compact_paths: true,
             density: Density::default(),
             diff_font: DiffFont::default(),
+            palette_sources: PaletteSources::default(),
         }
+    }
+}
+
+/// Which source types the command palette searches over.
+/// Disabling a source hides its items entirely (the `>` command mode is
+/// always available regardless of the toggles).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PaletteSources {
+    #[serde(default = "default_true")]
+    pub prs: bool,
+    #[serde(default = "default_true")]
+    pub files: bool,
+    #[serde(default = "default_true")]
+    pub repos: bool,
+    #[serde(default = "default_true")]
+    pub commands: bool,
+}
+
+impl Default for PaletteSources {
+    fn default() -> Self {
+        Self { prs: true, files: true, repos: true, commands: true }
     }
 }
 

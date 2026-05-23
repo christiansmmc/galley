@@ -1,5 +1,6 @@
 import type { CommentDraft } from "../../ipc/types";
 import { useDraftsStore } from "../../state/draftsStore";
+import { inlineWidgetShell } from "./inlineWidgetStyle";
 
 interface Props {
   draft: CommentDraft;
@@ -13,15 +14,8 @@ export function InlineDraftWidget({ draft }: Props) {
   return (
     <div
       style={{
-        margin: "var(--space-2) var(--space-9)",
-        padding: "var(--space-5)",
-        borderRadius: "var(--radius-lg)",
+        ...inlineWidgetShell,
         border: "1px solid var(--c-amber)",
-        background: "var(--c-mantle)",
-        fontFamily: "var(--font-ui)",
-        position: "relative",
-        zIndex: "var(--z-base)" as unknown as number,
-        pointerEvents: "auto",
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}

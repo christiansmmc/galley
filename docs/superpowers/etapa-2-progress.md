@@ -16,13 +16,13 @@
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
+| 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Done (approved 2026-05-23) | 2026-05-23 |
 
 **Possible states:** `Not started` · `In progress` · `Ready for review` · `Changes requested` · `Done (approved YYYY-MM-DD)`
 
 ## Active sub-phase
 
-**Currently:** none — 2.6 approved 2026-05-23. Next: 2.7 (Command palette + empty states).
+**Currently:** none — Etapa 2 complete (2.7 approved 2026-05-23). 🎉
 
 ## Notes / decisions during execution
 
@@ -140,3 +140,45 @@ Carry-forward for later sub-phases:
 Single fix during smoke:
 
 - **Dropdown options unreadable.** Native `<option>` elements ignore the parent `<select>`'s inline `background` in most engines and fall back to the OS palette — white-on-white in some Linux theme combos. Fix: set `color-scheme: light` / `color-scheme: dark` on `body[data-theme]`, and add a `.prr-input option { background: var(--c-base); color: var(--c-text); }` rule in `globals.css`. Carry-forward: any future native form control (date picker, color picker) inherits `color-scheme` from the body now — no per-component patching needed.
+
+## 2026-05-23 — Sub-phase 2.7 ready for review
+
+- **Custom titlebar (frameless).** `tauri.conf.json` flips `decorations: false` and adds `minWidth/minHeight`. New `TitleBar.tsx` replaces the old `GlobalHeader` and folds breadcrumb + Revisar + palette shortcut + settings gear + min/max/close window buttons into a 36 px bar. Native-feel drag region via `data-tauri-drag-region` on the titlebar root + breadcrumb span; interactive children opt out with `data-tauri-drag-region="false"`. Window control buttons call into the new `src/util/window.ts` wrapper, which lazy-imports `@tauri-apps/api/window` inside try/catch so vitest/jsdom (where there is no Tauri IPC bridge) renders the bar without crashing. Maximize/restore icon swap reacts to `onResized` so OS-side maximize triggers also stay in sync. The OS smoke matrix is currently Linux/Wayland only (Fedora/Nobara dev env); Windows + macOS are untested — flag if any taskbar/snap behavior surfaces during review.
+- **Command palette (Ctrl+K).** `CommandPalette.tsx` with reusable `CommandGroup` + `CommandItem` sub-components. No new dep — custom subsequence fuzzy matcher in `src/util/fuzzy.ts` (`fuzzyScore` + `fuzzyFilter`) that scores by span tightness, earliest first-match, and word-boundary bonuses. Sources: PRs (mine ∪ reviewRequested, dedupe by id), files (current PR diff[].path, only when a PR is open), commands (Refresh, Open Settings, Cycle theme, Submit review). `>` prefix flips command-only mode. ↑↓ navigate, Enter dispatch, hover sets active, Esc + backdrop close. The Ctrl+K shortcut now lives alongside Ctrl+1/2 in `useGlobalShortcuts` (takes an `onOpenPalette` callback). Wired into App.tsx + the new TitleBar (the badge button is also the visual hint that Ctrl+K opens the palette).
+- **Empty-state polish.** Swapped the remaining ad-hoc copy for the `<EmptyState>` primitive:
+  - `FileTreePanel` "Selecione um PR" + "Nenhum arquivo" (flat view) cases.
+  - `DiffPanel` "Selecione um arquivo" placeholder when no file is selected.
+  - `ReposSection` empty-list state.
+  - `BrowseReposModal` no-results state.
+  PrListPanel already used `<EmptyState>` end-to-end (shipped in 2.2).
+- **AtalhosSection** picked up the Ctrl+K row and dropped the "future shortcuts" footnote.
+- **Tests:** new `TitleBar.test.tsx` (ports the old GlobalHeader assertions and adds window-controls dispatch via `vi.mock("../util/window")` + palette button), `CommandPalette.test.tsx` (dedupe, fuzzy filter, `>` mode, Enter selects file + closes, Esc closes, backdrop closes, `> refresh` surfaces command), `fuzzy.test.ts` (empty query, subsequence match, case insensitivity, ranking). Deleted `GlobalHeader.test.tsx` along with the component.
+- **Notes / quirks:**
+  - `el?.scrollIntoView?.({ block: "nearest" })` — jsdom lacks the method, so the optional call protects tests without changing browser behavior.
+  - Theme cycling in the palette mirrors the existing `useTheme().setChoice` flow used by AparenciaSection (no persistence to backend — pre-existing behavior, out of scope for 2.7).
+  - Window controls degrade gracefully in non-Tauri contexts (e.g. the `#/__ui` gallery): `getCurrentWindow()` throws → util catches → buttons become no-ops.
+- **Final matrix:** `pnpm tsc --noEmit`, `pnpm test` (61/61), `cargo test` (32/32), `pnpm exec vite build` all clean.
+
+### 2026-05-23 — Follow-ups during smoke
+
+- **Window-control permissions missing.** Tauri v2 `core:default` does NOT include the sensitive `window:*` ops or `event:listen/unlisten`. Capability `default.json` extended with `core:window:allow-minimize / allow-toggle-maximize / allow-close / allow-start-dragging / allow-is-maximized` and `core:event:allow-listen / allow-unlisten`. Without these, `data-tauri-drag-region` is also dead because `startDragging` is gated. Carry-forward: any new sensitive Tauri op needs an explicit allow-* permission added here — `core:default` is the *minimum* surface, not "everything safe".
+- **Palette repo scope.** Added a "Repositórios" group listing every configured repo with its current PR count. Picking a repo enters scope mode: input row gets a `[owner/name ×]` chip, placeholder becomes "PRs em owner/name…", PR list narrows to that repo, repo entries themselves disappear. Esc on a scoped palette exits the scope (does not close); Backspace on an empty scoped query does the same. List container gained `role="listbox"` so `getAllByRole("option")` works for tests.
+- **Settings → Paleta toggles.** New `UiPrefs.palette_sources { prs, files, repos, commands }` (Rust + TS), each defaulted true via `#[serde(default = "default_true")]` for backward compat. New `PaletteSection` (between Diff and Conta) gives a checkbox per source. CommandPalette consumes the toggles and skips disabled source items. Commands remain reachable via `>` mode even when their toggle is off (explicit escape hatch).
+- **Bumped matrix:** `pnpm test` (71/71), `cargo test` (32/32), tsc + vite still clean.
+
+## 2026-05-23 — 2.7 approved
+
+Smoke uncovered several real bugs that became carry-forward notes:
+
+- **Tauri v2 `core:default` does NOT auto-include sensitive window ops.** Capabilities had to explicitly allow `core:window:allow-minimize / allow-toggle-maximize / allow-close / allow-start-dragging / allow-start-resize-dragging / allow-is-maximized` and `core:event:allow-listen / allow-unlisten`. Without these the custom titlebar's buttons, drag region, AND the edge resize handles are all dead. Future sensitive Tauri ops will need the same explicit allow-* line — `core:default` is the *minimum* surface, not "everything safe".
+- **Frameless windows lose native resize.** `decorations: false` strips the OS-managed resize handles, so we re-added them via `ResizeHandles.tsx`: eight absolute-positioned div strips (4 px edges, 10 px corners) calling Tauri's `startResizeDragging` on mousedown. Hidden when maximized (no-op state). Visible cursor changes (`ns-resize`, `ew-resize`, etc.) make the affordance obvious.
+- **Palette repo scope.** Picking a repo in Ctrl+K enters a scope mode (chip in input row, PR list narrows). Esc / Backspace-on-empty-query exits the scope.
+- **Settings → Paleta source toggles.** New `UiPrefs.palette_sources { prs, files, repos, commands }`, all default true. `>` prefix still surfaces commands even when their toggle is off — explicit escape hatch.
+- **Palette UX gotchas (CommandPalette.tsx):**
+  - `onMouseMove` refires on micro-twitches and clobbers `setActive` from keyboard nav. Switched to `onMouseEnter` + a `mouseMovedRef` that only becomes true after a real mousemove inside the listbox; without it the initial render under-cursor would override `active=0`. Plus a 300 ms keyboard-nav lock on ArrowUp/Down that any hover respects.
+  - After fuzzy sorting, identical group headers (e.g. "Pull Requests") rendered multiple times because the old consolidator only merged *adjacent* same-group items. Now bucketed by group into a fixed display order (Repositórios → Pull Requests → Arquivos → Comandos), and `visualOrder` is the linear traversal the keyboard navigates instead of the unbucketed `filtered`.
+  - `active` snaps back to 0 on every `effectiveQuery` / `scope` change so the user doesn't see a stale highlight buried inside a re-sorted list.
+- **`useDiffRenderMode` was measuring `window.innerWidth` instead of the diff panel.** Side panels squeeze the diff to ~56–78 % of the window, so a 1280 px window with both panels open gave the diff only ~700 px — but auto mode kept rendering side-by-side because it only looked at `window.innerWidth`. Refactored to take a container element and observe it via `ResizeObserver`, falling back to window width when no container is provided. Threshold (1100 px) unchanged but now applied to the actual diff content area.
+- **Inline widgets escaped the editor viewport.** Comment editor / thread / draft widgets live inside Monaco's horizontally-scrolling view zones, so long code lines pushed the right-aligned actions (Salvar / Apagar / Resolver) off the visible editor area. New `inlineWidgetShell` style + a `--diff-viewport-w` CSS var (published on the panel root via the **modified editor's `getLayoutInfo().contentWidth`** — *not* `panelEl.clientWidth`, which inflates the value with the line-number gutter + scrollbar + overview ruler) give the widgets `position: sticky; left: var(--space-9)` with `width = var(--diff-viewport-w) - 2 * gutter`. They now hug the visible editor area's left edge and stay buttoned regardless of horizontal scroll. Updated via `onDidLayoutChange` so panel resizes + render-mode flips both stay in sync.
+- **Default window size bumped to 1520×960.** 1520 is the minimum width that keeps auto-mode in side-by-side (`1520 × 0.78 - ~78 px Monaco chrome ≈ 1108 px ≥ 1100`); 960 height gives ~16:10 ratio so the app doesn't open flat. `minWidth: 720 / minHeight: 480` unchanged — user can shrink below and auto-mode will fall back to inline.
+- **Final matrix at approval:** `pnpm test` (74/74), `cargo test` (32/32), `pnpm tsc --noEmit` + `pnpm exec vite build` all clean.
