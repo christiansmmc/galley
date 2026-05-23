@@ -170,6 +170,32 @@ pub fn invalidate_pr(cache: &Cache, pr_id: i64) -> AppResult<()> {
     })
 }
 
+/// Invalidate only the threads bundle row for a PR — used after the user
+/// submits a review or replies to a thread, so the next read fetches the
+/// fresh server-side state instead of waiting out the 5-min TTL.
+pub fn invalidate_threads(cache: &Cache, pr_id: i64) -> AppResult<()> {
+    cache.with_conn(|c| {
+        c.execute("DELETE FROM threads WHERE pr_id = ?1", params![pr_id])?;
+        Ok(())
+    })
+}
+
+/// Hash-derived synthetic PR id used by the cache for the (owner, repo,
+/// number) tuple. Centralised here so every caller (prs.rs, reviews.rs)
+/// derives the same value for the same PR.
+///
+/// Masked to a positive i64 to avoid colliding with the negative synthetic
+/// ids used for threads bundle rows.
+pub fn synthetic_pr_id(owner: &str, repo: &str, number: u64) -> i64 {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    let mut h = DefaultHasher::new();
+    owner.hash(&mut h);
+    repo.hash(&mut h);
+    number.hash(&mut h);
+    (h.finish() & 0x7fff_ffff_ffff_ffff) as i64
+}
+
 /// Invalidate by (owner, repo, number) — used when we don't know the PR id yet
 /// (e.g. refresh_pr is called from the UI with the numeric handle).
 pub fn invalidate_pr_by_handle(cache: &Cache, owner: &str, repo: &str, number: u64) -> AppResult<()> {

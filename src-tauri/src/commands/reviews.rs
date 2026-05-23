@@ -1,3 +1,4 @@
+use crate::cache::ttl;
 use crate::drafts;
 use crate::error::{AppError, AppResult};
 use crate::github::reviews::{ReviewEvent, ReviewResult};
@@ -24,6 +25,14 @@ pub async fn submit_review(
         .ok_or_else(|| AppError::Auth("no GitHub client".into()))?;
     let result = client.submit_review(&owner, &repo, number, event, body.as_deref(), &selected).await?;
     for d in &selected { let _ = crate::drafts::delete(&state.cache, d.id); }
+
+    // The freshly-submitted comments aren't in the cached threads bundle,
+    // so the next get_pr_threads would serve stale data until the TTL
+    // expires (5 min). Invalidate just the threads row — diff / PR detail
+    // are unchanged.
+    let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+
     Ok(result)
 }
 
@@ -39,5 +48,11 @@ pub async fn reply_to_thread(
     let client = state.client.read().await
         .clone()
         .ok_or_else(|| AppError::Auth("no GitHub client".into()))?;
-    client.reply_to_thread(&owner, &repo, number, in_reply_to, &body).await
+    client.reply_to_thread(&owner, &repo, number, in_reply_to, &body).await?;
+
+    // Same reason as submit_review: the new reply isn't in the cache yet.
+    let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+
+    Ok(())
 }
