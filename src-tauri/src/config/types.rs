@@ -21,6 +21,10 @@ pub struct UiPrefs {
     pub diff_render_mode: DiffRenderMode,
     #[serde(default = "default_true")]
     pub compact_paths: bool,
+    #[serde(default)]
+    pub density: Density,
+    #[serde(default)]
+    pub diff_font: DiffFont,
 }
 
 fn default_true() -> bool { true }
@@ -35,7 +39,30 @@ impl Default for UiPrefs {
             filetree_width: 320,
             diff_render_mode: DiffRenderMode::default(),
             compact_paths: true,
+            density: Density::default(),
+            diff_font: DiffFont::default(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Density {
+    Compact,
+    #[default]
+    Comfortable,
+    Spacious,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DiffFont {
+    pub size: u32,
+    pub family: String,
+}
+
+impl Default for DiffFont {
+    fn default() -> Self {
+        Self { size: 13, family: "JetBrains Mono".into() }
     }
 }
 
