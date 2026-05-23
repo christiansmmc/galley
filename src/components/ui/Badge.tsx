@@ -11,10 +11,10 @@ interface Props {
 const toneStyle: Record<BadgeTone, CSSProperties> = {
   neutral: { background: "var(--c-surface0)", color: "var(--c-text)" },
   accent: { background: "var(--c-accent)", color: "white" },
-  green: { background: "var(--c-green)", color: "white" },
-  amber: { background: "var(--c-amber)", color: "var(--c-crust)" },
-  red: { background: "var(--c-red)", color: "white" },
-  blue: { background: "var(--c-blue)", color: "white" },
+  green: { background: "var(--c-success)", color: "white" },
+  amber: { background: "var(--c-warn)", color: "var(--c-crust)" },
+  red: { background: "var(--c-danger)", color: "white" },
+  blue: { background: "var(--c-info)", color: "white" },
 };
 
 export function Badge({ tone = "neutral", children, style }: Props) {

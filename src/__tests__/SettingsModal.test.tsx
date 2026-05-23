@@ -31,7 +31,7 @@ vi.mock("../ipc/client", () => ({
 }));
 
 vi.mock("../theme/ThemeProvider", () => ({
-  useTheme: () => ({ choice: "system", resolved: "mocha", setChoice: vi.fn() }),
+  useTheme: () => ({ choice: "system", resolved: "linen", setChoice: vi.fn() }),
 }));
 
 const baseUi = {

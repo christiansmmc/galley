@@ -10,9 +10,9 @@ const CI_LABEL: Record<CiStatus, string> = {
   none: "Sem checks",
 };
 const CI_COLOR: Record<CiStatus, string> = {
-  passing: "var(--c-green)",
-  pending: "var(--c-amber)",
-  failing: "var(--c-red)",
+  passing: "var(--c-success)",
+  pending: "var(--c-warn)",
+  failing: "var(--c-danger)",
   none: "var(--c-overlay)",
 };
 
@@ -45,9 +45,9 @@ export function PrMetaStrip({ pr }: Props) {
         <MetaItem>{s.changed_files} files</MetaItem>
         <Sep />
         <MetaItem>
-          <span style={{ color: "var(--c-green)" }}>+{pr.additions}</span>
+          <span style={{ color: "var(--c-success)" }}>+{pr.additions}</span>
           <span style={{ margin: "0 var(--space-1)" }}> </span>
-          <span style={{ color: "var(--c-red)" }}>−{pr.deletions}</span>
+          <span style={{ color: "var(--c-danger)" }}>−{pr.deletions}</span>
         </MetaItem>
         <Sep />
         <MetaItem title={CI_LABEL[s.ci_status]}>

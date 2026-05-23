@@ -12,9 +12,9 @@ const CI_LABEL: Record<CiStatus, string> = {
 };
 
 const CI_COLOR: Record<CiStatus, string> = {
-  passing: "var(--c-green)",
-  pending: "var(--c-amber)",
-  failing: "var(--c-red)",
+  passing: "var(--c-success)",
+  pending: "var(--c-warn)",
+  failing: "var(--c-danger)",
   none: "var(--c-overlay)",
 };
 

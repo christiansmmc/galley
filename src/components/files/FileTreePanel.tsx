@@ -30,8 +30,8 @@ function classify(files: FileDiff[], filters: PathFilter[]) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  added: "var(--c-green)", modified: "var(--c-amber)",
-  removed: "var(--c-red)", renamed: "var(--c-blue)",
+  added: "var(--c-success)", modified: "var(--c-warn)",
+  removed: "var(--c-danger)", renamed: "var(--c-info)",
 };
 
 export function FileTreePanel() {

@@ -76,7 +76,7 @@ export function ContaSection() {
               variant="ghost"
               size="sm"
               onClick={clear}
-              style={{ color: "var(--c-red)" }}
+              style={{ color: "var(--c-danger)" }}
             >
               <LogOut size={12} style={{ marginRight: "var(--space-2)" }} />
               Sair
@@ -100,7 +100,7 @@ export function ContaSection() {
             invalid={Boolean(err)}
           />
           {err && (
-            <div role="alert" style={{ color: "var(--c-red)", marginTop: "var(--space-3)", fontSize: "var(--text-sm)" }}>{err}</div>
+            <div role="alert" style={{ color: "var(--c-danger)", marginTop: "var(--space-3)", fontSize: "var(--text-sm)" }}>{err}</div>
           )}
           <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
             <Button variant="primary" size="sm" onClick={replace} disabled={busy || !token.trim()}>

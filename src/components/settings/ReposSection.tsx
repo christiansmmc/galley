@@ -61,7 +61,7 @@ export function ReposSection() {
               size="sm"
               aria-label="Remover"
               onClick={async () => { await api.removeRepo(r.owner, r.name); refresh(); }}
-              style={{ color: "var(--c-red)" }}
+              style={{ color: "var(--c-danger)" }}
             >
               <Trash2 size={14} />
             </Button>
@@ -88,7 +88,7 @@ export function ReposSection() {
         </Button>
       </div>
       {err && (
-        <div role="alert" style={{ color: "var(--c-red)", marginTop: "var(--space-3)", fontSize: "var(--text-sm)" }}>
+        <div role="alert" style={{ color: "var(--c-danger)", marginTop: "var(--space-3)", fontSize: "var(--text-sm)" }}>
           {err}
         </div>
       )}

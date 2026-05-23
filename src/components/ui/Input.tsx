@@ -15,7 +15,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
     height: size === "sm" ? "var(--control-h-sm)" : "var(--control-h-md)",
     padding: size === "sm" ? "0 var(--space-4)" : "0 var(--space-5)",
     borderRadius: "var(--radius-md)",
-    border: `1px solid ${invalid ? "var(--c-red)" : "var(--c-surface1)"}`,
+    border: `1px solid ${invalid ? "var(--c-danger)" : "var(--c-surface1)"}`,
     background: "var(--c-base)",
     color: "var(--c-text)",
     fontFamily: mono ? "var(--font-mono)" : "var(--font-ui)",

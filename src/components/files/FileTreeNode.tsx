@@ -25,8 +25,8 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  added: "var(--c-green)", modified: "var(--c-amber)",
-  removed: "var(--c-red)", renamed: "var(--c-blue)",
+  added: "var(--c-success)", modified: "var(--c-warn)",
+  removed: "var(--c-danger)", renamed: "var(--c-info)",
 };
 
 export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props) {
@@ -57,7 +57,7 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
         }}
       >
         {viewed
-          ? <Check size={12} style={{ color: "var(--c-green)" }} />
+          ? <Check size={12} style={{ color: "var(--c-success)" }} />
           : <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)" }} />}
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.path.split("/").pop()}</span>
         <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--c-subtext)" }}>

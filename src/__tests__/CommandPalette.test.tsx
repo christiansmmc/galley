@@ -5,7 +5,7 @@ import { usePrsStore } from "../state/prsStore";
 import { useSettingsStore } from "../state/settingsStore";
 
 vi.mock("../theme/ThemeProvider", () => ({
-  useTheme: () => ({ choice: "system", resolved: "mocha", setChoice: vi.fn() }),
+  useTheme: () => ({ choice: "system", resolved: "linen", setChoice: vi.fn() }),
 }));
 
 const mkPr = (over: Partial<{ id: number; number: number; title: string; owner: string; repo: string }>) => ({

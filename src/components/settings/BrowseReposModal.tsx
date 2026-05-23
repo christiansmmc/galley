@@ -153,7 +153,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
         </div>
 
         {error && (
-          <div role="alert" style={{ color: "var(--c-red)", fontSize: "var(--text-sm)" }}>{error}</div>
+          <div role="alert" style={{ color: "var(--c-danger)", fontSize: "var(--text-sm)" }}>{error}</div>
         )}
 
         <div
@@ -197,7 +197,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
                     <code>{r.full_name}</code>
                     {r.private && <Lock size={10} style={{ color: "var(--c-subtext)" }} />}
                     {r.fork && <GitFork size={10} style={{ color: "var(--c-subtext)" }} />}
-                    {r.archived && <Archive size={10} style={{ color: "var(--c-amber)" }} />}
+                    {r.archived && <Archive size={10} style={{ color: "var(--c-warn)" }} />}
                   </div>
                   {r.description && (
                     <div style={{ fontSize: "var(--text-sm)", color: "var(--c-subtext)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

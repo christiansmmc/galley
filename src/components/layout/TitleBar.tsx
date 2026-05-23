@@ -206,7 +206,7 @@ function WindowButton({
         cursor: "pointer",
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = danger ? "var(--c-red, #e57373)" : "var(--c-surface0)";
+        e.currentTarget.style.background = danger ? "var(--c-danger, #e57373)" : "var(--c-surface0)";
         e.currentTarget.style.color = danger ? "#fff" : "var(--c-text)";
       }}
       onMouseLeave={e => {
