@@ -35,15 +35,12 @@ interface MountedZone {
  * defer.
  */
 export function useDiffViewZones(
-  editorRef: React.MutableRefObject<editor.IStandaloneDiffEditor | null>,
-  ready: boolean,
+  diffEditor: editor.IStandaloneDiffEditor | null,
   specs: ViewZoneSpec[],
 ) {
   const zonesRef = useRef<Map<string, MountedZone>>(new Map());
 
   useEffect(() => {
-    if (!ready) return;
-    const diffEditor = editorRef.current;
     if (!diffEditor) return;
 
     const modified = diffEditor.getModifiedEditor();
@@ -139,12 +136,11 @@ export function useDiffViewZones(
     };
     addToEditor(modified, toAdd.filter(s => s.side === "RIGHT"));
     addToEditor(original, toAdd.filter(s => s.side === "LEFT"));
-  }, [editorRef, ready, specs]);
+  }, [diffEditor, specs]);
 
-  // Cleanup on unmount.
+  // Cleanup on unmount or when the editor instance changes (PR/file switch).
   useEffect(() => {
     return () => {
-      const diffEditor = editorRef.current;
       const mounted = zonesRef.current;
       if (diffEditor) {
         try {
@@ -163,6 +159,5 @@ export function useDiffViewZones(
         mounted.clear();
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [diffEditor]);
 }

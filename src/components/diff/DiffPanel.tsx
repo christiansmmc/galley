@@ -58,9 +58,8 @@ export function DiffPanel() {
   const currentPr = usePrsStore(s => s.currentPr);
   const { resolved } = useTheme();
 
-  const editorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [ready, setReady] = useState(false);
+  const [diffEd, setDiffEd] = useState<editor.IStandaloneDiffEditor | null>(null);
   const [commentOpen, setCommentOpen] = useState(false);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
@@ -145,26 +144,24 @@ export function DiffPanel() {
     return specs;
   }, [fileThreads, fileDrafts, pending, currentPr, addDraft, file?.path]);
 
-  useDiffViewZones(editorRef, ready, zoneSpecs);
+  useDiffViewZones(diffEd, zoneSpecs);
 
   // Monaco theme refresh on theme change.
   useEffect(() => {
-    if (!ready) return;
+    if (!diffEd) return;
     const monaco = (window as unknown as { monaco?: typeof import("monaco-editor") }).monaco;
     if (!monaco) return;
     monaco.editor.defineTheme("cat-latte", monacoLatte);
     monaco.editor.defineTheme("cat-mocha", monacoMocha);
     monaco.editor.setTheme(resolved === "mocha" ? "cat-mocha" : "cat-latte");
-  }, [resolved, ready]);
+  }, [resolved, diffEd]);
 
   // Gutter hover affordance + range selection listener. Bound to the
   // *modified* editor (right side); the original side is treated as
   // read-only context for now.
   useEffect(() => {
-    if (!ready) return;
-    const diffEditor = editorRef.current;
-    if (!diffEditor) return;
-    const modified = diffEditor.getModifiedEditor();
+    if (!diffEd) return;
+    const modified = diffEd.getModifiedEditor();
 
     const disposables: Array<{ dispose: () => void }> = [];
 
@@ -240,7 +237,7 @@ export function DiffPanel() {
     }));
 
     return () => { for (const d of disposables) d.dispose(); };
-  }, [ready]);
+  }, [diffEd]);
 
   if (!file) return <div style={{ padding: 16, color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
 
@@ -285,7 +282,7 @@ export function DiffPanel() {
             fontSize: 13,
             glyphMargin: true,
           }}
-          onMount={(ed) => { editorRef.current = ed; setReady(true); }}
+          onMount={(ed) => { setDiffEd(ed); }}
         />
         {rangeSel && !pending && (
           <button
