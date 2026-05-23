@@ -101,7 +101,6 @@ function GroupNode({ label, files, open, onToggle, selectedFile, onSelect }: {
         style={{
           display: "flex", width: "100%", textAlign: "left", border: 0,
           padding: "var(--space-3) var(--space-5)",
-          background: "transparent",
           color: "var(--c-subtext)",
           fontSize: "var(--text-sm)",
           fontWeight: "var(--weight-semibold)" as unknown as number,

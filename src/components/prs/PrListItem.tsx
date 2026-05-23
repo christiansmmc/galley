@@ -14,7 +14,6 @@ export function PrListItem({ pr, selected, onClick }: Props) {
         textAlign: "left",
         padding: "var(--space-4) var(--space-6)",
         border: 0,
-        background: "transparent",
         color: "var(--c-text)",
         cursor: "pointer",
         borderBottom: "1px solid var(--c-mantle)",

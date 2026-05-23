@@ -93,7 +93,10 @@ body[data-theme="mocha"] {
   box-shadow: var(--shadow-focus);
 }
 
-/* Hover affordance for selectable rows in the PR list / file tree. */
+/* Hover affordance for selectable rows in the PR list / file tree.
+   Class owns background so the inline-style trap (inline > class) does
+   not silently break hover. */
+.prr-row { background: transparent; }
 .prr-row:hover { background: var(--c-mantle); }
-.prr-row[data-selected="true"] { background: var(--c-surface0); }
+.prr-row[data-selected="true"],
 .prr-row[data-selected="true"]:hover { background: var(--c-surface0); }
