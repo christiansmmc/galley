@@ -10,7 +10,7 @@
 | Sub-phase | Branch | State | Reviewed at |
 |---|---|---|---|
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Ready for review | — |
+| 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Not started | — |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** 2.1 ready for review on `feat/etapa-2-1-design-system`. Awaiting smoke test + approval.
+**Currently:** none — 2.1 approved 2026-05-23. Awaiting kickoff of 2.2 (PR list redesign).
 
 ## Notes / decisions during execution
 
