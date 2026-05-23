@@ -42,7 +42,15 @@ CREATE TABLE IF NOT EXISTS drafts (
     line        INTEGER NOT NULL,
     side        TEXT NOT NULL,
     body        TEXT NOT NULL,
-    created_at  TEXT NOT NULL
+    created_at  TEXT NOT NULL,
+    start_line  INTEGER,
+    start_side  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pr_lists (
+    key          TEXT PRIMARY KEY,
+    payload_json TEXT NOT NULL,
+    fetched_at   TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_prs_state    ON prs(state, is_mine, review_requested);

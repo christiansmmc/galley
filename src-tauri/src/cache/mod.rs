@@ -1,4 +1,5 @@
 pub mod models;
+pub mod ttl;
 
 use crate::error::{AppError, AppResult};
 use rusqlite::Connection;
@@ -31,6 +32,21 @@ impl Cache {
     fn migrate(&self) -> AppResult<()> {
         let conn = self.conn.lock().map_err(|e| AppError::Internal(e.to_string()))?;
         conn.execute_batch(SCHEMA)?;
+        // Upgrade older `drafts` schemas missing start_line/start_side columns.
+        Self::add_column_if_missing(&conn, "drafts", "start_line", "INTEGER")?;
+        Self::add_column_if_missing(&conn, "drafts", "start_side", "TEXT")?;
+        Ok(())
+    }
+
+    fn add_column_if_missing(conn: &Connection, table: &str, column: &str, decl: &str) -> AppResult<()> {
+        let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})"))?;
+        let names: Vec<String> = stmt
+            .query_map([], |r| r.get::<_, String>(1))?
+            .filter_map(|r| r.ok())
+            .collect();
+        if !names.iter().any(|n| n == column) {
+            conn.execute(&format!("ALTER TABLE {table} ADD COLUMN {column} {decl}"), [])?;
+        }
         Ok(())
     }
 
