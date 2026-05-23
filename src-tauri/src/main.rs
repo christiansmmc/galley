@@ -4,6 +4,18 @@ use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, setti
 use pr_reviewer::AppState;
 
 fn main() {
+    // webkit2gtk + Wayland (Fedora/Nobara/GNOME) hits Protocol error 71 in the
+    // DMA-BUF renderer on launch. Setting this BEFORE webkit initialises forces
+    // the legacy GLES renderer path which is stable on those compositors.
+    // Users can override by exporting WEBKIT_DISABLE_DMABUF_RENDERER=0.
+    #[cfg(target_os = "linux")]
+    {
+        if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+            // Safety: single-threaded at this point; no other thread reads env.
+            unsafe { std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1"); }
+        }
+    }
+
     let _guard = pr_reviewer::logging::init().expect("logging init failed");
     tracing::info!("starting pr-reviewer");
 
