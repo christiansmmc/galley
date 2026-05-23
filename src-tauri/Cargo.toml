@@ -1,0 +1,37 @@
+[package]
+name = "pr-reviewer"
+version = "0.1.0"
+description = "Linux desktop GitHub PR reviewer"
+authors = ["csequeira153@gmail.com"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "pr_reviewer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pr-reviewer"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+octocrab = "0.42"
+rusqlite = { version = "0.32", features = ["bundled"] }
+keyring = { version = "3", features = ["sync-secret-service"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+toml = "0.8"
+glob = "0.3"
+thiserror = "1"
+tokio = { version = "1", features = ["full"] }
+directories = "5"
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
