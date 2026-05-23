@@ -158,3 +158,10 @@ Single fix during smoke:
   - Theme cycling in the palette mirrors the existing `useTheme().setChoice` flow used by AparenciaSection (no persistence to backend — pre-existing behavior, out of scope for 2.7).
   - Window controls degrade gracefully in non-Tauri contexts (e.g. the `#/__ui` gallery): `getCurrentWindow()` throws → util catches → buttons become no-ops.
 - **Final matrix:** `pnpm tsc --noEmit`, `pnpm test` (61/61), `cargo test` (32/32), `pnpm exec vite build` all clean.
+
+### 2026-05-23 — Follow-ups during smoke
+
+- **Window-control permissions missing.** Tauri v2 `core:default` does NOT include the sensitive `window:*` ops or `event:listen/unlisten`. Capability `default.json` extended with `core:window:allow-minimize / allow-toggle-maximize / allow-close / allow-start-dragging / allow-is-maximized` and `core:event:allow-listen / allow-unlisten`. Without these, `data-tauri-drag-region` is also dead because `startDragging` is gated. Carry-forward: any new sensitive Tauri op needs an explicit allow-* permission added here — `core:default` is the *minimum* surface, not "everything safe".
+- **Palette repo scope.** Added a "Repositórios" group listing every configured repo with its current PR count. Picking a repo enters scope mode: input row gets a `[owner/name ×]` chip, placeholder becomes "PRs em owner/name…", PR list narrows to that repo, repo entries themselves disappear. Esc on a scoped palette exits the scope (does not close); Backspace on an empty scoped query does the same. List container gained `role="listbox"` so `getAllByRole("option")` works for tests.
+- **Settings → Paleta toggles.** New `UiPrefs.palette_sources { prs, files, repos, commands }` (Rust + TS), each defaulted true via `#[serde(default = "default_true")]` for backward compat. New `PaletteSection` (between Diff and Conta) gives a checkbox per source. CommandPalette consumes the toggles and skips disabled source items. Commands remain reachable via `>` mode even when their toggle is off (explicit escape hatch).
+- **Bumped matrix:** `pnpm test` (71/71), `cargo test` (32/32), tsc + vite still clean.
