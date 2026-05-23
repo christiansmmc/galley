@@ -37,6 +37,8 @@ describe("InlineThreadWidget", () => {
       side: "RIGHT",
       start_line: null,
       start_side: null,
+      node_id: null,
+      resolved: false,
       comments: [
         { id: 100, author: "alice", body: "first", created_at: "", in_reply_to_id: null },
         { id: 101, author: "bob", body: "follow up", created_at: "", in_reply_to_id: 100 },
@@ -59,6 +61,7 @@ describe("InlineThreadWidget", () => {
     const thread: ReviewThread = {
       id: 100, path: "src/foo.ts", line: 12, side: "RIGHT",
       start_line: null, start_side: null,
+      node_id: null, resolved: false,
       comments: [{ id: 100, author: "alice", body: "first", created_at: "", in_reply_to_id: null }],
     };
     render(<InlineThreadWidget thread={thread} />);
