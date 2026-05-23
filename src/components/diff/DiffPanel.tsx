@@ -221,10 +221,23 @@ export function DiffPanel() {
         console.warn(`[DiffPanel] thread ${t.id} line ${t.line} not in current diff; skipping zone`);
         continue;
       }
-      // Height is approximate: 1 header + 1 per comment + 2 for reply textarea.
-      // Range threads bump the header height by 1 line for the "Lx–y" label.
+      // Height estimate — overshoots intentionally so widget content does not
+      // overflow into the next code line. ResizeObserver-based exact measure
+      // is deferred to sub-phase 2.4.
+      //
+      // Budget per piece (in Monaco "lines"):
+      //   header label                       1
+      //   per comment: author(1) + body(N) + separator(1)
+      //     where N = max(1, body lines), capped at 4 to avoid runaway height
+      //   reply textarea (rows=2) + button   4
+      //   range header adds                  1
+      //   outer padding/border               2
       const isRange = t.start_line != null && t.start_line !== t.line;
-      const heightInLines = Math.max(4, 2 + t.comments.length + 2 + (isRange ? 1 : 0));
+      const commentLines = t.comments.reduce((sum, c) => {
+        const bodyLines = Math.max(1, Math.min(4, c.body.split("\n").length));
+        return sum + 1 + bodyLines + 1;
+      }, 0);
+      const heightInLines = Math.max(6, 1 + commentLines + 4 + (isRange ? 1 : 0) + 2);
       specs.push({
         key: `thread:${t.id}`,
         side: "RIGHT",
@@ -241,8 +254,9 @@ export function DiffPanel() {
         console.warn(`[DiffPanel] draft ${d.id} line ${d.line} not in current diff; skipping zone`);
         continue;
       }
-      const lineCount = Math.max(1, d.body.split("\n").length);
-      const heightInLines = Math.max(3, 2 + Math.min(lineCount, 6));
+      // Header (1) + body (capped) + Apagar button (1) + padding (2).
+      const lineCount = Math.max(1, Math.min(d.body.split("\n").length, 6));
+      const heightInLines = Math.max(4, 1 + lineCount + 1 + 2);
       specs.push({
         key: `draft:${d.id}`,
         side: "RIGHT",
