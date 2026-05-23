@@ -40,7 +40,7 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
           borderRadius: "var(--radius-lg)",
           minWidth: minWidth ?? "var(--modal-min-w)",
           maxWidth: maxWidth ?? "var(--modal-max-w)",
-          border: "1px solid var(--c-surface1)",
+          border: "1px solid var(--c-line)",
           boxShadow: "var(--shadow-lg)",
           position: "relative",
           pointerEvents: "auto",
@@ -48,24 +48,39 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
       >
         <div style={{
           padding: "var(--space-6) var(--space-7)",
-          borderBottom: "1px solid var(--c-surface0)",
+          borderBottom: "1px solid var(--c-line)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <strong style={{ fontSize: "var(--text-lg)", fontWeight: "var(--weight-semibold)" as unknown as number }}>{title}</strong>
+          <strong style={{
+            fontFamily: "var(--font-serif)",
+            fontStyle: "italic",
+            fontSize: 22,
+            fontWeight: 400,
+            letterSpacing: "-0.005em",
+            color: "var(--c-text)",
+          }}>{title}</strong>
           <button
             onClick={onClose}
             aria-label="Fechar"
             style={{
-              background: "transparent", border: 0, color: "var(--c-subtext)",
-              cursor: "pointer", padding: "var(--space-2)",
+              background: "transparent",
+              border: "1px solid var(--c-line)",
+              borderRadius: "var(--radius-sm)",
+              color: "var(--c-subtext)",
+              cursor: "pointer",
+              padding: "var(--space-2)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 0,
             }}
-          ><X size={16} /></button>
+          ><X size={14} /></button>
         </div>
         <div style={{ padding: "var(--space-7)" }}>{children}</div>
         {footer && (
           <div style={{
             padding: "var(--space-5) var(--space-7)",
-            borderTop: "1px solid var(--c-surface0)",
+            borderTop: "1px solid var(--c-line)",
             display: "flex", justifyContent: "flex-end", gap: "var(--space-4)",
           }}>{footer}</div>
         )}

@@ -18,7 +18,7 @@ export function Tabs<T extends string>({ tabs, value, onChange, trailing }: Prop
       role="tablist"
       style={{
         display: "flex",
-        borderBottom: "1px solid var(--c-surface0)",
+        borderBottom: "1px solid var(--c-line)",
         background: "var(--c-mantle)",
       }}
     >
@@ -37,10 +37,11 @@ export function Tabs<T extends string>({ tabs, value, onChange, trailing }: Prop
               background: active ? "var(--c-base)" : "transparent",
               color: active ? "var(--c-text)" : "var(--c-subtext)",
               cursor: "pointer",
-              fontSize: "var(--text-base)",
-              fontWeight: "var(--weight-medium)" as unknown as number,
-              borderBottom: `2px solid ${active ? "var(--c-accent)" : "transparent"}`,
-              transition: "color var(--transition-fast), background var(--transition-fast)",
+              fontFamily: "var(--font-ui)",
+              fontSize: 12,
+              fontWeight: 400,
+              borderBottom: `1px solid ${active ? "var(--c-accent)" : "transparent"}`,
+              transition: "color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast)",
             }}
           >
             {t.label}

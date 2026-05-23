@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 
 interface Props {
+  /**
+   * Etapa 3 S3: kept for backwards compatibility with existing call sites,
+   * but no longer rendered. The new shape (per `design/etapa3-workshop`)
+   * is "no icon, no pill" — a serif-italic line + optional mono sub-line.
+   * Will be removed entirely in S9 once every call site stops passing it.
+   */
   icon?: ReactNode;
   title: string;
   description?: ReactNode;
@@ -8,7 +14,8 @@ interface Props {
   compact?: boolean;
 }
 
-export function EmptyState({ icon, title, description, action, compact }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function EmptyState({ icon: _icon, title, description, action, compact }: Props) {
   return (
     <div style={{
       display: "flex",
@@ -20,25 +27,22 @@ export function EmptyState({ icon, title, description, action, compact }: Props)
       color: "var(--c-subtext)",
       gap: "var(--space-4)",
     }}>
-      {icon && (
-        <span style={{
-          color: "var(--c-overlay)",
-          display: "inline-flex",
-          padding: "var(--space-5)",
-          background: "var(--c-surface0)",
-          borderRadius: "var(--radius-pill)",
-        }}>{icon}</span>
-      )}
       <div style={{
-        fontSize: compact ? "var(--text-md)" : "var(--text-lg)",
-        fontWeight: "var(--weight-semibold)" as unknown as number,
-        color: "var(--c-text)",
+        fontFamily: "var(--font-serif)",
+        fontStyle: "italic",
+        fontSize: 15.5,
+        fontWeight: 400,
+        color: "var(--c-subtext)",
       }}>{title}</div>
       {description && (
         <div style={{
-          fontSize: "var(--text-base)",
-          lineHeight: "var(--lh-normal)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 11,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: "var(--c-overlay)",
           maxWidth: 320,
+          lineHeight: "var(--lh-normal)",
         }}>{description}</div>
       )}
       {action && <div style={{ marginTop: "var(--space-3)" }}>{action}</div>}
