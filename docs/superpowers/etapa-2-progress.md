@@ -10,7 +10,7 @@
 | Sub-phase | Branch | State | Reviewed at |
 |---|---|---|---|
 | 2.0 — Close MVP gaps + cache | `feat/etapa-2-0-mvp-close` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Not started | — |
+| 2.1 — Design system foundation | `feat/etapa-2-1-design-system` | Ready for review | — |
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Not started | — |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Not started | — |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Not started | — |
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — 2.0 approved 2026-05-23, awaiting kickoff of 2.1.
+**Currently:** 2.1 ready for review on `feat/etapa-2-1-design-system`. Awaiting smoke test + approval.
 
 ## Notes / decisions during execution
 
@@ -51,3 +51,13 @@ Approved after a long bug-fix tail during manual smoke. Notable findings worth c
 - AppImage workaround: `NO_STRIP=true pnpm tauri build --bundles appimage` (linuxdeploy bundled `strip` can't read modern `SHT_RELR` sections). Documented in `docs/appimage-bundle.md`.
 
 Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote it mid-2.0 after the bug-whack-a-mole grew tiring; the audit's fix-order matches what shipped. Useful read for future Monaco-adjacent work.
+
+## 2026-05-23 — Sub-phase 2.1 ready for review
+
+- `src/styles/tokens.css` added with spacing / type / radius / shadow / motion / z-index / control-height scales. `globals.css` `@import`s tokens and keeps legacy aliases (`--pad`, `--gap`, `--radius`) so any unrefactored consumer keeps working.
+- `src/components/ui/` houses the primitive library: `Button` (variants × sizes + icon), `Input`, `Textarea`, `Dropdown`, `Modal` (with Esc-to-close), `Tabs`, `Tooltip`, `Badge`, `Avatar` (GitHub-derived URL with initial fallback), `Spinner`, `EmptyState`. Re-exported via `ui/index.ts`.
+- Hover / focus-visible states live in `globals.css` via classes `prr-btn`, `prr-input`, `prr-row` (selectable list rows). `--shadow-focus` doubles as the focus ring.
+- `common/Modal.tsx` deleted — only two import sites (`SettingsModal`, `ReviewSubmitModal`) were updated to consume `ui/Modal`. Banner + ToastStack moved to token-driven spacing while staying in `common/`.
+- Refactor pass touched: settings (Pat, Repos, Filters, SettingsModal), PR list (panel + item, EmptyState for the empty case), file tree (node + panel + group header), diff inline widgets (Editor, Draft, Thread — Thread now shows Avatars per comment), PanelHeader, App shell (FAB + gear).
+- Hidden gallery route: open the app with `#/__ui` to render `UiGallery.tsx` — every primitive in one page. Useful for smoke before approval.
+- `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, and `pnpm exec vite build` all clean.
