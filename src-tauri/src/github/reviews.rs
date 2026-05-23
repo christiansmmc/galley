@@ -3,6 +3,27 @@ use crate::error::{AppError, AppResult};
 use crate::github::GitHubClient;
 use serde::{Deserialize, Serialize};
 
+/// Pull the human-readable message out of an octocrab error.
+///
+/// Octocrab's Debug-formatting includes the GitHub JSON body when the
+/// request hit a 4xx/5xx; Display often loses that detail.
+fn extract_github_error(e: &octocrab::Error) -> String {
+    let dbg = format!("{e:?}");
+    if let octocrab::Error::GitHub { source, .. } = e {
+        let msg = &source.message;
+        let mut out = msg.clone();
+        if !source.errors.as_ref().map(|v| v.is_empty()).unwrap_or(true) {
+            if let Ok(detail) = serde_json::to_string(&source.errors) {
+                out.push_str(" — ");
+                out.push_str(&detail);
+            }
+        }
+        return out;
+    }
+    // Fall back to debug repr so the caller still sees something useful.
+    dbg
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ReviewEvent { Approve, Comment, RequestChanges }
@@ -56,9 +77,14 @@ impl GitHubClient {
             "comments": comments,
         });
         let route = format!("/repos/{owner}/{repo}/pulls/{number}/reviews");
+        tracing::debug!(target: "pr_reviewer::github", payload = %payload, "submit_review payload");
         let resp: serde_json::Value = self.inner
             .post(route, Some(&payload)).await
-            .map_err(|e| AppError::SubmitFailed(e.to_string()))?;
+            .map_err(|e| {
+                let msg = extract_github_error(&e);
+                tracing::error!(target: "pr_reviewer::github", error = %msg, "submit_review failed");
+                AppError::SubmitFailed(msg)
+            })?;
         Ok(ReviewResult {
             review_id: resp.get("id").and_then(|v| v.as_i64()).unwrap_or(0),
             state: resp.get("state").and_then(|v| v.as_str()).unwrap_or("").to_string(),
@@ -71,7 +97,11 @@ impl GitHubClient {
         let payload = serde_json::json!({ "body": body, "in_reply_to": in_reply_to });
         let _: serde_json::Value = self.inner
             .post(route, Some(&payload)).await
-            .map_err(|e| AppError::SubmitFailed(e.to_string()))?;
+            .map_err(|e| {
+                let msg = extract_github_error(&e);
+                tracing::error!(target: "pr_reviewer::github", error = %msg, "reply_to_thread failed");
+                AppError::SubmitFailed(msg)
+            })?;
         Ok(())
     }
 }
