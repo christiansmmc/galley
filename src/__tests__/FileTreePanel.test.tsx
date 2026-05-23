@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { FileTreePanel } from "../components/files/FileTreePanel";
 import { usePrsStore } from "../state/prsStore";
+import { useSettingsStore } from "../state/settingsStore";
 
 vi.mock("../ipc/client", () => ({
   api: {
@@ -10,6 +11,16 @@ vi.mock("../ipc/client", () => ({
     ]),
   },
 }));
+
+const baseUi = {
+  theme: "dark" as const,
+  sidebar_collapsed: false,
+  filetree_collapsed: false,
+  sidebar_width: 280,
+  filetree_width: 320,
+  diff_render_mode: "auto" as const,
+  compact_paths: true,
+};
 
 beforeEach(() => {
   usePrsStore.setState({
@@ -24,6 +35,11 @@ beforeEach(() => {
     ],
     threads: [],
     selectedFile: null,
+    viewedFiles: new Set(),
+  });
+  useSettingsStore.setState({
+    settings: { ui: baseUi, repos: [], path_filters: [] },
+    hasPat: false,
   });
 });
 
@@ -36,5 +52,23 @@ describe("FileTreePanel", () => {
 
     fireEvent.click(screen.getByText(/Testes \(1\)/));
     expect(screen.getByText("foo.rs")).toBeInTheDocument();
+  });
+
+  it("filters files by search query", async () => {
+    render(<FileTreePanel />);
+    await screen.findByText("main.rs");
+    const search = screen.getByLabelText("Filtrar arquivos") as HTMLInputElement;
+    fireEvent.change(search, { target: { value: "main" } });
+    expect(screen.getByText("main.rs")).toBeInTheDocument();
+    expect(screen.queryByText(/Testes/)).not.toBeInTheDocument();
+  });
+
+  it("renders flat view with dir column when toggled", async () => {
+    render(<FileTreePanel />);
+    await screen.findByText("main.rs");
+    fireEvent.click(screen.getByRole("button", { name: "Lista" }));
+    expect(screen.getByText("foo.rs")).toBeInTheDocument();
+    expect(screen.getByText("src/test")).toBeInTheDocument();
+    expect(screen.queryByText(/Testes \(1\)/)).not.toBeInTheDocument();
   });
 });

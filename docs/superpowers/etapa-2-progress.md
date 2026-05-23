@@ -14,7 +14,7 @@
 | 2.2 — PR list redesign | `feat/etapa-2-2-pr-list` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.3 — Layout global | `feat/etapa-2-3-layout` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.4 — Diff & comments redesign | `feat/etapa-2-4-diff-comments` | Done (approved 2026-05-23) | 2026-05-23 |
-| 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Not started | — |
+| 2.5 — File tree advanced | `feat/etapa-2-5-file-tree` | Done (approved 2026-05-23) | 2026-05-23 |
 | 2.6 — Settings refactor + repo add | `feat/etapa-2-6-settings-repos` | Not started | — |
 | 2.7 — Command palette + empty states | `feat/etapa-2-7-palette-polish` | Not started | — |
 
@@ -22,7 +22,7 @@
 
 ## Active sub-phase
 
-**Currently:** none — 2.4 approved 2026-05-23. Next: 2.5 (File tree advanced — compact linear paths, flat mode, file name search).
+**Currently:** none — 2.5 approved 2026-05-23. Next: 2.6 (Settings refactor + repo add).
 
 ## Notes / decisions during execution
 
@@ -110,3 +110,11 @@ Carry-forward for later sub-phases:
 - **GraphQL augmentation for threads.** `ReviewThread` gained `node_id: Option<String>` and `resolved: bool`. After the REST `/pulls/{n}/comments` fetch, `get_pr_threads` fires one GraphQL query (`reviewThreads(first:100){id isResolved comments(first:1){nodes{databaseId}}}`) to map each thread's root databaseId → `(node_id, isResolved)`. Resolved threads are dropped server-side from the returned vec. New `resolve_thread` Tauri command + `api.resolveThread` IPC binding. Threads cache invalidated after resolve.
 - **CommentLineModal / ThreadsSidebar:** already absent from the tree (2.0 deleted them ahead of schedule). Nothing left to remove for the spec's item 5.
 - **Tests:** added `ReviewSubmitPanel.test.tsx` (dialog role + submit roundtrip), `InlineThreadWidgetResolve.test.tsx` (resolve button visibility + IPC payload), `useDiffRenderMode.test.ts` (pref + width matrix), Rust `viewed_test.rs` (roundtrip + idempotent mark + unmark). Updated `InlineThreadWidget.test.tsx` fixtures for the new ReviewThread fields. `pnpm tsc --noEmit`, `pnpm test` (27/27), `cargo test` (15/15), `pnpm exec vite build` all clean.
+
+## 2026-05-23 — Sub-phase 2.5 ready for review
+
+- **Compact linear paths** (`src/components/files/treeBuild.ts`): extracted `buildTree` from `FileTreePanel` into its own module, accepting a `compact: boolean`. When ON, chains of single-dir-child are merged. Separator decision per merge: `.` when parent or child is a Java-root (`com / org / io / net / dev / gov / edu / ai / app`) or already contains `.`; else `/`. When walking into a Java-root segment from a non-Java parent we *break* the chain so paths like `src/main/java/com/esparta/scorehub/api/Foo.java` render as two nodes: `src/main/java` (slash) and `com.esparta.scorehub.api` (dot). DirNode gained `originalName` — the unjoined slash path — exposed as the tooltip in `FileTreeNode.tsx`.
+- **Flat mode + search**: `FileTreePanel` now has a Tree | Flat segmented toggle in the panel header (FolderTree / List icons) and a persistent search input below. Both views share the search filter (substring match on full path). Flat view (`buildFlat`) renders `[file] [dir] [+a −d]` rows sorted case-insensitively by name; path-filter groups don't apply in flat mode (intentional — flat is for "give me everything as a list").
+- **Settings → Aparência**: new section combining the pre-existing Theme picker and a new `Caminhos compactos` checkbox bound to `settings.ui.compact_paths`. The inline Tema section in `SettingsModal` was removed; the modal order is now Repos / Filtros / Diff / Aparência / Token.
+- **UiPrefs**: `compact_paths: bool` added (Rust + TS). Rust default is `true` via `#[serde(default = "default_true")]` so older configs missing the key still get compact mode ON.
+- **Tests:** new `treeBuild.test.ts` (compact off keeps per-segment; chain merged with `/` for non-Java; Java-root splits chain and joins package with `.`; sibling stops chain; file stops chain; `buildFlat` sort + dir extraction). Extended `FileTreePanel.test.tsx` to cover search filter and the Tree → Flat toggle (dir column visible, group header gone). `pnpm tsc --noEmit`, `pnpm test` (35/35), `cargo test` (15/15), `pnpm exec vite build` all clean.
