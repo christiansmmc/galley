@@ -21,7 +21,11 @@ export function Layout({ prList, fileTree, diff }: Props) {
 
   useEffect(() => {
     const h = prListRef.current; if (!h) return;
-    if (prListCollapsed && !h.isCollapsed()) h.collapse();
+    if (prListCollapsed && !h.isCollapsed()) {
+      h.collapse();
+      const ft = fileTreeRef.current;
+      if (ft && !ft.isCollapsed()) ft.resize(22);
+    }
     else if (!prListCollapsed && h.isCollapsed()) h.expand();
   }, [prListCollapsed]);
 
