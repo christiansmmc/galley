@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod error;
+
 #[tauri::command]
 fn healthcheck() -> &'static str {
     "ok"
