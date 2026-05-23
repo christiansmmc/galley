@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS pr_lists (
     fetched_at   TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS viewed_files (
+    pr_id INTEGER NOT NULL,
+    path  TEXT NOT NULL,
+    PRIMARY KEY (pr_id, path)
+);
+
 CREATE INDEX IF NOT EXISTS idx_prs_state    ON prs(state, is_mine, review_requested);
 CREATE INDEX IF NOT EXISTS idx_threads_pr   ON threads(pr_id);
 CREATE INDEX IF NOT EXISTS idx_drafts_pr    ON drafts(pr_id);
+CREATE INDEX IF NOT EXISTS idx_viewed_pr    ON viewed_files(pr_id);

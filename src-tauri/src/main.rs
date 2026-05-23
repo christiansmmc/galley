@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, settings};
+use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, settings, viewed};
 use pr_reviewer::AppState;
 
 fn main() {
@@ -14,11 +14,12 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             prs::list_prs, prs::get_pr, prs::get_pr_diff, prs::get_pr_threads, prs::refresh_pr,
             drafts::draft_comment, drafts::list_drafts, drafts::update_draft, drafts::delete_draft,
-            reviews::submit_review, reviews::reply_to_thread,
+            reviews::submit_review, reviews::reply_to_thread, reviews::resolve_thread,
             repos::list_repos, repos::add_repo, repos::remove_repo,
             filters::get_path_filters, filters::set_path_filters,
             settings::get_settings, settings::set_settings,
             secrets::set_pat, secrets::clear_pat, secrets::has_pat,
+            viewed::list_viewed_files, viewed::mark_viewed,
         ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {

@@ -1,6 +1,7 @@
 use crate::error::{AppError, AppResult};
 use crate::github::GitHubClient;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReviewThread {
@@ -14,6 +15,13 @@ pub struct ReviewThread {
     /// we read them only from that root comment.
     pub start_line: Option<i64>,
     pub start_side: Option<String>,
+    /// GraphQL node id of the review thread. Required by the
+    /// `resolveReviewThread` mutation; the REST endpoint doesn't surface it,
+    /// so we enrich via a parallel GraphQL fetch in `get_pr_threads`.
+    pub node_id: Option<String>,
+    /// `true` when GitHub has the thread marked as resolved. Resolved threads
+    /// are filtered out of the returned list by default.
+    pub resolved: bool,
     pub comments: Vec<ThreadComment>,
 }
 
@@ -32,7 +40,6 @@ impl GitHubClient {
         let items: Vec<serde_json::Value> = self.inner
             .get(route, None::<&()>).await
             .map_err(|e| AppError::Network(e.to_string()))?;
-        use std::collections::HashMap;
         let mut threads: HashMap<i64, ReviewThread> = HashMap::new();
         for item in items {
             let id = item.get("id").and_then(|v| v.as_i64()).unwrap_or(0);
@@ -55,6 +62,8 @@ impl GitHubClient {
                 id: root_id, path: path.clone(), line,
                 side: side.clone(),
                 start_line, start_side: start_side.clone(),
+                node_id: None,
+                resolved: false,
                 comments: vec![],
             });
             // If this is the root comment (id == root_id) and the entry
@@ -68,8 +77,104 @@ impl GitHubClient {
                 id, author, body, created_at, in_reply_to_id: in_reply_to,
             });
         }
-        let mut out: Vec<_> = threads.into_values().collect();
+        // Enrich threads with GraphQL-only fields (node_id + isResolved).
+        // We map by the first comment's databaseId because that's the stable
+        // root id we already keyed on above. Best-effort: if GraphQL fails
+        // (network, scope, …) we serve the REST-only data and the resolve
+        // button just won't fire.
+        if let Ok(map) = self.fetch_thread_meta(owner, repo, number).await {
+            for (root_id, meta) in map {
+                if let Some(t) = threads.get_mut(&root_id) {
+                    t.node_id = Some(meta.node_id);
+                    t.resolved = meta.resolved;
+                }
+            }
+        }
+
+        // Drop resolved threads. The UI re-fetches after resolve, so a hidden
+        // resolved thread effectively disappears without an explicit filter
+        // toggle. If we ever want a "show resolved" affordance we can lift
+        // this filter to the caller.
+        let mut out: Vec<_> = threads
+            .into_values()
+            .filter(|t| !t.resolved)
+            .collect();
         out.sort_by_key(|t| t.id);
         Ok(out)
     }
+
+    async fn fetch_thread_meta(
+        &self,
+        owner: &str,
+        repo: &str,
+        number: u64,
+    ) -> AppResult<HashMap<i64, ThreadMeta>> {
+        let query = r#"
+            query($owner: String!, $name: String!, $number: Int!) {
+              repository(owner: $owner, name: $name) {
+                pullRequest(number: $number) {
+                  reviewThreads(first: 100) {
+                    nodes {
+                      id
+                      isResolved
+                      comments(first: 1) { nodes { databaseId } }
+                    }
+                  }
+                }
+              }
+            }
+        "#;
+        let body = serde_json::json!({
+            "query": query,
+            "variables": { "owner": owner, "name": repo, "number": number },
+        });
+        let resp: serde_json::Value = self.inner
+            .post::<_, serde_json::Value>("/graphql", Some(&body))
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?;
+        let mut out = HashMap::new();
+        let nodes = resp
+            .pointer("/data/repository/pullRequest/reviewThreads/nodes")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        for node in nodes {
+            let node_id = node.get("id").and_then(|v| v.as_str()).map(|s| s.to_string());
+            let resolved = node.get("isResolved").and_then(|v| v.as_bool()).unwrap_or(false);
+            let root_db_id = node
+                .pointer("/comments/nodes/0/databaseId")
+                .and_then(|v| v.as_i64());
+            if let (Some(id), Some(node_id)) = (root_db_id, node_id) {
+                out.insert(id, ThreadMeta { node_id, resolved });
+            }
+        }
+        Ok(out)
+    }
+
+    pub async fn resolve_thread(&self, thread_node_id: &str) -> AppResult<()> {
+        let mutation = r#"
+            mutation($id: ID!) {
+              resolveReviewThread(input: { threadId: $id }) {
+                thread { id isResolved }
+              }
+            }
+        "#;
+        let body = serde_json::json!({
+            "query": mutation,
+            "variables": { "id": thread_node_id },
+        });
+        let resp: serde_json::Value = self.inner
+            .post::<_, serde_json::Value>("/graphql", Some(&body))
+            .await
+            .map_err(|e| AppError::Network(e.to_string()))?;
+        if let Some(errors) = resp.get("errors") {
+            return Err(AppError::SubmitFailed(format!("resolve_thread: {errors}")));
+        }
+        Ok(())
+    }
+}
+
+struct ThreadMeta {
+    node_id: String,
+    resolved: bool,
 }
