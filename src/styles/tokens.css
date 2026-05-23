@@ -1,0 +1,78 @@
+/* Design tokens — sub-phase 2.1 foundation.
+   Spacing, type, radius, shadow, motion. Theme colors stay in globals.css.
+   Primitives in src/components/ui/ read from these CSS vars exclusively. */
+
+:root {
+  /* Spacing scale (4px base). */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 16px;
+  --space-8: 20px;
+  --space-9: 24px;
+  --space-10: 32px;
+  --space-12: 48px;
+
+  /* Type scale. */
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+
+  --lh-tight: 1.2;
+  --lh-normal: 1.45;
+  --lh-relaxed: 1.6;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Radius. */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* Shadows. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.28);
+  --shadow-focus: 0 0 0 2px var(--c-accent-soft, rgba(136, 57, 239, 0.30));
+
+  /* Motion. */
+  --transition-fast: 100ms ease;
+  --transition-base: 150ms ease;
+  --transition-slow: 240ms ease;
+
+  /* Z-index scale. */
+  --z-base: 1;
+  --z-overlay-widget: 10;
+  --z-floating: 50;
+  --z-modal: 100;
+  --z-toast: 200;
+
+  /* Control sizing. */
+  --control-h-sm: 24px;
+  --control-h-md: 30px;
+  --control-h-lg: 38px;
+
+  /* Layout limits. */
+  --modal-min-w: 480px;
+  --modal-max-w: 720px;
+}
+
+/* Accent soft variants per theme — used for focus rings. */
+body[data-theme="latte"] {
+  --c-accent-soft: rgba(136, 57, 239, 0.28);
+}
+body[data-theme="mocha"] {
+  --c-accent-soft: rgba(203, 166, 247, 0.35);
+}

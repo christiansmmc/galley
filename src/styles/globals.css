@@ -1,10 +1,13 @@
+@import "./tokens.css";
+
 :root {
   --font-ui: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
-  --radius: 5px;
-  --pad: 12px;
-  --gap: 8px;
-  --transition: 150ms ease;
+  /* Legacy aliases (kept until full refactor). */
+  --radius: var(--radius-md);
+  --pad: var(--space-6);
+  --gap: var(--space-4);
+  --transition: var(--transition-base);
 }
 
 * { box-sizing: border-box; }
@@ -39,7 +42,7 @@ body[data-theme="mocha"] {
 /* Gutter glyph used by DiffPanel for the inline "+ comment" affordance. */
 .prr-comment-glyph {
   background: var(--c-accent);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   margin-left: 2px;
   width: 14px !important;
   height: 14px !important;
@@ -52,8 +55,8 @@ body[data-theme="mocha"] {
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
   line-height: 14px;
 }
 .prr-comment-glyph:hover { opacity: 1; }
@@ -64,3 +67,33 @@ body[data-theme="mocha"] {
   background: transparent;
   width: 100%;
 }
+
+/* Primitive hover/focus/active states.
+   Inline styles cover layout; pseudo-states live here. */
+.prr-btn:not(:disabled):hover { filter: brightness(1.08); }
+.prr-btn:not(:disabled):active { filter: brightness(0.94); }
+.prr-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+.prr-btn[data-variant="icon"]:not(:disabled):hover {
+  background: var(--c-surface0);
+}
+.prr-btn[data-variant="ghost"]:not(:disabled):hover {
+  background: var(--c-surface0);
+}
+.prr-btn[data-variant="subtle"]:not(:disabled):hover {
+  background: var(--c-surface1);
+}
+
+.prr-input:focus-visible,
+.prr-input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Hover affordance for selectable rows in the PR list / file tree. */
+.prr-row:hover { background: var(--c-mantle); }
+.prr-row[data-selected="true"] { background: var(--c-surface0); }
+.prr-row[data-selected="true"]:hover { background: var(--c-surface0); }
