@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Lock, GitFork, Archive } from "lucide-react";
+import { Lock, GitFork, Archive, Search as SearchIcon } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { RemoteRepo, RepoBrowseFilters, RepoConfig } from "../../ipc/types";
-import { Button, Input, Modal, Spinner } from "../ui";
+import { Button, EmptyState, Input, Modal, Spinner } from "../ui";
 
 interface Props {
   open: boolean;
@@ -166,9 +166,12 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
           }}
         >
           {visible.length === 0 && !loading && (
-            <div style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--c-subtext)", fontSize: "var(--text-sm)" }}>
-              Nenhum repo encontrado.
-            </div>
+            <EmptyState
+              icon={<SearchIcon size={20} />}
+              title="Nenhum repo encontrado"
+              description="Ajuste os filtros ou a busca."
+              compact
+            />
           )}
           {visible.map(r => {
             const isSelected = selected.has(r.full_name);

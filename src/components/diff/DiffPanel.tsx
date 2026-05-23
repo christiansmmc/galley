@@ -1,6 +1,6 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye } from "lucide-react";
+import { Check, Eye, FileText } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -12,6 +12,7 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
+import { EmptyState } from "../ui";
 
 interface ParsedDiff {
   original: string;
@@ -441,7 +442,13 @@ export function DiffPanel() {
     return () => { for (const d of disposables) d.dispose(); };
   }, [diffEd, modifiedLineMap, commentableModified]);
 
-  if (!file) return <div style={{ padding: "var(--space-7)", color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
+  if (!file) return (
+    <EmptyState
+      icon={<FileText size={20} />}
+      title="Selecione um arquivo"
+      description="Escolha um item na árvore pra começar a revisar."
+    />
+  );
 
   const isViewed = viewedFiles.has(file.path);
 
