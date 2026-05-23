@@ -66,8 +66,8 @@ export function Layout({ prList, fileTree, diff }: Props) {
         <Separator style={{ width: 1, background: "var(--c-surface0)", cursor: "col-resize" }} />
         <Panel
           panelRef={fileTreeRef}
-          defaultSize={currentPr ? 10 : 0}
-          minSize={8}
+          defaultSize={22}
+          minSize={12}
           collapsible
           collapsedSize={0}
           onResize={size => {
@@ -78,7 +78,7 @@ export function Layout({ prList, fileTree, diff }: Props) {
           <div style={{ height: "100%", background: "var(--c-base)" }}>{fileTree}</div>
         </Panel>
         <Separator style={{ width: 1, background: "var(--c-surface0)", cursor: "col-resize" }} />
-        <Panel defaultSize={68} minSize={30}>
+        <Panel defaultSize={56} minSize={30}>
           <div style={{ height: "100%", background: "var(--c-base)" }}>{diff}</div>
         </Panel>
       </Group>
