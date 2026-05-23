@@ -76,11 +76,11 @@ Architectural audit: `docs/superpowers/notes/2026-05-23-diff-audit.md` — wrote
 - `PrDetail` gained `additions`, `deletions`, `reviewers_count` (parsed from `/pulls/{n}` — `requested_reviewers` array length). Frontend types + 3 test fixtures updated.
 - `GlobalHeader` replaces the bare gear bar. No PR open → "Pull Requests" title + gear. PR open → breadcrumb `owner/repo › #N title` + back arrow (only when PR list is collapsed) + file-tree toggle + `Revisar (N)` primary button + gear. FAB removed; Revisar lives in the header now.
 - PR list autocollapse: `openPr` success sets `uiStore.prListCollapsed = true`; Layout's PR Panel reacts imperatively (`.collapse()/.expand()`) via the panel ref. `onResize` keeps the flag in sync when the user drags the separator.
-- File tree no longer occupies a Group panel — rendered as a fixed-position drawer (320 px, slides in from the left, semi-transparent backdrop). `Ctrl+2` toggles. ESC + click-outside close. Picking a file in the drawer also closes it (tracks initial `selectedFile` per open).
+- File tree stays as a resizable Panel column (not an overlay drawer — user pushed back on the drawer design from the original 2.3 plan). Visible by default when a PR is open. `Ctrl+2` collapses/expands. Collapse icon (`PanelLeftClose`) lives in the file tree panel header; the `Files` button in the global header re-expands when collapsed.
 - `PrMetaStrip` under the header: `author · age · N files · +X −Y · CI dot+label · N reviewer(s)` with a Draft badge when `pr.draft`. PR body is a collapsible block below the meta line (plaintext for now; `<pre>` with `pre-wrap` + 240 px scroll cap).
 - Shortcuts refactor: `useGlobalShortcuts` now in App (was in Layout). Ctrl/Cmd+1 toggles PR list via uiStore; Ctrl/Cmd+2 toggles file tree drawer. `PanelHeader` deleted — no longer used.
-- New tests: `GlobalHeader.test.tsx`, `PrMetaStrip.test.tsx`, `FileTreeDrawer.test.tsx` (12 new tests; close-on-file-select, close-on-ESC, close-on-X, breadcrumb assertions, draft count in Revisar label, reviewer singular/plural). Existing PrDetail fixtures updated to include the new fields.
-- `pnpm tsc --noEmit`, `pnpm test` (25/25), `cargo test` (14/14), `pnpm exec vite build` all clean.
+- New tests: `GlobalHeader.test.tsx`, `PrMetaStrip.test.tsx` (breadcrumb assertions, draft count in Revisar label, reviewer singular/plural, body toggle). Existing PrDetail fixtures updated to include the new fields.
+- `pnpm tsc --noEmit`, `pnpm test` (21/21), `cargo test` (14/14), `pnpm exec vite build` all clean.
 
 ## 2026-05-23 — 2.2 approved
 
