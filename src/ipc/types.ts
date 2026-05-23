@@ -9,6 +9,7 @@ export interface UiPrefs {
   sidebar_width: number;
   filetree_width: number;
   diff_render_mode: DiffRenderMode;
+  compact_paths: boolean;
 }
 
 export interface RepoConfig { owner: string; name: string; }

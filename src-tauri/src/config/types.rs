@@ -19,7 +19,11 @@ pub struct UiPrefs {
     pub filetree_width: u32,
     #[serde(default)]
     pub diff_render_mode: DiffRenderMode,
+    #[serde(default = "default_true")]
+    pub compact_paths: bool,
 }
+
+fn default_true() -> bool { true }
 
 impl Default for UiPrefs {
     fn default() -> Self {
@@ -30,6 +34,7 @@ impl Default for UiPrefs {
             sidebar_width: 280,
             filetree_width: 320,
             diff_render_mode: DiffRenderMode::default(),
+            compact_paths: true,
         }
     }
 }
