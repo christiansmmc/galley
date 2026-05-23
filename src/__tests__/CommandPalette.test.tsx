@@ -110,6 +110,44 @@ describe("CommandPalette", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("renders each group header at most once even after fuzzy interleaving", () => {
+    useSettingsStore.setState(baseSettings({
+      repos: [
+        { owner: "esparta", name: "scorehub-api" },
+        { owner: "esparta", name: "scorehub-signature" },
+      ],
+    }) as never);
+    usePrsStore.setState({
+      reviewRequested: [
+        mkPr({ id: 1, number: 1, title: "scorehub api fix", owner: "esparta", repo: "scorehub-api" }),
+        mkPr({ id: 2, number: 2, title: "scorehub sig tweak", owner: "esparta", repo: "scorehub-signature" }),
+      ],
+    } as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Buscar"), { target: { value: "scorehub" } });
+    expect(screen.getAllByText("Pull Requests")).toHaveLength(1);
+    expect(screen.getAllByText("Repositórios")).toHaveLength(1);
+  });
+
+  it("arrow up after arrow down navigates back to top", () => {
+    usePrsStore.setState({
+      reviewRequested: [
+        mkPr({ id: 1, number: 1, title: "A" }),
+        mkPr({ id: 2, number: 2, title: "B" }),
+        mkPr({ id: 3, number: 3, title: "C" }),
+      ],
+    } as never);
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    const input = screen.getByLabelText("Buscar");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    // Active should be at row 1 (#2 B). Verify by checking aria-selected.
+    const selected = screen.getAllByRole("option").filter(el => el.getAttribute("aria-selected") === "true");
+    expect(selected).toHaveLength(1);
+    expect((selected[0].textContent ?? "")).toContain("#2 B");
+  });
+
   it("Esc closes palette", () => {
     const onClose = vi.fn();
     render(<CommandPalette open={true} onClose={onClose} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);

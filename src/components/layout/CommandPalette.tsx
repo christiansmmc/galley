@@ -47,7 +47,13 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const listRef = useRef<HTMLDivElement>(null);
   /** While >0, ignore hover-driven setActive — lets keyboard arrows win against accidental mouse twitches over the palette. */
   const keyNavLockRef = useRef(0);
-  const hover = (idx: number) => { if (keyNavLockRef.current === 0) setActive(idx); };
+  /** Becomes true only after the user actually moves the mouse inside the palette. Prevents the initial render's onMouseEnter (which fires on whichever row the cursor is parked over) from clobbering the keyboard default of "first item". */
+  const mouseMovedRef = useRef(false);
+  const hover = (idx: number) => {
+    if (!mouseMovedRef.current) return;
+    if (keyNavLockRef.current !== 0) return;
+    setActive(idx);
+  };
 
   // Reset state on each open.
   useEffect(() => {
@@ -55,6 +61,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       setQuery("");
       setActive(0);
       setScope(null);
+      mouseMovedRef.current = false;
       queueMicrotask(() => {
         inputRef.current?.focus();
         if (listRef.current) listRef.current.scrollTop = 0;
@@ -200,6 +207,9 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   }, [items, effectiveQuery]);
 
   useEffect(() => { if (active >= filtered.length) setActive(0); }, [filtered.length, active]);
+  // After typing changes filtered/grouping, snap selection back to the top so the user
+  // doesn't see a stale highlight buried somewhere in the new list.
+  useEffect(() => { setActive(0); }, [effectiveQuery, scope]);
 
   useEffect(() => {
     if (!open) return;
@@ -227,24 +237,39 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       setActive(0);
       return;
     }
-    if (e.key === "ArrowDown") { e.preventDefault(); armKeyNavLock(); setActive(a => Math.min(filtered.length - 1, a + 1)); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); armKeyNavLock(); setActive(a => Math.min(visualOrder.length - 1, a + 1)); return; }
     if (e.key === "ArrowUp") { e.preventDefault(); armKeyNavLock(); setActive(a => Math.max(0, a - 1)); return; }
     if (e.key === "Enter") {
       e.preventDefault();
-      const item = filtered[active];
+      const item = visualOrder[active];
       if (!item) return;
       item.run();
       return;
     }
   };
 
-  // Group items in render order without resorting (preserves fuzzy ranking).
-  const groups: Array<[string, Item[]]> = [];
+  // Bucket items by group so each group header appears exactly once even
+  // after a fuzzy resort interleaves items. Groups render in a fixed order;
+  // fuzzy ranking is preserved *within* each group. `visualOrder` is the
+  // linear traversal the keyboard navigates — its indices are what `active`
+  // refers to from this point on.
+  const GROUP_ORDER = ["Repositórios", "Pull Requests", "Arquivos", "Comandos"];
+  const buckets = new Map<string, Item[]>();
   for (const it of filtered) {
-    const last = groups[groups.length - 1];
-    if (last && last[0] === it.group) last[1].push(it);
-    else groups.push([it.group, [it]]);
+    const b = buckets.get(it.group);
+    if (b) b.push(it);
+    else buckets.set(it.group, [it]);
   }
+  const groups: Array<[string, Item[]]> = [];
+  for (const g of GROUP_ORDER) {
+    const items = buckets.get(g);
+    if (items && items.length) groups.push([g, items]);
+  }
+  for (const [g, items] of buckets) {
+    if (!GROUP_ORDER.includes(g)) groups.push([g, items]);
+  }
+  const visualOrder: Item[] = [];
+  for (const [, items] of groups) visualOrder.push(...items);
 
   return (
     <div
@@ -327,8 +352,14 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
           />
         </div>
 
-        <div ref={listRef} role="listbox" aria-label="Resultados" style={{ overflowY: "auto", flex: 1 }}>
-          {filtered.length === 0 ? (
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label="Resultados"
+          onMouseMove={() => { mouseMovedRef.current = true; }}
+          style={{ overflowY: "auto", flex: 1 }}
+        >
+          {visualOrder.length === 0 ? (
             <div style={{
               padding: "var(--space-7)",
               textAlign: "center",
@@ -337,9 +368,11 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
             }}>
               Nada encontrado.
             </div>
-          ) : (
-            groups.map(([group, gItems]) => {
-              const startIdx = filtered.indexOf(gItems[0]);
+          ) : (() => {
+            let cursor = 0;
+            return groups.map(([group, gItems]) => {
+              const startIdx = cursor;
+              cursor += gItems.length;
               return (
                 <CommandGroup key={group} label={group}>
                   {gItems.map((it, i) => (
@@ -356,8 +389,8 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
                   ))}
                 </CommandGroup>
               );
-            })
-          )}
+            });
+          })()}
         </div>
 
         <div style={{
