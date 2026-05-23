@@ -18,15 +18,20 @@ interface ParsedDiff {
   /** Editor line (1-based) on modified side → file line in modified file, or null for hunk separators. */
   modifiedLineMap: Map<number, number | null>;
   originalLineMap: Map<number, number | null>;
+  /** Reverse: file line in modified file → editor line on the modified side. */
+  modifiedFileToEditor: Map<number, number>;
+  /** Reverse: file line in original file → editor line on the original side. */
+  originalFileToEditor: Map<number, number>;
   /** Modified-side editor lines that GitHub will accept as comment targets. */
   commentableModified: Set<number>;
   commentableOriginal: Set<number>;
 }
 
-function parsePatchSides(patch: string | null): ParsedDiff {
+function parseDiff(patch: string | null): ParsedDiff {
   const empty: ParsedDiff = {
     original: "", modified: "",
     modifiedLineMap: new Map(), originalLineMap: new Map(),
+    modifiedFileToEditor: new Map(), originalFileToEditor: new Map(),
     commentableModified: new Set(), commentableOriginal: new Set(),
   };
   if (!patch) return empty;
@@ -35,6 +40,8 @@ function parsePatchSides(patch: string | null): ParsedDiff {
   const mod: string[] = [];
   const origMap = new Map<number, number | null>();
   const modMap = new Map<number, number | null>();
+  const modFileToEditor = new Map<number, number>();
+  const origFileToEditor = new Map<number, number>();
   const commentableMod = new Set<number>();
   const commentableOrig = new Set<number>();
 
@@ -54,20 +61,24 @@ function parsePatchSides(patch: string | null): ParsedDiff {
     if (raw.startsWith("+")) {
       mod.push(raw.slice(1));
       modMap.set(mod.length, modLine);
+      modFileToEditor.set(modLine, mod.length);
       commentableMod.add(mod.length);
       modLine++;
     } else if (raw.startsWith("-")) {
       orig.push(raw.slice(1));
       origMap.set(orig.length, origLine);
+      origFileToEditor.set(origLine, orig.length);
       commentableOrig.add(orig.length);
       origLine++;
     } else if (raw.startsWith(" ") || raw.length === 0) {
       const content = raw.startsWith(" ") ? raw.slice(1) : raw;
       orig.push(content);
       origMap.set(orig.length, origLine);
+      origFileToEditor.set(origLine, orig.length);
       commentableOrig.add(orig.length);
       mod.push(content);
       modMap.set(mod.length, modLine);
+      modFileToEditor.set(modLine, mod.length);
       commentableMod.add(mod.length);
       origLine++;
       modLine++;
@@ -80,6 +91,8 @@ function parsePatchSides(patch: string | null): ParsedDiff {
     modified: mod.join("\n"),
     modifiedLineMap: modMap,
     originalLineMap: origMap,
+    modifiedFileToEditor: modFileToEditor,
+    originalFileToEditor: origFileToEditor,
     commentableModified: commentableMod,
     commentableOriginal: commentableOrig,
   };
@@ -97,18 +110,38 @@ function languageFor(path: string): string {
   return map[ext ?? ""] ?? "plaintext";
 }
 
+/**
+ * A pending (uncommitted) inline draft. Two coordinate systems are kept
+ * separate by construction:
+ *   - `anchor` is what Monaco understands (editor lines / side).
+ *   - `target` is what is persisted to disk and posted to GitHub (file lines).
+ *
+ * Fix 6 narrows the React-side `side` to "RIGHT" only; LEFT-side commenting
+ * is deferred. The Rust + IPC types stay flexible (`String`).
+ */
 interface PendingDraft {
-  line: number;
-  side: "RIGHT" | "LEFT";
-  startLine?: number;
+  anchor: { editorLine: number; side: "RIGHT" };
+  target: {
+    line: number;
+    startLine?: number;
+    side: "RIGHT";
+    startSide?: "RIGHT";
+  };
 }
 
 interface RangeSelection {
-  startLine: number;
-  endLine: number;
-  side: "RIGHT" | "LEFT";
-  /** Pixel top inside the editor — used to anchor the floating button. */
-  topPx: number;
+  anchor: {
+    startEditorLine: number;
+    endEditorLine: number;
+    side: "RIGHT";
+    /** Pixel top inside the editor — used to anchor the floating button. */
+    topPx: number;
+  };
+  target: {
+    startLine: number;
+    endLine: number;
+    side: "RIGHT";
+  };
 }
 
 export function DiffPanel() {
@@ -125,8 +158,12 @@ export function DiffPanel() {
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
   const file = diff.find(f => f.path === selectedFile);
-  const parsed = useMemo(() => parsePatchSides(file?.patch ?? null), [file?.patch]);
-  const { original, modified, modifiedLineMap, commentableModified } = parsed;
+  const parsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+  const {
+    original, modified,
+    modifiedLineMap, modifiedFileToEditor,
+    commentableModified,
+  } = parsed;
 
   // Clear transient editor state when the file changes — otherwise an inline
   // editor or range button can outlive its file.
@@ -141,31 +178,49 @@ export function DiffPanel() {
 
   // Build the view-zone spec list. Each spec has a stable `key` so the hook
   // diffs cleanly between renders.
+  //
+  // CRITICAL: `afterLineNumber` is an *editor* line, never a file line.
+  // Threads and saved drafts arrive with file lines; we translate via the
+  // reverse map. Stale data (file line not in the current diff) is skipped
+  // with a console warning rather than crashing.
   const zoneSpecs: ViewZoneSpec[] = useMemo(() => {
     const specs: ViewZoneSpec[] = [];
 
     for (const t of fileThreads) {
       if (t.line == null) continue;
-      const side = (t.side === "LEFT" ? "LEFT" : "RIGHT") as "LEFT" | "RIGHT";
+      // For RIGHT side we use the modified reverse map; LEFT would need the
+      // original reverse map. Until we ship LEFT-side rendering, only RIGHT
+      // threads are placed inline.
+      if (t.side === "LEFT") continue;
+      const editorLine = modifiedFileToEditor.get(t.line);
+      if (editorLine == null) {
+        console.warn(`[DiffPanel] thread ${t.id} line ${t.line} not in current diff; skipping zone`);
+        continue;
+      }
       // Height is approximate: 1 header + 1 per comment + 2 for reply textarea.
       const heightInLines = Math.max(4, 2 + t.comments.length + 2);
       specs.push({
         key: `thread:${t.id}`,
-        side,
-        afterLineNumber: t.line,
+        side: "RIGHT",
+        afterLineNumber: editorLine,
         heightInLines,
         render: () => <InlineThreadWidget thread={t} />,
       });
     }
 
     for (const d of fileDrafts) {
-      const side = (d.side === "LEFT" ? "LEFT" : "RIGHT") as "LEFT" | "RIGHT";
+      if (d.side === "LEFT") continue;
+      const editorLine = modifiedFileToEditor.get(d.line);
+      if (editorLine == null) {
+        console.warn(`[DiffPanel] draft ${d.id} line ${d.line} not in current diff; skipping zone`);
+        continue;
+      }
       const lineCount = Math.max(1, d.body.split("\n").length);
       const heightInLines = Math.max(3, 2 + Math.min(lineCount, 6));
       specs.push({
         key: `draft:${d.id}`,
-        side,
-        afterLineNumber: d.line,
+        side: "RIGHT",
+        afterLineNumber: editorLine,
         heightInLines,
         render: () => <InlineDraftWidget draft={d} />,
       });
@@ -173,26 +228,30 @@ export function DiffPanel() {
 
     if (pending) {
       specs.push({
-        key: `pending:${pending.side}:${pending.startLine ?? "_"}:${pending.line}`,
-        side: pending.side,
-        afterLineNumber: pending.line,
+        // Constant key — see fix #4. Even if the user retargets the pending
+        // draft (e.g. by re-clicking a different line), the shape-diff in
+        // useDiffViewZones will remove+re-add only when afterLineNumber/side/
+        // heightInLines change, never on a body keystroke.
+        key: "pending:current",
+        side: pending.anchor.side,
+        afterLineNumber: pending.anchor.editorLine,
         heightInLines: 6,
         render: () => (
           <InlineCommentEditor
-            line={pending.line}
-            side={pending.side}
-            startLine={pending.startLine ?? null}
+            line={pending.target.line}
+            side={pending.target.side}
+            startLine={pending.target.startLine ?? null}
             onCancel={() => setPending(null)}
             onSave={async (body) => {
               if (!currentPr) return;
               await addDraft(
                 currentPr.summary.id,
                 file?.path ?? "",
-                pending.line,
-                pending.side,
+                pending.target.line,
+                pending.target.side,
                 body,
-                pending.startLine ?? null,
-                pending.startLine != null ? pending.side : null,
+                pending.target.startLine ?? null,
+                pending.target.startSide ?? null,
               );
               setPending(null);
               setRangeSel(null);
@@ -203,7 +262,7 @@ export function DiffPanel() {
     }
 
     return specs;
-  }, [fileThreads, fileDrafts, pending, currentPr, addDraft, file?.path]);
+  }, [fileThreads, fileDrafts, pending, currentPr, addDraft, file?.path, modifiedFileToEditor]);
 
   useDiffViewZones(diffEd, zoneSpecs);
 
@@ -219,7 +278,7 @@ export function DiffPanel() {
 
   // Gutter hover affordance + range selection listener. Bound to the
   // *modified* editor (right side); the original side is treated as
-  // read-only context for now.
+  // read-only context for now (LEFT-side commenting deferred — see fix 6).
   useEffect(() => {
     if (!diffEd) return;
     const modified = diffEd.getModifiedEditor();
@@ -269,7 +328,8 @@ export function DiffPanel() {
       if (!commentableModified.has(editorLine)) return;
 
       // If there's an active range selection covering multiple commentable
-      // lines, open as range — mapping editor lines to file lines.
+      // lines, open as range — capturing both anchor (editor) and target
+      // (file) coordinates.
       const sel = modified.getSelection();
       if (sel && !sel.isEmpty() && sel.startLineNumber !== sel.endLineNumber) {
         const sEditor = Math.min(sel.startLineNumber, sel.endLineNumber);
@@ -277,14 +337,20 @@ export function DiffPanel() {
         const startFile = modifiedLineMap.get(sEditor);
         const endFile = modifiedLineMap.get(eEditor);
         if (startFile != null && endFile != null) {
-          setPending({ line: endFile, side: "RIGHT", startLine: startFile });
+          setPending({
+            anchor: { editorLine: eEditor, side: "RIGHT" },
+            target: { line: endFile, startLine: startFile, side: "RIGHT", startSide: "RIGHT" },
+          });
           setRangeSel(null);
           return;
         }
       }
       const fileLine = modifiedLineMap.get(editorLine);
       if (fileLine == null) return;
-      setPending({ line: fileLine, side: "RIGHT" });
+      setPending({
+        anchor: { editorLine, side: "RIGHT" },
+        target: { line: fileLine, side: "RIGHT" },
+      });
       setRangeSel(null);
     }));
 
@@ -293,7 +359,15 @@ export function DiffPanel() {
     // onDidChangeCursorSelection because in a read-only DiffEditor the
     // cursor-selection event doesn't fire reliably for drag-only selections
     // (no cursor activity → no event).
-    disposables.push(modified.onMouseUp(() => {
+    //
+    // Gated on target type CONTENT_TEXT (6): mouseup events inside view zones
+    // (e.g. when the user clicks inside an inline editor/thread) shouldn't
+    // rebuild rangeSel. Monaco's MouseTargetType.CONTENT_TEXT === 6.
+    disposables.push(modified.onMouseUp((e) => {
+      const kind = e.target.type;
+      // Only CONTENT_TEXT clicks count. Anything else (overlay widgets, view
+      // zones, gutter, scrollbar, …) means the user isn't selecting code.
+      if (kind !== 6) return;
       const sel = modified.getSelection();
       if (!sel || sel.startLineNumber === sel.endLineNumber) {
         setRangeSel(null);
@@ -308,7 +382,10 @@ export function DiffPanel() {
         return;
       }
       const top = modified.getTopForLineNumber(eEditor) - modified.getScrollTop();
-      setRangeSel({ startLine: startFile, endLine: endFile, side: "RIGHT", topPx: top });
+      setRangeSel({
+        anchor: { startEditorLine: sEditor, endEditorLine: eEditor, side: "RIGHT", topPx: top },
+        target: { startLine: startFile, endLine: endFile, side: "RIGHT" },
+      });
     }));
 
     return () => { for (const d of disposables) d.dispose(); };
@@ -366,7 +443,15 @@ export function DiffPanel() {
         {rangeSel && !pending && (
           <button
             onClick={() => {
-              setPending({ line: rangeSel.endLine, side: rangeSel.side, startLine: rangeSel.startLine });
+              setPending({
+                anchor: { editorLine: rangeSel.anchor.endEditorLine, side: "RIGHT" },
+                target: {
+                  line: rangeSel.target.endLine,
+                  startLine: rangeSel.target.startLine,
+                  side: "RIGHT",
+                  startSide: "RIGHT",
+                },
+              });
               setRangeSel(null);
             }}
             style={{
@@ -374,7 +459,7 @@ export function DiffPanel() {
               // We anchor mid-right; the diff editor's split puts the
               // modified side on the right half, so center the button there.
               right: 24,
-              top: Math.max(rangeSel.topPx + 18, 4),
+              top: Math.max(rangeSel.anchor.topPx + 18, 4),
               padding: "6px 12px",
               borderRadius: 5,
               border: 0,
@@ -386,7 +471,7 @@ export function DiffPanel() {
               zIndex: 10,
             }}
           >
-            Comentar {rangeSel.endLine - rangeSel.startLine + 1} linhas
+            Comentar {rangeSel.target.endLine - rangeSel.target.startLine + 1} linhas
           </button>
         )}
       </div>
