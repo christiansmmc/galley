@@ -68,6 +68,10 @@ export interface ReviewThread {
   path: string;
   line: number | null;
   side: string;
+  /** For range threads: file line where the range starts (inclusive). */
+  start_line: number | null;
+  /** For range threads: side of the range start (typically same as `side`). */
+  start_side: string | null;
   comments: ThreadComment[];
 }
 

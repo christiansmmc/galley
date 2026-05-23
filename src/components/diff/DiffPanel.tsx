@@ -198,7 +198,9 @@ export function DiffPanel() {
         continue;
       }
       // Height is approximate: 1 header + 1 per comment + 2 for reply textarea.
-      const heightInLines = Math.max(4, 2 + t.comments.length + 2);
+      // Range threads bump the header height by 1 line for the "Lx–y" label.
+      const isRange = t.start_line != null && t.start_line !== t.line;
+      const heightInLines = Math.max(4, 2 + t.comments.length + 2 + (isRange ? 1 : 0));
       specs.push({
         key: `thread:${t.id}`,
         side: "RIGHT",

@@ -64,7 +64,9 @@ export function InlineThreadWidget({ thread }: Props) {
       onClick={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
-        Thread · L{thread.line ?? "?"} · {thread.side}
+        {thread.start_line != null && thread.start_line !== thread.line
+          ? `Thread · L${thread.start_line}–${thread.line ?? "?"} · ${thread.side}`
+          : `Thread · L${thread.line ?? "?"} · ${thread.side}`}
       </div>
       {thread.comments.map((c, i) => (
         <div
