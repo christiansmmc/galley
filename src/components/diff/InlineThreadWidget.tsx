@@ -55,9 +55,13 @@ export function InlineThreadWidget({ thread }: Props) {
         border: "1px solid var(--c-surface1)",
         background: "var(--c-mantle)",
         fontFamily: "var(--font-ui)",
+        position: "relative",
+        zIndex: 1,
+        pointerEvents: "auto",
       }}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onMouseUpCapture={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
         Thread · L{thread.line ?? "?"} · {thread.side}

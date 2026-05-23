@@ -42,9 +42,13 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
         color: "var(--c-text)",
         fontFamily: "var(--font-ui)",
         boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+        position: "relative",
+        zIndex: 1,
+        pointerEvents: "auto",
       }}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onMouseUpCapture={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-subtext)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
         {isRange ? `Rascunho · L${startLine}–${line} · ${side === "RIGHT" ? "Depois" : "Antes"}` : `Rascunho · L${line} · ${side === "RIGHT" ? "Depois" : "Antes"}`}

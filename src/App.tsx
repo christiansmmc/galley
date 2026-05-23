@@ -61,6 +61,7 @@ export default function App() {
             borderRadius: 999, border: 0, background: "var(--c-accent)",
             color: "white", cursor: "pointer", fontWeight: 500,
             boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
+            zIndex: 50,
           }}
         >
           Enviar review{draftCount > 0 ? ` (${draftCount})` : ""}

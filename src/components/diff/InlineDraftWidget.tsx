@@ -19,9 +19,13 @@ export function InlineDraftWidget({ draft }: Props) {
         border: "1px solid var(--c-amber)",
         background: "var(--c-mantle)",
         fontFamily: "var(--font-ui)",
+        position: "relative",
+        zIndex: 1,
+        pointerEvents: "auto",
       }}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onMouseUpCapture={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
       <div style={{ fontSize: 11, color: "var(--c-amber)", marginBottom: 4, fontFamily: "var(--font-mono)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>

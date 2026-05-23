@@ -16,11 +16,16 @@ export function Modal({ title, open, onClose, children, footer }: Props) {
       display: "flex", alignItems: "center", justifyContent: "center",
       zIndex: 100,
     }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: "var(--c-base)", color: "var(--c-text)",
-        borderRadius: 6, minWidth: 480, maxWidth: 720,
-        border: "1px solid var(--c-surface1)",
-      }}>
+      <div
+        onMouseDownCapture={e => e.stopPropagation()}
+        onMouseUpCapture={e => e.stopPropagation()}
+        onClickCapture={e => e.stopPropagation()}
+        style={{
+          background: "var(--c-base)", color: "var(--c-text)",
+          borderRadius: 6, minWidth: 480, maxWidth: 720,
+          border: "1px solid var(--c-surface1)",
+          position: "relative", zIndex: 1, pointerEvents: "auto",
+        }}>
         <div style={{
           padding: "12px 16px", borderBottom: "1px solid var(--c-surface0)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
