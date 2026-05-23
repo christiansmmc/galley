@@ -140,6 +140,40 @@ select.prr-input option {
   background: var(--c-surface1);
 }
 
+/* Etapa 3 S3: hairline accent primary (Revisar button).
+   Hover fills with full accent + base text — the single survivor of
+   filled-style buttons. */
+.prr-btn[data-variant="primary"]:not(:disabled):hover {
+  background: var(--c-accent);
+  color: var(--c-base);
+  filter: none;
+}
+.prr-btn[data-variant="primary"]:not(:disabled):active {
+  filter: brightness(0.94);
+}
+
+/* Etapa 3 S3: link variant. Hairline text link with mono 11.
+   Hover swaps to text color and shows the 1px underline. */
+.prr-btn--link:not(:disabled):hover {
+  color: var(--c-text);
+  border-bottom-color: var(--c-line);
+  filter: none;
+}
+.prr-btn--link[data-tone="accent"]:not(:disabled):hover {
+  color: var(--c-accent);
+  border-bottom-color: var(--c-accent);
+}
+.prr-btn--link:focus-visible {
+  outline: none;
+  box-shadow: none;
+  color: var(--c-text);
+  border-bottom-color: var(--c-line);
+}
+.prr-btn--link[data-tone="accent"]:focus-visible {
+  color: var(--c-accent);
+  border-bottom-color: var(--c-accent);
+}
+
 .prr-input:focus-visible,
 .prr-input:focus {
   outline: none;

@@ -135,7 +135,7 @@ export function InlineThreadWidget({ thread }: Props) {
           }}
         />
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--space-2)" }}>
-          <Button variant="primary" size="sm" onClick={submitReply} disabled={busy || !reply.trim()}>
+          <Button variant="link" tone="accent" onClick={submitReply} disabled={busy || !reply.trim()}>
             {busy ? "Enviando…" : "Responder"}
           </Button>
         </div>

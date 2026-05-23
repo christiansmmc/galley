@@ -41,6 +41,12 @@ export function UiGallery() {
             <Button variant={v} leadingIcon={<Search size={14} />}>com ícone</Button>
           </div>
         ))}
+        <div style={{ display: "flex", gap: "var(--space-5)", alignItems: "center" }}>
+          <span style={{ width: 80, fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>link</span>
+          <Button variant="link">resolver</Button>
+          <Button variant="link" tone="accent">salvar rascunho</Button>
+          <Button variant="link" disabled>disabled</Button>
+        </div>
         <Button variant="icon" leadingIcon={<RefreshCw size={14} />} aria-label="refresh" />
       </Section>
 
@@ -86,9 +92,9 @@ export function UiGallery() {
       <Section title="EmptyState">
         <EmptyState
           icon={<Inbox size={24} />}
-          title="Nada por aqui"
-          description="Adicione repositórios para começar."
-          action={<Button variant="primary" size="sm">Abrir configurações</Button>}
+          title="Nada na sua fila."
+          description="tudo limpo · 09:42"
+          action={<Button variant="link" tone="accent">abrir configurações</Button>}
         />
       </Section>
 
@@ -101,12 +107,20 @@ export function UiGallery() {
           footer={
             <>
               <Button variant="ghost" onClick={() => setModal(false)}>Cancelar</Button>
-              <Button variant="primary" onClick={() => setModal(false)}>Ok</Button>
+              <Button variant="subtle" onClick={() => setModal(false)}>Ok</Button>
             </>
           }
         >
           <p>Conteúdo do modal. Esc fecha. Click fora fecha.</p>
         </Modal>
+      </Section>
+
+      <Section title="Badge — hairline state tag">
+        <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
+          <Badge tone="hairline">aberto</Badge>
+          <Badge tone="hairline">rascunho</Badge>
+          <Badge tone="hairline">resolvido</Badge>
+        </div>
       </Section>
     </div>
   );

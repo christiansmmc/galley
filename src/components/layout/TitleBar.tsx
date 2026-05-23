@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, Minimize2, Minus, Send, Settings, Square, X } from "lucide-react";
+import { ArrowLeft, Minimize2, Minus, Send, Settings, Square, X } from "lucide-react";
 import { Button } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
@@ -44,7 +44,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         alignItems: "center",
         gap: "var(--space-3)",
         padding: "0 var(--space-3) 0 var(--space-5)",
-        borderBottom: "1px solid var(--c-surface0)",
+        borderBottom: "1px solid var(--c-line)",
         background: "var(--c-mantle)",
         height: 36,
         flex: "0 0 36px",
@@ -74,26 +74,63 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             gap: "var(--space-2)",
             minWidth: 0,
             flex: 1,
-            fontSize: "var(--text-md)",
           }}
         >
-          <span data-tauri-drag-region style={{ color: "var(--c-subtext)" }}>
-            {currentPr.summary.owner}/{currentPr.summary.repo}
+          {/* Breadcrumb — mono 12. Slashes in overlay, leaf (repo) weight 500. */}
+          <span
+            data-tauri-drag-region
+            aria-label={`${currentPr.summary.owner}/${currentPr.summary.repo}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "var(--space-1)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              fontWeight: 400,
+              color: "var(--c-subtext)",
+              flex: "0 0 auto",
+            }}
+          >
+            <span data-tauri-drag-region>{currentPr.summary.owner}</span>
+            <span data-tauri-drag-region style={{ color: "var(--c-overlay)" }}>/</span>
+            <span
+              data-tauri-drag-region
+              style={{ color: "var(--c-text)", fontWeight: 500 }}
+            >
+              {currentPr.summary.repo}
+            </span>
           </span>
-          <ChevronRight size={14} style={{ color: "var(--c-overlay)", flex: "0 0 auto" }} data-tauri-drag-region />
-          <span data-tauri-drag-region style={{ color: "var(--c-subtext)", flex: "0 0 auto" }}>
+
+          {/* PR number — mono 11 overlay. */}
+          <span
+            data-tauri-drag-region
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              fontWeight: 400,
+              color: "var(--c-overlay)",
+              flex: "0 0 auto",
+              marginLeft: "var(--space-2)",
+            }}
+          >
             #{currentPr.summary.number}
           </span>
+
+          {/* PR title — sans 13/500, the only sans element this bold in the app. */}
           <span
             data-tauri-drag-region
             title={currentPr.summary.title}
             style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: 13,
+              fontWeight: 500,
+              letterSpacing: "-0.005em",
               color: "var(--c-text)",
-              fontWeight: "var(--weight-medium)" as unknown as number,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               minWidth: 0,
+              marginLeft: "var(--space-3)",
             }}
           >
             {currentPr.summary.title}
@@ -124,7 +161,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             fontSize: 10,
             padding: "2px 6px",
             borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--c-surface0)",
+            border: "1px solid var(--c-line)",
             color: "var(--c-subtext)",
             fontFamily: "inherit",
           }}>⌘K</kbd>
@@ -158,7 +195,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         gap: 2,
         alignItems: "center",
         marginLeft: "var(--space-2)",
-        borderLeft: "1px solid var(--c-surface0)",
+        borderLeft: "1px solid var(--c-line)",
         paddingLeft: "var(--space-2)",
       }}>
         <WindowButton onClick={minimizeWindow} title="Minimizar" aria-label="Minimizar">

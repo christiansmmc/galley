@@ -40,7 +40,12 @@ describe("TitleBar", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
 
     render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
-    expect(screen.getByText("esparta/scorehub-api")).toBeInTheDocument();
+    // Etapa 3 S3: breadcrumb is split into <span>org</span>/<span>repo</span>
+    // with a literal "/" glyph between. Assert on the parts and on the
+    // aria-label that re-composes the full path.
+    expect(screen.getByText("esparta")).toBeInTheDocument();
+    expect(screen.getByText("scorehub-api")).toBeInTheDocument();
+    expect(screen.getByLabelText("esparta/scorehub-api")).toBeInTheDocument();
     expect(screen.getByText("#42")).toBeInTheDocument();
     expect(screen.getByText("Fix login bug")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Revisar/ })).toBeInTheDocument();

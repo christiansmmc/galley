@@ -65,7 +65,7 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
       />
       <div style={{ display: "flex", gap: "var(--space-4)", justifyContent: "flex-end", marginTop: "var(--space-3)" }}>
         <Button variant="ghost" size="sm" onClick={onCancel} disabled={busy}>Cancelar</Button>
-        <Button variant="primary" size="sm" onClick={submit} disabled={busy || !body.trim()}>
+        <Button variant="link" tone="accent" onClick={submit} disabled={busy || !body.trim()}>
           {busy ? "Salvando…" : "Salvar rascunho"}
         </Button>
       </div>
