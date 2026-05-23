@@ -12,11 +12,20 @@ import type { CSSProperties } from "react";
  * via ResizeObserver, halved on side-by-side mode) keeps the widget
  * glued to the visible editor area regardless of horizontal scroll.
  */
+/**
+ * Right gutter big enough to clear Monaco's vertical scrollbar (≈14 px
+ * default) and leave a little breathing room so the rightmost button
+ * (Salvar / Apagar / Responder / Resolver) isn't visually pressed
+ * against the scrollbar track.
+ */
+const RIGHT_GUTTER = "var(--space-10)";
+const LEFT_GUTTER = "var(--space-9)";
+
 export const inlineWidgetShell: CSSProperties = {
   position: "sticky",
-  left: "var(--space-9)",
-  width: "calc(var(--diff-viewport-w, 100%) - var(--space-9) * 2)",
-  maxWidth: "calc(var(--diff-viewport-w, 100%) - var(--space-9) * 2)",
+  left: LEFT_GUTTER,
+  width: `calc(var(--diff-viewport-w, 100%) - ${LEFT_GUTTER} - ${RIGHT_GUTTER})`,
+  maxWidth: `calc(var(--diff-viewport-w, 100%) - ${LEFT_GUTTER} - ${RIGHT_GUTTER})`,
   margin: "var(--space-2) 0",
   padding: "var(--space-5)",
   borderRadius: "var(--radius-lg)",
