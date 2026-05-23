@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Button, Textarea } from "../ui";
+import { SlidePanel, Button, Textarea } from "../ui";
 import { api } from "../../ipc/client";
 import { userMessage } from "../../ipc/errors";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -8,7 +8,7 @@ import type { ReviewEvent } from "../../ipc/types";
 
 interface Props { open: boolean; onClose: () => void; }
 
-export function ReviewSubmitModal({ open, onClose }: Props) {
+export function ReviewSubmitPanel({ open, onClose }: Props) {
   const { drafts, clear } = useDraftsStore();
   const { currentPr, refreshThreads } = usePrsStore();
   const [event, setEvent] = useState<ReviewEvent>("COMMENT");
@@ -36,7 +36,7 @@ export function ReviewSubmitModal({ open, onClose }: Props) {
   };
 
   return (
-    <Modal
+    <SlidePanel
       title="Enviar review"
       open={open}
       onClose={onClose}
@@ -47,37 +47,36 @@ export function ReviewSubmitModal({ open, onClose }: Props) {
         </>
       }
     >
-      <div style={{ display: "flex", gap: "var(--space-4)", marginBottom: "var(--space-6)" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", marginBottom: "var(--space-6)" }}>
         {(["APPROVE", "COMMENT", "REQUEST_CHANGES"] as ReviewEvent[]).map(ev => (
           <label
             key={ev}
             style={{
-              flex: 1,
-              padding: "var(--space-5)",
+              padding: "var(--space-4) var(--space-5)",
               border: "1px solid var(--c-surface1)",
               borderRadius: "var(--radius-md)",
               cursor: "pointer",
               fontSize: "var(--text-md)",
-              textAlign: "center",
               background: event === ev ? "var(--c-surface0)" : "transparent",
               transition: "background var(--transition-fast)",
+              display: "flex", alignItems: "center", gap: "var(--space-3)",
             }}
           >
-            <input type="radio" name="event" checked={event === ev} onChange={() => setEvent(ev)} style={{ display: "none" }} />
-            {ev === "APPROVE" ? "Aprovar" : ev === "COMMENT" ? "Comentar" : "Pedir mudanças"}
+            <input type="radio" name="event" checked={event === ev} onChange={() => setEvent(ev)} style={{ accentColor: "var(--c-accent)" }} />
+            <span>{ev === "APPROVE" ? "Aprovar" : ev === "COMMENT" ? "Comentar" : "Pedir mudanças"}</span>
           </label>
         ))}
       </div>
       <Textarea
         value={body}
         onChange={e => setBody(e.target.value)}
-        rows={4}
+        rows={5}
         placeholder="Resumo (opcional)"
       />
-      <div style={{ marginTop: "var(--space-6)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
+      <div style={{ marginTop: "var(--space-5)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
         {drafts.length} rascunho{drafts.length === 1 ? "" : "s"} inline.
       </div>
       {err && <div style={{ color: "var(--c-red)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
-    </Modal>
+    </SlidePanel>
   );
 }

@@ -45,6 +45,13 @@ export const api = {
     invoke<ReviewResult>("submit_review", { owner, repo, number, event, body, prId, draftIds }),
   replyToThread: (owner: string, repo: string, number: number, inReplyTo: number, body: string) =>
     invoke<void>("reply_to_thread", { owner, repo, number, inReplyTo, body }),
+  resolveThread: (owner: string, repo: string, number: number, threadNodeId: string) =>
+    invoke<void>("resolve_thread", { owner, repo, number, threadNodeId }),
+
+  listViewedFiles: (prId: number) =>
+    invoke<string[]>("list_viewed_files", { prId }),
+  markViewed: (prId: number, path: string, viewed: boolean) =>
+    invoke<void>("mark_viewed", { prId, path, viewed }),
 
   listRepos: () => invoke<RepoConfig[]>("list_repos"),
   addRepo: (owner: string, name: string) => invoke<RepoConfig>("add_repo", { owner, name }),

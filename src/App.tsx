@@ -8,7 +8,7 @@ import { PrListPanel } from "./components/prs/PrListPanel";
 import { PrMetaStrip } from "./components/prs/PrMetaStrip";
 import { FileTreePanel } from "./components/files/FileTreePanel";
 import { DiffPanel } from "./components/diff/DiffPanel";
-import { ReviewSubmitModal } from "./components/review/ReviewSubmitModal";
+import { ReviewSubmitPanel } from "./components/review/ReviewSubmitPanel";
 import { Banner } from "./components/common/Banner";
 import { ToastStack } from "./components/common/Toast";
 import { useSettingsStore } from "./state/settingsStore";
@@ -59,7 +59,7 @@ export default function App() {
           diff={<DiffPanel />}
         />
       </div>
-      <ReviewSubmitModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
+      <ReviewSubmitPanel open={submitOpen} onClose={() => setSubmitOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ToastStack />
     </div>
