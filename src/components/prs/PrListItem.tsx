@@ -1,7 +1,8 @@
 import type { CiStatus, PrSummary } from "../../ipc/types";
 import { formatAge } from "../../util/time";
+import { Spinner } from "../ui";
 
-interface Props { pr: PrSummary; selected: boolean; onClick: () => void; }
+interface Props { pr: PrSummary; selected: boolean; loading?: boolean; onClick: () => void; }
 
 const CI_LABEL: Record<CiStatus, string> = {
   passing: "CI passou",
@@ -34,14 +35,17 @@ function CiDot({ status }: { status: CiStatus }) {
   );
 }
 
-export function PrListItem({ pr, selected, onClick }: Props) {
+export function PrListItem({ pr, selected, loading, onClick }: Props) {
   const age = formatAge(pr.updated_at);
   const changed = `${pr.changed_files} changed`;
   return (
     <button
       onClick={onClick}
+      disabled={loading}
       className="prr-row"
       data-selected={selected}
+      data-loading={loading || undefined}
+      aria-busy={loading || undefined}
       style={{
         display: "flex",
         gap: "var(--space-3)",
@@ -50,12 +54,15 @@ export function PrListItem({ pr, selected, onClick }: Props) {
         padding: "var(--density-row-pad-y) var(--density-row-pad-x)",
         border: 0,
         color: "var(--c-text)",
-        cursor: "pointer",
+        cursor: loading ? "progress" : "pointer",
         borderBottom: "1px solid var(--c-mantle)",
         transition: "background var(--transition-fast)",
+        opacity: loading ? 0.75 : 1,
       }}
     >
-      <CiDot status={pr.ci_status} />
+      {loading
+        ? <span style={{ flex: "0 0 auto", width: 8, height: 8, marginTop: 4, display: "inline-flex" }} title="Carregando"><Spinner size={10} /></span>
+        : <CiDot status={pr.ci_status} />}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div
           title={pr.title}

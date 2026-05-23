@@ -7,7 +7,7 @@ import { useUiStore } from "../../state/uiStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import { FileTreeNode } from "./FileTreeNode";
 import { buildTree, buildFlat, FlatRow } from "./treeBuild";
-import { Button, EmptyState, Input } from "../ui";
+import { Button, EmptyState, Input, Spinner } from "../ui";
 
 function matchesGlob(pattern: string, path: string): boolean {
   const re = "^" + pattern
@@ -36,6 +36,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function FileTreePanel() {
   const { diff, currentPr, selectedFile, selectFile } = usePrsStore();
+  const loadingPr = usePrsStore(s => s.loadingPr);
   const setFileTreeCollapsed = useUiStore(s => s.setFileTreeCollapsed);
   const compactPaths = useSettingsStore(s => s.settings?.ui.compact_paths ?? true);
   const [filters, setFilters] = useState<PathFilter[]>([]);
@@ -59,14 +60,27 @@ export function FileTreePanel() {
   const unmatchedTree = useMemo(() => buildTree(unmatched, compactPaths), [unmatched, compactPaths]);
   const flatRows = useMemo(() => buildFlat(filteredDiff), [filteredDiff]);
 
-  if (!currentPr) return (
-    <EmptyState
-      icon={<FolderOpen size={20} />}
-      title="Nenhum PR selecionado"
-      description="Abra um PR pra ver os arquivos modificados."
-      compact
-    />
-  );
+  if (!currentPr) {
+    if (loadingPr) {
+      return (
+        <div
+          role="status"
+          aria-label="Carregando PR"
+          style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-subtext)", gap: "var(--space-3)" }}
+        >
+          <Spinner size={16} /><span>Carregando arquivos…</span>
+        </div>
+      );
+    }
+    return (
+      <EmptyState
+        icon={<FolderOpen size={20} />}
+        title="Nenhum PR selecionado"
+        description="Abra um PR pra ver os arquivos modificados."
+        compact
+      />
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>

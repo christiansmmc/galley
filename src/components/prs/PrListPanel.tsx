@@ -31,6 +31,7 @@ function matchesQuery(pr: PrSummary, q: string): boolean {
 
 export function PrListPanel() {
   const { mine, reviewRequested, loadingLists, refreshLists, openPr, currentPr } = usePrsStore();
+  const pendingPr = usePrsStore(s => s.pendingPr);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
   const [tab, setTab] = useState<Tab>("review_requested");
   const [query, setQuery] = useState("");
@@ -140,18 +141,25 @@ export function PrListPanel() {
                 >
                   {name ?? owner}
                 </div>
-                {prs.map(p => (
-                  <PrListItem
-                    key={p.id}
-                    pr={p}
-                    selected={
-                      selectedNum === p.number &&
-                      currentPr?.summary.owner === p.owner &&
-                      currentPr?.summary.repo === p.repo
-                    }
-                    onClick={() => openPr(p.owner, p.repo, p.number)}
-                  />
-                ))}
+                {prs.map(p => {
+                  const loading =
+                    pendingPr?.owner === p.owner &&
+                    pendingPr?.repo === p.repo &&
+                    pendingPr?.number === p.number;
+                  return (
+                    <PrListItem
+                      key={p.id}
+                      pr={p}
+                      selected={
+                        selectedNum === p.number &&
+                        currentPr?.summary.owner === p.owner &&
+                        currentPr?.summary.repo === p.repo
+                      }
+                      loading={loading}
+                      onClick={() => openPr(p.owner, p.repo, p.number)}
+                    />
+                  );
+                })}
               </div>
             );
           })

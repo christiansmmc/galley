@@ -12,7 +12,7 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
-import { EmptyState } from "../ui";
+import { EmptyState, Spinner } from "../ui";
 
 interface ParsedDiff {
   original: string;
@@ -149,6 +149,7 @@ interface RangeSelection {
 
 export function DiffPanel() {
   const { diff, selectedFile, threads } = usePrsStore();
+  const loadingPr = usePrsStore(s => s.loadingPr);
   const drafts = useDraftsStore(s => s.drafts);
   const addDraft = useDraftsStore(s => s.add);
   const currentPr = usePrsStore(s => s.currentPr);
@@ -461,13 +462,24 @@ export function DiffPanel() {
     return () => { for (const d of disposables) d.dispose(); };
   }, [diffEd, modifiedLineMap, commentableModified]);
 
-  if (!file) return (
-    <EmptyState
-      icon={<FileText size={20} />}
-      title="Selecione um arquivo"
-      description="Escolha um item na árvore pra começar a revisar."
-    />
-  );
+  if (!file) {
+    if (loadingPr) return (
+      <div
+        role="status"
+        aria-label="Carregando PR"
+        style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-subtext)", gap: "var(--space-3)" }}
+      >
+        <Spinner size={20} /><span>Carregando PR…</span>
+      </div>
+    );
+    return (
+      <EmptyState
+        icon={<FileText size={20} />}
+        title="Selecione um arquivo"
+        description="Escolha um item na árvore pra começar a revisar."
+      />
+    );
+  }
 
   const isViewed = viewedFiles.has(file.path);
 

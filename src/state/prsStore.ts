@@ -15,6 +15,8 @@ interface PrsState {
   threads: ReviewThread[];
   selectedFile: string | null;
   loadingPr: boolean;
+  /** PR currently being fetched (used to render per-row spinners). Null when idle. */
+  pendingPr: { owner: string; repo: string; number: number } | null;
   prError: unknown | null;
   /** Paths viewed for the current PR. Populated by openPr; mutated by setViewed. */
   viewedFiles: Set<string>;
@@ -38,6 +40,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   threads: [],
   selectedFile: null,
   loadingPr: false,
+  pendingPr: null,
   prError: null,
   viewedFiles: new Set(),
 
@@ -59,7 +62,16 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   },
 
   openPr: async (owner, repo, number) => {
-    set({ loadingPr: true, prError: null, currentPr: null, diff: [], threads: [], selectedFile: null, viewedFiles: new Set() });
+    set({
+      loadingPr: true,
+      prError: null,
+      currentPr: null,
+      diff: [],
+      threads: [],
+      selectedFile: null,
+      viewedFiles: new Set(),
+      pendingPr: { owner, repo, number },
+    });
     try {
       // Always refresh on open — invalidates cached PR/diff/threads server
       // side so the user sees up-to-date data after external GitHub changes
@@ -86,7 +98,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
       if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
       else useUiStore.getState().pushToast("error", userMessage(e));
     } finally {
-      set({ loadingPr: false });
+      set({ loadingPr: false, pendingPr: null });
     }
   },
 
