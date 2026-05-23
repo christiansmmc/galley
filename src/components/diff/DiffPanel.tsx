@@ -12,17 +12,77 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 
-function parsePatchSides(patch: string | null): { original: string; modified: string } {
-  if (!patch) return { original: "", modified: "" };
+interface ParsedDiff {
+  original: string;
+  modified: string;
+  /** Editor line (1-based) on modified side → file line in modified file, or null for hunk separators. */
+  modifiedLineMap: Map<number, number | null>;
+  originalLineMap: Map<number, number | null>;
+  /** Modified-side editor lines that GitHub will accept as comment targets. */
+  commentableModified: Set<number>;
+  commentableOriginal: Set<number>;
+}
+
+function parsePatchSides(patch: string | null): ParsedDiff {
+  const empty: ParsedDiff = {
+    original: "", modified: "",
+    modifiedLineMap: new Map(), originalLineMap: new Map(),
+    commentableModified: new Set(), commentableOriginal: new Set(),
+  };
+  if (!patch) return empty;
+
   const orig: string[] = [];
   const mod: string[] = [];
-  for (const line of patch.split("\n")) {
-    if (line.startsWith("@@")) { orig.push(""); mod.push(""); continue; }
-    if (line.startsWith("+")) mod.push(line.slice(1));
-    else if (line.startsWith("-")) orig.push(line.slice(1));
-    else { orig.push(line.startsWith(" ") ? line.slice(1) : line); mod.push(line.startsWith(" ") ? line.slice(1) : line); }
+  const origMap = new Map<number, number | null>();
+  const modMap = new Map<number, number | null>();
+  const commentableMod = new Set<number>();
+  const commentableOrig = new Set<number>();
+
+  let origLine = 0;
+  let modLine = 0;
+  const hunkRe = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+
+  for (const raw of patch.split("\n")) {
+    const m = hunkRe.exec(raw);
+    if (m) {
+      origLine = parseInt(m[1], 10);
+      modLine = parseInt(m[2], 10);
+      orig.push(""); origMap.set(orig.length, null);
+      mod.push(""); modMap.set(mod.length, null);
+      continue;
+    }
+    if (raw.startsWith("+")) {
+      mod.push(raw.slice(1));
+      modMap.set(mod.length, modLine);
+      commentableMod.add(mod.length);
+      modLine++;
+    } else if (raw.startsWith("-")) {
+      orig.push(raw.slice(1));
+      origMap.set(orig.length, origLine);
+      commentableOrig.add(orig.length);
+      origLine++;
+    } else if (raw.startsWith(" ") || raw.length === 0) {
+      const content = raw.startsWith(" ") ? raw.slice(1) : raw;
+      orig.push(content);
+      origMap.set(orig.length, origLine);
+      commentableOrig.add(orig.length);
+      mod.push(content);
+      modMap.set(mod.length, modLine);
+      commentableMod.add(mod.length);
+      origLine++;
+      modLine++;
+    }
+    // Lines starting with '\' (e.g. "\ No newline at end of file") are skipped.
   }
-  return { original: orig.join("\n"), modified: mod.join("\n") };
+
+  return {
+    original: orig.join("\n"),
+    modified: mod.join("\n"),
+    modifiedLineMap: modMap,
+    originalLineMap: origMap,
+    commentableModified: commentableMod,
+    commentableOriginal: commentableOrig,
+  };
 }
 
 function languageFor(path: string): string {
@@ -65,7 +125,8 @@ export function DiffPanel() {
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
   const file = diff.find(f => f.path === selectedFile);
-  const { original, modified } = useMemo(() => parsePatchSides(file?.patch ?? null), [file?.patch]);
+  const parsed = useMemo(() => parsePatchSides(file?.patch ?? null), [file?.patch]);
+  const { original, modified, modifiedLineMap, commentableModified } = parsed;
 
   // Clear transient editor state when the file changes — otherwise an inline
   // editor or range button can outlive its file.
@@ -179,9 +240,9 @@ export function DiffPanel() {
         }
         return;
       }
-      // Show the + on gutter line numbers OR while hovering the text itself.
       const showOnGutter = kind === 3 || kind === 2 || kind === 6;
-      if (!showOnGutter) {
+      // Only allow the + on commentable lines (= context + additions inside a hunk).
+      if (!showOnGutter || !commentableModified.has(line)) {
         if (hoverDecorations.length) {
           hoverDecorations = modified.deltaDecorations(hoverDecorations, []);
         }
@@ -202,21 +263,29 @@ export function DiffPanel() {
     // Click on gutter glyph → open inline editor at that line.
     disposables.push(modified.onMouseDown((e) => {
       const target = e.target;
-      const line = target.position?.lineNumber;
-      if (!line) return;
-      // GLYPH_MARGIN = 2 in Monaco's MouseTargetType enum.
-      if (target.type === 2) {
-        // If there's an active range selection covering this line, open as range.
-        const sel = modified.getSelection();
-        if (sel && !sel.isEmpty() && sel.startLineNumber !== sel.endLineNumber) {
-          const sLine = Math.min(sel.startLineNumber, sel.endLineNumber);
-          const eLine = Math.max(sel.startLineNumber, sel.endLineNumber);
-          setPending({ line: eLine, side: "RIGHT", startLine: sLine });
-        } else {
-          setPending({ line, side: "RIGHT" });
+      const editorLine = target.position?.lineNumber;
+      if (!editorLine) return;
+      if (target.type !== 2) return; // GLYPH_MARGIN
+      if (!commentableModified.has(editorLine)) return;
+
+      // If there's an active range selection covering multiple commentable
+      // lines, open as range — mapping editor lines to file lines.
+      const sel = modified.getSelection();
+      if (sel && !sel.isEmpty() && sel.startLineNumber !== sel.endLineNumber) {
+        const sEditor = Math.min(sel.startLineNumber, sel.endLineNumber);
+        const eEditor = Math.max(sel.startLineNumber, sel.endLineNumber);
+        const startFile = modifiedLineMap.get(sEditor);
+        const endFile = modifiedLineMap.get(eEditor);
+        if (startFile != null && endFile != null) {
+          setPending({ line: endFile, side: "RIGHT", startLine: startFile });
+          setRangeSel(null);
+          return;
         }
-        setRangeSel(null);
       }
+      const fileLine = modifiedLineMap.get(editorLine);
+      if (fileLine == null) return;
+      setPending({ line: fileLine, side: "RIGHT" });
+      setRangeSel(null);
     }));
 
     // Range selection listener — surface the floating button when the user
@@ -230,14 +299,20 @@ export function DiffPanel() {
         setRangeSel(null);
         return;
       }
-      const sLine = Math.min(sel.startLineNumber, sel.endLineNumber);
-      const eLine = Math.max(sel.startLineNumber, sel.endLineNumber);
-      const top = modified.getTopForLineNumber(eLine) - modified.getScrollTop();
-      setRangeSel({ startLine: sLine, endLine: eLine, side: "RIGHT", topPx: top });
+      const sEditor = Math.min(sel.startLineNumber, sel.endLineNumber);
+      const eEditor = Math.max(sel.startLineNumber, sel.endLineNumber);
+      const startFile = modifiedLineMap.get(sEditor);
+      const endFile = modifiedLineMap.get(eEditor);
+      if (startFile == null || endFile == null) {
+        setRangeSel(null);
+        return;
+      }
+      const top = modified.getTopForLineNumber(eEditor) - modified.getScrollTop();
+      setRangeSel({ startLine: startFile, endLine: endFile, side: "RIGHT", topPx: top });
     }));
 
     return () => { for (const d of disposables) d.dispose(); };
-  }, [diffEd]);
+  }, [diffEd, modifiedLineMap, commentableModified]);
 
   if (!file) return <div style={{ padding: 16, color: "var(--c-subtext)" }}>Selecione um arquivo.</div>;
 
