@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pr-reviewer",
+  "productName": "PR Reviewer",
   "version": "0.1.0",
   "identifier": "dev.csequeira.prreviewer",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "pr-reviewer",
-        "width": 800,
-        "height": 600
+        "title": "PR Reviewer",
+        "width": 1280,
+        "height": 800
       }
     ],
     "security": {
