@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { FileText, GitPullRequest, RefreshCw, Send, Settings, Sun } from "lucide-react";
+import { FileText, FolderGit2, GitPullRequest, RefreshCw, Send, Settings, Sun, X } from "lucide-react";
 import { usePrsStore } from "../../state/prsStore";
+import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
 import { fuzzyScore } from "../../util/fuzzy";
-import type { PrSummary } from "../../ipc/types";
+import type { PrSummary, RepoConfig } from "../../ipc/types";
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -13,7 +14,7 @@ export interface CommandPaletteProps {
   onOpenSubmit: () => void;
 }
 
-type ItemKind = "pr" | "file" | "command";
+type ItemKind = "pr" | "file" | "command" | "repo";
 
 interface Item {
   id: string;
@@ -23,7 +24,8 @@ interface Item {
   hint?: string;
   icon: ReactNode;
   match: string;
-  run: () => void;
+  /** Return `true` to keep the palette open (e.g. drilling into a repo scope). */
+  run: () => boolean | void;
 }
 
 export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: CommandPaletteProps) {
@@ -34,10 +36,12 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const openPr = usePrsStore(s => s.openPr);
   const selectFile = usePrsStore(s => s.selectFile);
   const refreshLists = usePrsStore(s => s.refreshLists);
+  const repos = useSettingsStore(s => s.settings?.repos) ?? [];
   const theme = useTheme();
 
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const [scope, setScope] = useState<RepoConfig | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +50,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
     if (open) {
       setQuery("");
       setActive(0);
-      // Defer focus to after the input mounts.
+      setScope(null);
       queueMicrotask(() => inputRef.current?.focus());
     }
   }, [open]);
@@ -54,18 +58,54 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const commandOnly = query.startsWith(">");
   const effectiveQuery = commandOnly ? query.slice(1).trimStart() : query;
 
+  const enterScope = (r: RepoConfig) => {
+    setScope(r);
+    setQuery("");
+    setActive(0);
+    queueMicrotask(() => inputRef.current?.focus());
+  };
+
   const items = useMemo(() => {
     const out: Item[] = [];
 
     if (!commandOnly) {
       // PRs (dedupe by id; reviewRequested first since user opens them more often).
       const seen = new Set<number>();
+      const allPrs: PrSummary[] = [];
       for (const p of [...reviewRequested, ...mine]) {
         if (seen.has(p.id)) continue;
         seen.add(p.id);
-        out.push(prItem(p, openPr, onClose));
+        allPrs.push(p);
       }
-      // Files within the open PR.
+
+      // Scoped: only show PRs of `scope`. Otherwise show all + repo entries.
+      if (scope) {
+        for (const p of allPrs) {
+          if (p.owner === scope.owner && p.repo === scope.name) {
+            out.push(prItem(p, openPr, onClose));
+          }
+        }
+      } else {
+        // Repo entries — clicking enters scope, not opens.
+        for (const r of repos) {
+          const count = allPrs.filter(p => p.owner === r.owner && p.repo === r.name).length;
+          out.push({
+            id: `repo:${r.owner}/${r.name}`,
+            kind: "repo",
+            group: "Repositórios",
+            label: `${r.owner}/${r.name}`,
+            hint: count > 0 ? `${count} PR${count === 1 ? "" : "s"}` : undefined,
+            icon: <FolderGit2 size={14} />,
+            match: `${r.owner}/${r.name} ${r.name} ${r.owner}`,
+            run: () => { enterScope(r); return true; },
+          });
+        }
+        for (const p of allPrs) {
+          out.push(prItem(p, openPr, onClose));
+        }
+      }
+
+      // Files within the open PR — always available when a PR is open.
       if (currentPr) {
         for (const f of diff) {
           out.push({
@@ -131,7 +171,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
     }
 
     return out;
-  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit]);
+  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit]);
 
   const filtered = useMemo(() => {
     if (!effectiveQuery) return items;
@@ -144,10 +184,8 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
     return scored.map(([, it]) => it);
   }, [items, effectiveQuery]);
 
-  // Keep active index inside bounds when results shrink.
   useEffect(() => { if (active >= filtered.length) setActive(0); }, [filtered.length, active]);
 
-  // Scroll active row into view.
   useEffect(() => {
     if (!open) return;
     const el = listRef.current?.querySelector<HTMLElement>(`[data-cmd-row="${active}"]`);
@@ -157,10 +195,27 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   if (!open) return null;
 
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (scope) { setScope(null); setQuery(""); setActive(0); }
+      else onClose();
+      return;
+    }
+    if (e.key === "Backspace" && query === "" && scope) {
+      e.preventDefault();
+      setScope(null);
+      setActive(0);
+      return;
+    }
     if (e.key === "ArrowDown") { e.preventDefault(); setActive(a => Math.min(filtered.length - 1, a + 1)); return; }
     if (e.key === "ArrowUp") { e.preventDefault(); setActive(a => Math.max(0, a - 1)); return; }
-    if (e.key === "Enter") { e.preventDefault(); filtered[active]?.run(); return; }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const item = filtered[active];
+      if (!item) return;
+      item.run();
+      return;
+    }
   };
 
   // Group items in render order without resorting (preserves fuzzy ranking).
@@ -206,26 +261,53 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         <div style={{
           padding: "var(--space-3) var(--space-5)",
           borderBottom: "1px solid var(--c-surface0)",
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-3)",
         }}>
+          {scope && (
+            <button
+              onClick={() => { setScope(null); setQuery(""); setActive(0); inputRef.current?.focus(); }}
+              aria-label={`Sair do escopo ${scope.owner}/${scope.name}`}
+              title="Sair do escopo (Esc ou Backspace)"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                padding: "2px var(--space-3)",
+                background: "var(--c-surface0)",
+                color: "var(--c-text)",
+                border: "1px solid var(--c-surface1)",
+                borderRadius: "var(--radius-pill)",
+                cursor: "pointer",
+                fontSize: "var(--text-sm)",
+              }}
+            >
+              <FolderGit2 size={12} />
+              <span>{scope.owner}/{scope.name}</span>
+              <X size={12} style={{ color: "var(--c-subtext)" }} />
+            </button>
+          )}
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Buscar PRs, arquivos, ou > comando..."
+            placeholder={scope ? `PRs em ${scope.owner}/${scope.name}…` : "Buscar PRs, arquivos, repos, ou > comando..."}
             aria-label="Buscar"
             style={{
-              width: "100%",
+              flex: 1,
               border: 0,
               outline: "none",
               background: "transparent",
               color: "var(--c-text)",
               fontSize: "var(--text-md)",
               padding: "var(--space-2) 0",
+              minWidth: 0,
             }}
           />
         </div>
 
-        <div ref={listRef} style={{ overflowY: "auto", flex: 1 }}>
+        <div ref={listRef} role="listbox" aria-label="Resultados" style={{ overflowY: "auto", flex: 1 }}>
           {filtered.length === 0 ? (
             <div style={{
               padding: "var(--space-7)",
@@ -265,10 +347,11 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
           fontSize: "var(--text-sm)",
           display: "flex",
           gap: "var(--space-5)",
+          flexWrap: "wrap",
         }}>
           <span>↑↓ navegar</span>
           <span>↵ selecionar</span>
-          <span>esc fechar</span>
+          <span>esc {scope ? "sair do escopo" : "fechar"}</span>
           <span>{"> "}prefixo = comandos</span>
         </div>
       </div>

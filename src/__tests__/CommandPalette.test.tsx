@@ -2,6 +2,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { CommandPalette } from "../components/layout/CommandPalette";
 import { usePrsStore } from "../state/prsStore";
+import { useSettingsStore } from "../state/settingsStore";
 
 vi.mock("../theme/ThemeProvider", () => ({
   useTheme: () => ({ choice: "system", resolved: "mocha", setChoice: vi.fn() }),
@@ -21,6 +22,18 @@ beforeEach(() => {
     currentPr: null,
     diff: [],
     selectedFile: null,
+  } as never);
+  useSettingsStore.setState({
+    settings: {
+      ui: {
+        theme: "system", sidebar_collapsed: false, filetree_collapsed: false,
+        sidebar_width: 22, filetree_width: 22, diff_render_mode: "auto",
+        compact_paths: true, density: "comfortable",
+        diff_font: { family: "JetBrains Mono", size: 13 },
+      },
+      repos: [],
+      path_filters: [],
+    },
   } as never);
 });
 
@@ -114,6 +127,79 @@ describe("CommandPalette", () => {
     const dialog = screen.getByRole("dialog", { name: "Paleta de comandos" });
     fireEvent.click(dialog);
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("CommandPalette repo scope", () => {
+  beforeEach(() => {
+    useSettingsStore.setState({
+      settings: {
+        ui: {
+          theme: "system", sidebar_collapsed: false, filetree_collapsed: false,
+          sidebar_width: 22, filetree_width: 22, diff_render_mode: "auto",
+          compact_paths: true, density: "comfortable",
+          diff_font: { family: "JetBrains Mono", size: 13 },
+        },
+        repos: [
+          { owner: "esparta", name: "scorehub-api" },
+          { owner: "esparta", name: "scorehub-dashboard" },
+        ],
+        path_filters: [],
+      },
+    } as never);
+    usePrsStore.setState({
+      reviewRequested: [
+        mkPr({ id: 1, number: 1, title: "API one", owner: "esparta", repo: "scorehub-api" }),
+        mkPr({ id: 2, number: 2, title: "API two", owner: "esparta", repo: "scorehub-api" }),
+        mkPr({ id: 3, number: 3, title: "Dash one", owner: "esparta", repo: "scorehub-dashboard" }),
+      ],
+    } as never);
+  });
+
+  const optionWith = (substr: string) => {
+    const hit = screen.getAllByRole("option").find(el => (el.textContent ?? "").includes(substr));
+    if (!hit) throw new Error(`No option with text containing "${substr}"`);
+    return hit;
+  };
+  const hasOption = (substr: string) =>
+    screen.queryAllByRole("option").some(el => (el.textContent ?? "").includes(substr));
+
+  it("lists configured repos as entries with PR counts", () => {
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    expect(optionWith("esparta/scorehub-api2 PRs")).toBeInTheDocument();
+    expect(optionWith("esparta/scorehub-dashboard1 PR")).toBeInTheDocument();
+  });
+
+  it("typing a repo name fuzzy-matches repo entries", () => {
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Buscar"), { target: { value: "dashboard" } });
+    expect(optionWith("esparta/scorehub-dashboard1 PR")).toBeInTheDocument();
+  });
+
+  it("selecting a repo scopes the list to that repo's PRs", () => {
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    fireEvent.click(optionWith("esparta/scorehub-api2 PRs"));
+    expect(screen.getByRole("button", { name: /Sair do escopo esparta\/scorehub-api/ })).toBeInTheDocument();
+    expect(screen.getByText("#1 API one")).toBeInTheDocument();
+    expect(screen.getByText("#2 API two")).toBeInTheDocument();
+    expect(screen.queryByText("#3 Dash one")).not.toBeInTheDocument();
+    expect(hasOption("scorehub-dashboard")).toBe(false);
+  });
+
+  it("Esc on scoped palette exits scope (does not close)", () => {
+    const onClose = vi.fn();
+    render(<CommandPalette open={true} onClose={onClose} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    fireEvent.click(optionWith("esparta/scorehub-api2 PRs"));
+    fireEvent.keyDown(screen.getByLabelText("Buscar"), { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Sair do escopo/ })).not.toBeInTheDocument();
+  });
+
+  it("Backspace on empty scoped query exits scope", () => {
+    render(<CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />);
+    fireEvent.click(optionWith("esparta/scorehub-api2 PRs"));
+    fireEvent.keyDown(screen.getByLabelText("Buscar"), { key: "Backspace" });
+    expect(screen.queryByRole("button", { name: /Sair do escopo/ })).not.toBeInTheDocument();
   });
 });
 
