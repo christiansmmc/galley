@@ -12,7 +12,7 @@ import { PrMetaStrip } from "./components/prs/PrMetaStrip";
 import { FileTreePanel } from "./components/files/FileTreePanel";
 import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitPanel } from "./components/review/ReviewSubmitPanel";
-import { Banner } from "./components/common/Banner";
+import { ErrorBlock } from "./components/ui";
 import { ToastStack } from "./components/common/Toast";
 import { useSettingsStore } from "./state/settingsStore";
 import { usePrsStore } from "./state/prsStore";
@@ -57,9 +57,14 @@ export default function App() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       {authBanner && (
-        <Banner kind="error" onAction={{ label: "Configurar", onClick: () => { setSettingsOpen(true); setAuthBanner(false); } }}>
-          Token inválido. Reautentique nas configurações.
-        </Banner>
+        <ErrorBlock
+          source="github.com"
+          message="responded 401 unauthorized."
+          action={{
+            label: "reautenticar",
+            onClick: () => { setSettingsOpen(true); setAuthBanner(false); },
+          }}
+        />
       )}
       <TitleBar
         onOpenSettings={() => setSettingsOpen(true)}

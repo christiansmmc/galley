@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Inbox, RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import type { PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
 import { PrListItem } from "./PrListItem";
-import { Button, EmptyState, Input, Spinner, Tabs } from "../ui";
+import { Button, EmptyState, Input, SkeletonBars, Spinner, Sweep, Tabs } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
 
 type Tab = "mine" | "review_requested";
@@ -113,11 +113,10 @@ export function PrListPanel() {
         }
       />
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", position: "relative" }}>
+        {loadingLists && <Sweep />}
         {loadingLists && list.length === 0 ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-8)" }}>
-            <Spinner size={18} />
-          </div>
+          <SkeletonBars rows={8} />
         ) : list.length === 0 ? (
           renderEmpty({ hasRepos, query, totalAll })
         ) : (
@@ -183,39 +182,31 @@ function renderEmpty({ hasRepos, query, totalAll }: { hasRepos: boolean; query: 
   if (!hasRepos) {
     return (
       <EmptyState
-        icon={<Inbox size={20} />}
-        title="Nenhum repo"
-        description="Adicione repositórios em Configurações para começar."
-        compact
+        title="Nenhum repositório, ainda."
+        description="adicione um em configurações."
       />
     );
   }
   if (query) {
     return (
       <EmptyState
-        icon={<Search size={20} />}
-        title="Nada encontrado"
-        description={`Nenhum PR casa com "${query}".`}
-        compact
+        title="Nada encontrado."
+        description={`nenhum PR casa com "${query}".`}
       />
     );
   }
   if (totalAll === 0) {
     return (
       <EmptyState
-        icon={<Inbox size={20} />}
-        title="Inbox vazio"
-        description="Nenhum PR ativo nos repositórios configurados."
-        compact
+        title="Nada na sua fila."
+        description="nenhum PR ativo nos repos configurados."
       />
     );
   }
   return (
     <EmptyState
-      icon={<Inbox size={20} />}
-      title="Vazio nessa aba"
-      description="Tente a outra aba ou ajuste seus repositórios."
-      compact
+      title="Vazio nessa aba."
+      description="tente a outra ou ajuste seus repos."
     />
   );
 }

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Inbox, Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Badge, type BadgeTone } from "./Badge";
 import { Button, type ButtonSize, type ButtonVariant } from "./Button";
@@ -91,7 +91,6 @@ export function UiGallery() {
 
       <Section title="EmptyState">
         <EmptyState
-          icon={<Inbox size={24} />}
           title="Nada na sua fila."
           description="tudo limpo · 09:42"
           action={<Button variant="link" tone="accent">abrir configurações</Button>}

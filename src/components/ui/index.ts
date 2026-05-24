@@ -10,3 +10,5 @@ export { Badge, type BadgeTone } from "./Badge";
 export { Avatar } from "./Avatar";
 export { Spinner } from "./Spinner";
 export { EmptyState } from "./EmptyState";
+export { Sweep, SkeletonBars } from "./Sweep";
+export { ErrorBlock } from "./ErrorBlock";

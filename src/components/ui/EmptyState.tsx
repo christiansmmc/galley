@@ -1,31 +1,25 @@
 import type { ReactNode } from "react";
 
 interface Props {
-  /**
-   * Etapa 3 S3: kept for backwards compatibility with existing call sites,
-   * but no longer rendered. The new shape (per `design/etapa3-workshop`)
-   * is "no icon, no pill" — a serif-italic line + optional mono sub-line.
-   * Will be removed entirely in S9 once every call site stops passing it.
-   */
-  icon?: ReactNode;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
-  compact?: boolean;
+  align?: "center" | "left";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function EmptyState({ icon: _icon, title, description, action, compact }: Props) {
+export function EmptyState({ title, description, action, align = "center" }: Props) {
+  const left = align === "left";
   return (
     <div style={{
       display: "flex",
       flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      padding: compact ? "var(--space-7) var(--space-6)" : "var(--space-10) var(--space-7)",
+      alignItems: left ? "flex-start" : "center",
+      justifyContent: left ? "flex-start" : "center",
+      textAlign: left ? "left" : "center",
+      padding: left ? "var(--space-9) var(--space-9)" : "var(--space-10) var(--space-7)",
       color: "var(--c-subtext)",
       gap: "var(--space-4)",
+      maxWidth: left ? 480 : undefined,
     }}>
       <div style={{
         fontFamily: "var(--font-serif)",
