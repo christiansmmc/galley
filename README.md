@@ -167,3 +167,7 @@ The visual language is documented in [`design/etapa3-workshop/README.md`](design
 ## License
 
 [MIT](LICENSE).
+
+---
+
+> Quer screenshots em alta resolução? `App Mock Galley.html` está incluído neste pacote — abra no navegador, escolha a cena pelo toggle no canto inferior, e capture na resolução que quiser. Os PNGs em `screenshots/` foram capturados no ambiente sandbox a 924×540 e podem ficar pequenos no GitHub. Para o README definitivo, recapture o mock direto na sua máquina a 1520×960 (resolução de design).
