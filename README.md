@@ -1,8 +1,14 @@
-# Galley
+<p align="center">
+  <img src="src-tauri/icons/512x512.png" alt="Galley" width="128" />
+</p>
 
-Linux desktop GitHub PR reviewer. Tauri 2 (Rust) + React/TypeScript (Vite).
-Built around a calm-workshop design language — linen (dark) / paper (light)
-palette, sage accent, hairline borders, mono for facts.
+<h1 align="center">Galley</h1>
+
+<p align="center">
+  Linux desktop GitHub PR reviewer. Tauri 2 (Rust) + React/TypeScript (Vite).<br>
+  Calm-workshop design language — linen (dark) / paper (light), sage accent,<br>
+  hairline borders, mono for facts.
+</p>
 
 > "Reading. No summaries."
 
