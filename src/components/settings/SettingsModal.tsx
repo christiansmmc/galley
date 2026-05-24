@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Modal } from "../ui";
 import { ReposSection } from "./ReposSection";
 import { FiltersSection } from "./FiltersSection";
@@ -8,6 +8,7 @@ import { ContaSection } from "./ContaSection";
 import { AtalhosSection } from "./AtalhosSection";
 import { PaletteSection } from "./PaletteSection";
 import { useT } from "../../i18n";
+import { usePrsStore } from "../../state/prsStore";
 
 type SectionId = "aparencia" | "repos" | "filtros" | "diff" | "palette" | "conta" | "atalhos";
 
@@ -23,10 +24,10 @@ const NAV: NavItem[] = [
   { id: "atalhos", labelKey: "settings.nav.shortcuts" },
 ];
 
-function renderSection(id: SectionId) {
+function renderSection(id: SectionId, onReposChanged: () => void) {
   switch (id) {
     case "aparencia": return <AparenciaSection />;
-    case "repos":     return <ReposSection />;
+    case "repos":     return <ReposSection onReposChanged={onReposChanged} />;
     case "filtros":   return <FiltersSection />;
     case "diff":      return <DiffSection />;
     case "palette":   return <PaletteSection />;
@@ -38,9 +39,21 @@ function renderSection(id: SectionId) {
 export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT();
   const [active, setActive] = useState<SectionId>("aparencia");
+  const reposDirty = useRef(false);
+  const refreshLists = usePrsStore(s => s.refreshLists);
+
+  const handleClose = useCallback(() => {
+    if (reposDirty.current) {
+      reposDirty.current = false;
+      void refreshLists();
+    }
+    onClose();
+  }, [onClose, refreshLists]);
+
+  const markReposDirty = useCallback(() => { reposDirty.current = true; }, []);
 
   return (
-    <Modal title={t("settings.title")} open={open} onClose={onClose} minWidth={760} maxWidth={760}>
+    <Modal title={t("settings.title")} open={open} onClose={handleClose} minWidth={760} maxWidth={760}>
       <div style={{ display: "flex", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
         <nav
           aria-label={t("settings.sections_aria")}
@@ -81,7 +94,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           })}
         </nav>
         <div style={{ flex: 1, minWidth: 0, padding: "24px 32px", overflow: "auto" }}>
-          {renderSection(active)}
+          {renderSection(active, markReposDirty)}
         </div>
       </div>
     </Modal>
