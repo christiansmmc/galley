@@ -46,7 +46,7 @@ const baseUi = {
   diff_font: { size: 13, family: "JetBrains Mono" },
   palette_sources: { prs: true, files: true, repos: true, commands: true },
   accent_color: "sage" as const,
-  creed: "lendo. sem resumos.",
+  creed: "reading",
   language: "auto" as const,
 };
 

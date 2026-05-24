@@ -146,6 +146,13 @@
       "compact_paths": "Caminhos compactos na árvore de arquivos",
       "compact_paths_aria": "Caminhos compactos",
       "voice": "Voz",
+      "voice_options": {
+        "reading": "lendo. sem resumos.",
+        "code_first": "código antes do colega.",
+        "no_shortcuts": "sem atalhos não pedidos.",
+        "one_diff": "um diff por vez.",
+        "you_review": "você é o revisor."
+      },
       "language": "Idioma",
       "language_auto": "sistema",
       "language_en": "english",
