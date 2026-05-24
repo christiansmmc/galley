@@ -1,18 +1,9 @@
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
+import { useSettingsStore } from "../../state/settingsStore";
 import type { CiStatus } from "../../ipc/types";
 
-/**
- * Etapa 3 · S2 — workshop status line.
- *
- * Persistent 28px footer, mantle bg, top hairline. Subscribes to the current
- * PR + draft count and renders a row of "segments" on the left. The right side
- * floats a single italic-serif creed — the app's voice. Segments hide when
- * irrelevant (e.g. no PR open → only the creed shows).
- *
- * Creed is hardcoded here; S7 wires it to `settings.ui.creed`.
- */
-const CREED = "lendo. sem resumos.";
+const CREED_FALLBACK = "lendo. sem resumos.";
 
 function ciDotColor(status: CiStatus | undefined): string {
   switch (status) {
@@ -26,6 +17,7 @@ function ciDotColor(status: CiStatus | undefined): string {
 export function StatusLine() {
   const currentPr = usePrsStore(s => s.currentPr);
   const draftCount = useDraftsStore(s => s.drafts.length);
+  const creed = useSettingsStore(s => s.settings?.ui.creed) || CREED_FALLBACK;
 
   const summary = currentPr?.summary;
   const repoFullName = summary ? `${summary.owner}/${summary.repo}` : null;
@@ -106,7 +98,7 @@ export function StatusLine() {
           color: "var(--c-subtext)",
         }}
       >
-        {CREED}
+        {creed}
       </span>
     </div>
   );

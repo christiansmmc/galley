@@ -34,7 +34,7 @@ export function ReposSection() {
 
   return (
     <section>
-      <h4 style={{ margin: "0 0 var(--space-4)" }}>Repositórios</h4>
+      <h3 className="settings-section-title">Repositórios</h3>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", marginBottom: "var(--space-6)" }}>
         {repos.length === 0 && (

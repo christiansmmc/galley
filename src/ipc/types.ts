@@ -4,6 +4,8 @@ export type DiffRenderMode = "side-by-side" | "inline" | "auto";
 
 export type Density = "compact" | "comfortable" | "spacious";
 
+export type AccentColor = "sage" | "ochre" | "ink" | "rust";
+
 export interface DiffFont {
   size: number;
   family: string;
@@ -20,6 +22,8 @@ export interface UiPrefs {
   density: Density;
   diff_font: DiffFont;
   palette_sources: PaletteSources;
+  accent_color: AccentColor;
+  creed: string;
 }
 
 export interface PaletteSources {

@@ -40,7 +40,7 @@ export function DiffSection() {
 
   return (
     <section>
-      <h4 style={{ margin: "0 0 var(--space-4)" }}>Diff</h4>
+      <h3 className="settings-section-title">Diff</h3>
 
       <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
         Modo de renderização

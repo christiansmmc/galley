@@ -27,9 +27,14 @@ pub struct UiPrefs {
     pub diff_font: DiffFont,
     #[serde(default)]
     pub palette_sources: PaletteSources,
+    #[serde(default)]
+    pub accent_color: AccentColor,
+    #[serde(default = "default_creed")]
+    pub creed: String,
 }
 
 fn default_true() -> bool { true }
+fn default_creed() -> String { "lendo. sem resumos.".to_string() }
 
 impl Default for UiPrefs {
     fn default() -> Self {
@@ -44,8 +49,20 @@ impl Default for UiPrefs {
             density: Density::default(),
             diff_font: DiffFont::default(),
             palette_sources: PaletteSources::default(),
+            accent_color: AccentColor::default(),
+            creed: default_creed(),
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum AccentColor {
+    #[default]
+    Sage,
+    Ochre,
+    Ink,
+    Rust,
 }
 
 /// Which source types the command palette searches over.
