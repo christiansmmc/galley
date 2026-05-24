@@ -90,22 +90,28 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
           >
             {busy ? "salvando…" : "salvar token"}
           </Button>
-          <a
-            href="https://github.com/settings/tokens/new?scopes=repo&description=PR%20Reviewer"
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => {
+              void api.openExternalUrl(
+                "https://github.com/settings/tokens/new?scopes=repo&description=PR%20Reviewer",
+              );
+            }}
             style={{
+              background: "transparent",
+              border: 0,
+              padding: 0,
               fontFamily: "var(--font-mono)",
               fontSize: 11,
               color: "var(--c-subtext)",
-              textDecoration: "none",
+              cursor: "pointer",
               borderBottom: "1px solid transparent",
             }}
             onMouseEnter={(e) => { e.currentTarget.style.color = "var(--c-text)"; e.currentTarget.style.borderBottomColor = "var(--c-line)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--c-subtext)"; e.currentTarget.style.borderBottomColor = "transparent"; }}
           >
             criar token no github ↗
-          </a>
+          </button>
         </div>
       </div>
     </div>

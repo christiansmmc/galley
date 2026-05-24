@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, settings, viewed};
+use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, settings, system, viewed};
 use pr_reviewer::AppState;
 
 fn main() {
@@ -33,6 +33,7 @@ fn main() {
             settings::get_settings, settings::set_settings,
             secrets::set_pat, secrets::clear_pat, secrets::has_pat, secrets::current_user,
             viewed::list_viewed_files, viewed::mark_viewed,
+            system::open_external_url,
         ])
         .setup(|app| {
             tauri::async_runtime::block_on(async move {

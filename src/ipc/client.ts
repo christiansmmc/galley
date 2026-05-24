@@ -71,4 +71,6 @@ export const api = {
   clearPat: () => invoke<void>("clear_pat"),
   hasPat: () => invoke<boolean>("has_pat"),
   currentUser: () => invoke<string | null>("current_user"),
+
+  openExternalUrl: (url: string) => invoke<void>("open_external_url", { url }),
 };

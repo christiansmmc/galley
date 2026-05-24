@@ -34,7 +34,7 @@ export function EmptyState({ title, description, action, align = "center" }: Pro
           fontSize: 11,
           letterSpacing: "0.04em",
           textTransform: "uppercase",
-          color: "var(--c-overlay)",
+          color: "var(--c-subtext)",
           maxWidth: 320,
           lineHeight: "var(--lh-normal)",
         }}>{description}</div>

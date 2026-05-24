@@ -32,7 +32,10 @@ interface PrsState {
 export const usePrsStore = create<PrsState>((set, get) => ({
   mine: [],
   reviewRequested: [],
-  loadingLists: false,
+  // Defaults to true so the very first render shows the loading sweep +
+  // skeleton instead of flashing an "empty inbox" state for one frame
+  // while the first refreshLists() roundtrip resolves.
+  loadingLists: true,
   listError: null,
 
   currentPr: null,

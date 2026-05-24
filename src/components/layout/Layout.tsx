@@ -45,7 +45,7 @@ export function Layout({ prList, fileTree, diff }: Props) {
         </Panel>
         <Separator style={{ width: 1, background: "var(--c-surface0)", cursor: "col-resize" }} />
         <Panel defaultSize={78} minSize={30}>
-          <div style={{ height: "100%", background: "var(--c-base)" }} />
+          <div style={{ height: "100%", background: "var(--c-base)" }}>{diff}</div>
         </Panel>
       </Group>
     );
