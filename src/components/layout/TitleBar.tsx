@@ -173,14 +173,24 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         </button>
 
         {currentPr && (
-          <Button
-            variant="primary"
-            size="sm"
+          <button
             onClick={onOpenSubmit}
             title="Enviar review"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.04em",
+              color: "var(--c-text)",
+              background: "var(--c-accent-soft)",
+              border: "1px solid var(--c-accent)",
+              padding: "4px 14px",
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
           >
             revisar{draftCount > 0 ? ` (${draftCount})` : ""}
-          </Button>
+          </button>
         )}
 
         <Button
