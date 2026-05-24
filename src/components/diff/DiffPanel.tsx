@@ -1,6 +1,6 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -12,7 +12,8 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
-import { EmptyState, Spinner } from "../ui";
+import { EmptyState, Spinner, Button } from "../ui";
+import { splitPath } from "../../util/path";
 
 interface ParsedDiff {
   original: string;
@@ -155,8 +156,10 @@ export function DiffPanel() {
   const currentPr = usePrsStore(s => s.currentPr);
   const viewedFiles = usePrsStore(s => s.viewedFiles);
   const setViewed = usePrsStore(s => s.setViewed);
-  const renderModePref = useSettingsStore(s => s.settings?.ui.diff_render_mode);
-  const diffFont = useSettingsStore(s => s.settings?.ui.diff_font);
+  const settings = useSettingsStore(s => s.settings);
+  const saveSettings = useSettingsStore(s => s.save);
+  const renderModePref = settings?.ui.diff_render_mode;
+  const diffFont = settings?.ui.diff_font;
   const { resolved } = useTheme();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -186,6 +189,26 @@ export function DiffPanel() {
 
   const file = diff.find(f => f.path === selectedFile);
   const parsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+
+  // `v` toggles viewed for the open file. Ignore when an editable field has
+  // focus (textarea / input / contentEditable) so typing "v" in a reply box
+  // doesn't flip the seen-dot.
+  useEffect(() => {
+    if (!file) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key !== "v" && e.key !== "V") return;
+      const t = e.target as HTMLElement | null;
+      if (t) {
+        const tag = t.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || t.isContentEditable) return;
+      }
+      e.preventDefault();
+      setViewed(file.path, !viewedFiles.has(file.path));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [file, setViewed, viewedFiles]);
   const {
     original, modified,
     modifiedLineMap, originalLineMap, modifiedFileToEditor,
@@ -482,42 +505,77 @@ export function DiffPanel() {
   }
 
   const isViewed = viewedFiles.has(file.path);
+  const { head, leaf } = splitPath(file.path);
+
+  const copyPath = () => {
+    if (!navigator.clipboard) return;
+    void navigator.clipboard.writeText(file.path);
+  };
+  const toggleRenderMode = () => {
+    if (!settings) return;
+    const next = renderSideBySide ? "inline" : "side-by-side";
+    void saveSettings({ ...settings, ui: { ...settings.ui, diff_render_mode: next } });
+  };
 
   return (
     <div ref={setPanelEl} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
-        padding: "var(--space-4) var(--space-6)",
-        borderBottom: "1px solid var(--c-surface0)",
+        padding: "10px 24px",
+        borderBottom: "1px solid var(--c-line)",
         background: "var(--c-mantle)",
-        fontSize: "var(--text-base)",
-        color: "var(--c-subtext)",
-        fontFamily: "var(--font-mono)",
-        display: "flex", alignItems: "center", gap: "var(--space-4)",
+        display: "flex", alignItems: "center", gap: "12px",
       }}>
-        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {file.path}
-          <span style={{ marginLeft: "var(--space-4)", color: "var(--c-success)" }}>+{file.additions}</span>
-          <span style={{ marginLeft: "var(--space-2)", color: "var(--c-danger)" }}>−{file.deletions}</span>
-        </span>
         <button
           onClick={() => setViewed(file.path, !isViewed)}
-          title={isViewed ? "Desmarcar como visto" : "Marcar como visto"}
+          title={isViewed ? "desmarcar como visto · v" : "marcar como visto · v"}
+          aria-label={isViewed ? "desmarcar como visto" : "marcar como visto"}
           aria-pressed={isViewed}
           style={{
-            display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
-            padding: "var(--space-2) var(--space-4)",
-            border: `1px solid ${isViewed ? "var(--c-success)" : "var(--c-surface1)"}`,
-            borderRadius: "var(--radius-pill)",
-            background: isViewed ? "var(--c-accent-soft, transparent)" : "transparent",
-            color: isViewed ? "var(--c-success)" : "var(--c-subtext)",
-            fontSize: "var(--text-sm)",
-            fontFamily: "var(--font-ui)",
+            flex: "0 0 auto",
+            width: 9, height: 9,
+            borderRadius: "50%",
+            border: `1.5px solid ${isViewed ? "var(--c-accent)" : "var(--c-overlay)"}`,
+            background: isViewed ? "var(--c-accent)" : "transparent",
+            padding: 0,
             cursor: "pointer",
           }}
+        />
+        <span style={{
+          flex: 1, minWidth: 0,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontFamily: "var(--font-mono)", fontSize: 11,
+        }}>
+          {head.map((seg, i) => (
+            <span key={i}>
+              <span style={{ color: "var(--c-subtext)" }}>{seg}</span>
+              <span style={{ color: "var(--c-overlay)" }}>{" / "}</span>
+            </span>
+          ))}
+          <span style={{ color: "var(--c-text)", fontWeight: 500 }}>{leaf}</span>
+        </span>
+        <span style={{
+          flex: "0 0 auto",
+          fontFamily: "var(--font-mono)", fontSize: 10.5,
+          display: "inline-flex", gap: "var(--space-2)",
+        }}>
+          <span style={{ color: "var(--c-success)" }}>+{file.additions}</span>
+          <span style={{ color: "var(--c-danger)" }}>−{file.deletions}</span>
+        </span>
+        <Button
+          variant="link"
+          onClick={copyPath}
+          title="copiar caminho"
         >
-          {isViewed ? <Check size={12} /> : <Eye size={12} />}
-          {isViewed ? "Visto" : "Marcar como visto"}
-        </button>
+          copiar caminho
+        </Button>
+        <Button
+          variant="link"
+          onClick={toggleRenderMode}
+          title={renderSideBySide ? "alternar para inline" : "alternar para lado a lado"}
+          disabled={!settings}
+        >
+          {renderSideBySide ? "inline" : "lado a lado"}
+        </Button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
