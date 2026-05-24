@@ -1,17 +1,20 @@
-interface Shortcut { keys: string[]; desc: string; }
+import { useT } from "../../i18n";
+
+interface Shortcut { keys: string[]; descKey: string; }
 
 const SHORTCUTS: Shortcut[] = [
-  { keys: ["Ctrl", "K"], desc: "Paleta de comandos (PRs, arquivos, comandos)" },
-  { keys: ["Ctrl", "1"], desc: "Mostrar / esconder lista de PRs" },
-  { keys: ["Ctrl", "2"], desc: "Mostrar / esconder árvore de arquivos" },
-  { keys: ["Ctrl", "P"], desc: "Focar busca na lista de PRs" },
-  { keys: ["Esc"], desc: "Fechar modal ou painel aberto" },
+  { keys: ["Ctrl", "K"], descKey: "settings.shortcuts.palette_desc" },
+  { keys: ["Ctrl", "1"], descKey: "settings.shortcuts.toggle_pr_list_desc" },
+  { keys: ["Ctrl", "2"], descKey: "settings.shortcuts.toggle_file_tree_desc" },
+  { keys: ["Ctrl", "P"], descKey: "settings.shortcuts.focus_search_desc" },
+  { keys: ["Esc"], descKey: "settings.shortcuts.close_modal_desc" },
 ];
 
 export function AtalhosSection() {
+  const t = useT();
   return (
     <section>
-      <h3 className="settings-section-title">Atalhos</h3>
+      <h3 className="settings-section-title">{t("settings.shortcuts.title")}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {SHORTCUTS.map((s, i) => (
           <div
@@ -24,7 +27,7 @@ export function AtalhosSection() {
               fontSize: "var(--text-base)",
             }}
           >
-            <span style={{ color: "var(--c-text)" }}>{s.desc}</span>
+            <span style={{ color: "var(--c-text)" }}>{t(s.descKey)}</span>
             <span style={{ display: "flex", gap: "var(--space-2)" }}>
               {s.keys.map((k, j) => (
                 <kbd
@@ -45,7 +48,7 @@ export function AtalhosSection() {
         ))}
       </div>
       <p style={{ marginTop: "var(--space-4)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-        Mais atalhos serão adicionados conforme novas ações ganharem hotkeys.
+        {t("settings.shortcuts.more_hint")}
       </p>
     </section>
   );

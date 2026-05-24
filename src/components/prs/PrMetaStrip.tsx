@@ -2,12 +2,13 @@ import { useState } from "react";
 import type { CiStatus, PrDetail } from "../../ipc/types";
 import { formatAge } from "../../util/time";
 import { api } from "../../ipc/client";
+import { useT } from "../../i18n";
 
-const CI_LABEL: Record<CiStatus, string> = {
-  passing: "CI passou",
-  pending: "CI rodando",
-  failing: "CI falhou",
-  none: "Sem checks",
+const CI_LABEL_KEY: Record<CiStatus, string> = {
+  passing: "pr_meta.ci_passing",
+  pending: "pr_meta.ci_pending",
+  failing: "pr_meta.ci_failing",
+  none: "pr_meta.ci_none",
 };
 const CI_COLOR: Record<CiStatus, string> = {
   passing: "var(--c-success)",
@@ -19,6 +20,7 @@ const CI_COLOR: Record<CiStatus, string> = {
 interface Props { pr: PrDetail; }
 
 export function PrMetaStrip({ pr }: Props) {
+  const t = useT();
   const [bodyOpen, setBodyOpen] = useState(false);
   const s = pr.summary;
   const age = formatAge(s.updated_at);
@@ -55,7 +57,7 @@ export function PrMetaStrip({ pr }: Props) {
             <Sep />
             <MetaItem>{age}</MetaItem>
             <Sep />
-            <MetaItem>{s.changed_files} arq</MetaItem>
+            <MetaItem>{t("pr_meta.files_count", { count: s.changed_files })}</MetaItem>
             <Sep />
             <MetaItem>
               <span style={{ color: "var(--c-success)" }}>+{pr.additions}</span>
@@ -63,7 +65,7 @@ export function PrMetaStrip({ pr }: Props) {
               <span style={{ color: "var(--c-danger)" }}>−{pr.deletions}</span>
             </MetaItem>
             <Sep />
-            <MetaItem title={CI_LABEL[s.ci_status]}>
+            <MetaItem title={t(CI_LABEL_KEY[s.ci_status])}>
               <span style={{
                 display: "inline-block",
                 width: 6, height: 6,
@@ -73,12 +75,12 @@ export function PrMetaStrip({ pr }: Props) {
                 verticalAlign: "middle",
               }} />
               <span style={{ color: s.ci_status === "passing" ? "var(--c-success)" : "var(--c-subtext)" }}>
-                {CI_LABEL[s.ci_status]}
+                {t(CI_LABEL_KEY[s.ci_status])}
               </span>
             </MetaItem>
             <Sep />
             <MetaItem>
-              {pr.reviewers_count} reviewer{pr.reviewers_count === 1 ? "" : "s"}
+              {t("pr_meta.reviewer", { count: pr.reviewers_count })}
             </MetaItem>
             {pr.draft && (<>
               <Sep />
@@ -91,7 +93,7 @@ export function PrMetaStrip({ pr }: Props) {
                   textTransform: "uppercase",
                   letterSpacing: 0.4,
                 }}>
-                  Draft
+                  {t("pr_meta.draft")}
                 </span>
               </MetaItem>
             </>)}
@@ -129,7 +131,7 @@ export function PrMetaStrip({ pr }: Props) {
                 aria-expanded={bodyOpen}
                 style={{ cursor: "pointer" }}
               >
-                {bodyOpen ? "esconder descrição" : "mostrar descrição"}
+                {bodyOpen ? t("pr_meta.hide_description") : t("pr_meta.show_description")}
               </span>
               <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
             </>
@@ -141,7 +143,7 @@ export function PrMetaStrip({ pr }: Props) {
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGithub(); } }}
             style={{ cursor: "pointer" }}
           >
-            abrir no github ↗
+            {t("pr_meta.open_in_github")}
           </span>
         </div>
       </div>

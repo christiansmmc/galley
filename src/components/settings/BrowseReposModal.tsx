@@ -3,6 +3,7 @@ import { Lock, GitFork, Archive } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { RemoteRepo, RepoBrowseFilters, RepoConfig } from "../../ipc/types";
 import { Button, EmptyState, Input, Modal, Spinner } from "../ui";
+import { useT } from "../../i18n";
 
 interface Props {
   open: boolean;
@@ -11,12 +12,12 @@ interface Props {
   onSaved: (repos: RepoConfig[]) => Promise<void> | void;
 }
 
-interface FilterPill { key: keyof RepoBrowseFilters; label: string; icon: React.ReactNode; }
+interface FilterPill { key: keyof RepoBrowseFilters; labelKey: string; icon: React.ReactNode; }
 
 const PILLS: FilterPill[] = [
-  { key: "include_orgs", label: "Org", icon: null },
-  { key: "include_forks", label: "Forks", icon: <GitFork size={12} /> },
-  { key: "include_archived", label: "Arquivados", icon: <Archive size={12} /> },
+  { key: "include_orgs", labelKey: "settings.browse.filter_org", icon: null },
+  { key: "include_forks", labelKey: "settings.browse.filter_forks", icon: <GitFork size={12} /> },
+  { key: "include_archived", labelKey: "settings.browse.filter_archived", icon: <Archive size={12} /> },
 ];
 
 const DEFAULT_FILTERS: RepoBrowseFilters = {
@@ -26,6 +27,7 @@ const DEFAULT_FILTERS: RepoBrowseFilters = {
 };
 
 export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) {
+  const t = useT();
   const [filters, setFilters] = useState<RepoBrowseFilters>(DEFAULT_FILTERS);
   const [remote, setRemote] = useState<RemoteRepo[]>([]);
   const [page, setPage] = useState(1);
@@ -106,14 +108,14 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
 
   return (
     <Modal
-      title="Procurar repositórios"
+      title={t("settings.browse.title")}
       open={open}
       onClose={onClose}
       maxWidth={720}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="subtle" onClick={save}>Salvar ({selected.size})</Button>
+          <Button variant="ghost" onClick={onClose}>{t("settings.browse.cancel")}</Button>
+          <Button variant="subtle" onClick={save}>{t("settings.browse.save_count", { count: selected.size })}</Button>
         </>
       }
     >
@@ -121,9 +123,9 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar..."
+          placeholder={t("settings.browse.search_placeholder")}
           size="sm"
-          aria-label="Buscar repos"
+          aria-label={t("settings.browse.search_aria")}
         />
 
         <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
@@ -146,7 +148,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
                 }}
               >
                 {p.icon}
-                {p.label}
+                {t(p.labelKey)}
               </button>
             );
           })}
@@ -167,8 +169,8 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
         >
           {visible.length === 0 && !loading && (
             <EmptyState
-              title="Nenhum repo encontrado"
-              description="ajuste os filtros ou a busca."
+              title={t("settings.browse.empty_title")}
+              description={t("settings.browse.empty_desc")}
             />
           )}
           {visible.map(r => {
@@ -214,7 +216,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
           )}
           {exhausted && visible.length > 0 && (
             <div style={{ padding: "var(--space-4)", textAlign: "center", fontSize: "var(--text-xs)", color: "var(--c-subtext)" }}>
-              Fim da lista.
+              {t("settings.browse.end_of_list")}
             </div>
           )}
         </div>

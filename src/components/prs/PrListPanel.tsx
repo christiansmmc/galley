@@ -6,6 +6,7 @@ import { useUiStore } from "../../state/uiStore";
 import { PrListItem } from "./PrListItem";
 import { Button, EmptyState, Input, SkeletonBars, Spinner, Sweep, Tabs } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
+import { useT } from "../../i18n";
 
 type Tab = "mine" | "review_requested";
 
@@ -31,6 +32,7 @@ function matchesQuery(pr: PrSummary, q: string): boolean {
 }
 
 export function PrListPanel() {
+  const t = useT();
   const { mine, reviewRequested, loadingLists, refreshLists, openPr, currentPr } = usePrsStore();
   const pendingPr = usePrsStore(s => s.pendingPr);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
@@ -79,14 +81,14 @@ export function PrListPanel() {
           textTransform: "uppercase",
           color: "var(--c-overlay)",
         }}>
-          pull requests
+          {t("pr_list.label")}
         </span>
         {currentPr && (
           <button
             type="button"
             onClick={() => setPrListCollapsed(true)}
-            title="Recolher lista (Ctrl+1)"
-            aria-label="Recolher lista"
+            title={t("pr_list.collapse")}
+            aria-label={t("pr_list.collapse_aria")}
             style={{
               background: "transparent", border: 0,
               color: "var(--c-overlay)", cursor: "pointer",
@@ -119,10 +121,10 @@ export function PrListPanel() {
           ref={searchRef}
           size="sm"
           mono
-          placeholder="buscar título, autor, #"
+          placeholder={t("pr_list.search_placeholder")}
           value={query}
           onChange={e => setQuery(e.target.value)}
-          aria-label="Buscar PRs"
+          aria-label={t("pr_list.search_aria")}
           style={{ paddingLeft: "var(--space-9)", fontSize: 12 }}
         />
       </div>
@@ -131,8 +133,8 @@ export function PrListPanel() {
         value={tab}
         onChange={setTab}
         tabs={[
-          { id: "review_requested", label: `Pra revisar (${filteredRr.length})` },
-          { id: "mine", label: `Meus (${filteredMine.length})` },
+          { id: "review_requested", label: t("pr_list.tab_review_requested", { count: filteredRr.length }) },
+          { id: "mine", label: t("pr_list.tab_mine", { count: filteredMine.length }) },
         ]}
         trailing={
           <Button
@@ -140,8 +142,8 @@ export function PrListPanel() {
             size="md"
             onClick={refreshLists}
             disabled={loadingLists}
-            title="Atualizar"
-            aria-label="Atualizar"
+            title={t("pr_list.refresh")}
+            aria-label={t("pr_list.refresh")}
           >
             {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
           </Button>
@@ -153,7 +155,7 @@ export function PrListPanel() {
         {loadingLists && list.length === 0 ? (
           <SkeletonBars rows={8} />
         ) : list.length === 0 ? (
-          renderEmpty({ hasRepos, query, totalAll })
+          renderEmpty({ hasRepos, query, totalAll, t })
         ) : (
           groups.map(([repo, prs]) => {
             const [owner, name] = repo.split("/");
@@ -213,35 +215,37 @@ export function PrListPanel() {
   );
 }
 
-function renderEmpty({ hasRepos, query, totalAll }: { hasRepos: boolean; query: string; totalAll: number }) {
+type TFn = ReturnType<typeof useT>;
+
+function renderEmpty({ hasRepos, query, totalAll, t }: { hasRepos: boolean; query: string; totalAll: number; t: TFn }) {
   if (!hasRepos) {
     return (
       <EmptyState
-        title="Nenhum repositório, ainda."
-        description="adicione um em configurações."
+        title={t("pr_list.empty_no_repos_title")}
+        description={t("pr_list.empty_no_repos_desc")}
       />
     );
   }
   if (query) {
     return (
       <EmptyState
-        title="Nada encontrado."
-        description={`nenhum PR casa com "${query}".`}
+        title={t("pr_list.empty_search_title")}
+        description={t("pr_list.empty_search_desc", { query })}
       />
     );
   }
   if (totalAll === 0) {
     return (
       <EmptyState
-        title="Nada na sua fila."
-        description="nenhum PR ativo nos repos configurados."
+        title={t("pr_list.empty_inbox_title")}
+        description={t("pr_list.empty_inbox_desc")}
       />
     );
   }
   return (
     <EmptyState
-      title="Vazio nessa aba."
-      description="tente a outra ou ajuste seus repos."
+      title={t("pr_list.empty_tab_title")}
+      description={t("pr_list.empty_tab_desc")}
     />
   );
 }

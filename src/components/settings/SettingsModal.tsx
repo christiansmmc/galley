@@ -7,19 +7,20 @@ import { AparenciaSection } from "./AparenciaSection";
 import { ContaSection } from "./ContaSection";
 import { AtalhosSection } from "./AtalhosSection";
 import { PaletteSection } from "./PaletteSection";
+import { useT } from "../../i18n";
 
 type SectionId = "aparencia" | "repos" | "filtros" | "diff" | "palette" | "conta" | "atalhos";
 
-interface NavItem { id: SectionId; label: string; }
+interface NavItem { id: SectionId; labelKey: string; }
 
 const NAV: NavItem[] = [
-  { id: "aparencia", label: "Aparência" },
-  { id: "repos", label: "Repositórios" },
-  { id: "filtros", label: "Filtros" },
-  { id: "diff", label: "Diff" },
-  { id: "palette", label: "Paleta" },
-  { id: "conta", label: "Conta" },
-  { id: "atalhos", label: "Atalhos" },
+  { id: "aparencia", labelKey: "settings.nav.appearance" },
+  { id: "repos", labelKey: "settings.nav.repos" },
+  { id: "filtros", labelKey: "settings.nav.filters" },
+  { id: "diff", labelKey: "settings.nav.diff" },
+  { id: "palette", labelKey: "settings.nav.palette" },
+  { id: "conta", labelKey: "settings.nav.account" },
+  { id: "atalhos", labelKey: "settings.nav.shortcuts" },
 ];
 
 function renderSection(id: SectionId) {
@@ -35,13 +36,14 @@ function renderSection(id: SectionId) {
 }
 
 export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const [active, setActive] = useState<SectionId>("aparencia");
 
   return (
-    <Modal title="Configurações" open={open} onClose={onClose} minWidth={760} maxWidth={760}>
+    <Modal title={t("settings.title")} open={open} onClose={onClose} minWidth={760} maxWidth={760}>
       <div style={{ display: "flex", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
         <nav
-          aria-label="Seções"
+          aria-label={t("settings.sections_aria")}
           style={{
             width: 200, flex: "0 0 auto",
             display: "flex", flexDirection: "column",
@@ -73,7 +75,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
                 }}
                 aria-current={selected ? "page" : undefined}
               >
-                {item.label}
+                {t(item.labelKey)}
               </button>
             );
           })}

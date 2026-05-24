@@ -1,13 +1,14 @@
 import type { CiStatus, PrSummary } from "../../ipc/types";
 import { formatAge } from "../../util/time";
+import { useT } from "../../i18n";
 
 interface Props { pr: PrSummary; selected: boolean; loading?: boolean; onClick: () => void; }
 
-const CI_LABEL: Record<CiStatus, string> = {
-  passing: "CI passou",
-  pending: "CI rodando",
-  failing: "CI falhou",
-  none: "Sem checks",
+const CI_LABEL_KEY: Record<CiStatus, string> = {
+  passing: "pr_meta.ci_passing",
+  pending: "pr_meta.ci_pending",
+  failing: "pr_meta.ci_failing",
+  none: "pr_meta.ci_none",
 };
 
 const CI_COLOR: Record<CiStatus, string> = {
@@ -18,10 +19,11 @@ const CI_COLOR: Record<CiStatus, string> = {
 };
 
 function CiDot({ status }: { status: CiStatus }) {
+  const t = useT();
   return (
     <span
-      title={CI_LABEL[status]}
-      aria-label={CI_LABEL[status]}
+      title={t(CI_LABEL_KEY[status])}
+      aria-label={t(CI_LABEL_KEY[status])}
       style={{
         width: 7,
         height: 7,

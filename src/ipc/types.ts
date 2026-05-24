@@ -6,6 +6,8 @@ export type Density = "compact" | "comfortable" | "spacious";
 
 export type AccentColor = "sage" | "ochre" | "ink" | "rust";
 
+export type LanguageChoice = "auto" | "en" | "pt-BR";
+
 export interface DiffFont {
   size: number;
   family: string;
@@ -24,6 +26,7 @@ export interface UiPrefs {
   palette_sources: PaletteSources;
   accent_color: AccentColor;
   creed: string;
+  language: LanguageChoice;
 }
 
 export interface PaletteSources {

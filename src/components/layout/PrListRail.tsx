@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import type { CiStatus, PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
+import { useT } from "../../i18n";
 
 const CI_COLOR: Record<CiStatus, string> = {
   passing: "var(--c-success)",
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function PrListRail({ onExpand }: Props) {
+  const t = useT();
   const reviewRequested = usePrsStore(s => s.reviewRequested);
   const mine = usePrsStore(s => s.mine);
   const currentPr = usePrsStore(s => s.currentPr);
@@ -46,8 +48,8 @@ export function PrListRail({ onExpand }: Props) {
       <button
         type="button"
         onClick={onExpand}
-        title="Expandir lista (Ctrl+1)"
-        aria-label="Expandir lista de PRs"
+        title={t("pr_list.expand")}
+        aria-label={t("pr_list.expand_aria")}
         style={{
           width: "100%",
           height: 28,
@@ -85,7 +87,7 @@ export function PrListRail({ onExpand }: Props) {
               type="button"
               onClick={() => openPr(p.owner, p.repo, p.number)}
               title={`#${p.number} ${p.title}`}
-              aria-label={`Abrir #${p.number} ${p.title}`}
+              aria-label={`#${p.number} ${p.title}`}
               aria-current={active || undefined}
               style={{
                 position: "relative",
@@ -138,7 +140,7 @@ export function PrListRail({ onExpand }: Props) {
           gap: 2,
           fontFamily: "var(--font-mono)",
         }}
-        title={`${total} PR${total === 1 ? "" : "s"} na fila`}
+        title={t("pr_list.queue_count", { count: total })}
       >
         <span style={{ fontSize: 11, color: "var(--c-text)" }}>{total}</span>
         <span style={{
@@ -147,7 +149,7 @@ export function PrListRail({ onExpand }: Props) {
           textTransform: "uppercase",
           color: "var(--c-overlay)",
         }}>
-          prs
+          {t("pr_list.prs_label")}
         </span>
       </div>
     </div>

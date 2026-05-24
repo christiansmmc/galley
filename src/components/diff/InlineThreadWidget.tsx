@@ -7,6 +7,7 @@ import { userMessage } from "../../ipc/errors";
 import { Button, Textarea } from "../ui";
 import { inlineWidgetShell } from "./inlineWidgetStyle";
 import { formatAge } from "../../util/time";
+import { useT } from "../../i18n";
 
 interface Props {
   thread: ReviewThread;
@@ -23,6 +24,7 @@ interface Props {
  * "responder" is tone="neutral".
  */
 export function InlineThreadWidget({ thread }: Props) {
+  const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
   const refreshThreads = usePrsStore(s => s.refreshThreads);
   const pushToast = useUiStore(s => s.pushToast);
@@ -36,7 +38,7 @@ export function InlineThreadWidget({ thread }: Props) {
   const lastAuthor = lastComment?.author ?? "—";
   const age = formatAge(lastComment?.created_at ?? "");
   const isRange = thread.start_line != null && thread.start_line !== thread.line;
-  const sideLabel = thread.side === "RIGHT" ? "direita" : "esquerda";
+  const sideLabel = thread.side === "RIGHT" ? t("comment.side_right") : t("comment.side_left");
   const lineLabel = isRange
     ? `L${thread.start_line}–${thread.line ?? "?"}`
     : `L${thread.line ?? "?"}`;
@@ -57,7 +59,7 @@ export function InlineThreadWidget({ thread }: Props) {
       );
       setReply("");
       await refreshThreads();
-      pushToast("info", "Resposta enviada.");
+      pushToast("info", t("comment.reply_sent"));
     } catch (e) {
       pushToast("error", userMessage(e));
     } finally {
@@ -76,7 +78,7 @@ export function InlineThreadWidget({ thread }: Props) {
         thread.node_id,
       );
       await refreshThreads();
-      pushToast("info", "Thread resolvida.");
+      pushToast("info", t("comment.thread_resolved"));
     } catch (e) {
       pushToast("error", userMessage(e));
     } finally {
@@ -86,7 +88,7 @@ export function InlineThreadWidget({ thread }: Props) {
 
   const ruleColor = isResolved ? "var(--c-overlay)" : "var(--c-accent)";
   const tagColor = isResolved ? "var(--c-overlay)" : "var(--c-accent)";
-  const tagLabel = isResolved ? "RESOLVIDO" : "ABERTO";
+  const tagLabel = isResolved ? t("comment.resolved_upper") : t("comment.open_upper");
 
   return (
     <div
@@ -139,7 +141,7 @@ export function InlineThreadWidget({ thread }: Props) {
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--c-line-soft)" }}>
           <Textarea
             rows={focused || reply.length > 0 ? 4 : 2}
-            placeholder="responder…"
+            placeholder={t("comment.reply_placeholder")}
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -157,13 +159,13 @@ export function InlineThreadWidget({ thread }: Props) {
                 tone="accent"
                 onClick={resolve}
                 disabled={resolving}
-                title="Marcar thread como resolvida"
+                title={t("comment.resolve_title")}
               >
-                {resolving ? "resolvendo…" : "resolver"}
+                {resolving ? t("comment.resolving") : t("comment.resolve")}
               </Button>
             )}
             <Button variant="link" onClick={submitReply} disabled={busy || !reply.trim()}>
-              {busy ? "enviando…" : "responder"}
+              {busy ? t("comment.replying") : t("comment.reply")}
             </Button>
           </div>
         </div>

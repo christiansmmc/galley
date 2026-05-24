@@ -1,11 +1,12 @@
 import { Button, Dropdown, Input } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
 import type { DiffRenderMode } from "../../ipc/types";
+import { useT } from "../../i18n";
 
-const LABELS: Record<DiffRenderMode, string> = {
-  "side-by-side": "Lado a lado",
-  "inline": "Inline",
-  "auto": "Auto",
+const LABEL_KEYS: Record<DiffRenderMode, string> = {
+  "side-by-side": "settings.diff.mode_side_by_side",
+  "inline": "settings.diff.mode_inline",
+  "auto": "settings.diff.mode_auto",
 };
 
 const FONT_FAMILIES = [
@@ -20,6 +21,7 @@ const FONT_FAMILIES = [
 ];
 
 export function DiffSection() {
+  const t = useT();
   const settings = useSettingsStore(s => s.settings);
   const save = useSettingsStore(s => s.save);
 
@@ -40,10 +42,10 @@ export function DiffSection() {
 
   return (
     <section>
-      <h3 className="settings-section-title">Diff</h3>
+      <h3 className="settings-section-title">{t("settings.diff.title")}</h3>
 
       <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
-        Modo de renderização
+        {t("settings.diff.render_mode")}
       </label>
       <div style={{ display: "flex", gap: "var(--space-3)" }}>
         {(["side-by-side", "inline", "auto"] as DiffRenderMode[]).map(m => (
@@ -53,17 +55,17 @@ export function DiffSection() {
             size="sm"
             fullWidth
             onClick={() => setMode(m)}
-          >{LABELS[m]}</Button>
+          >{t(LABEL_KEYS[m])}</Button>
         ))}
       </div>
       <p style={{ marginTop: "var(--space-3)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-        Auto: lado a lado quando o painel do diff tem ≥&nbsp;1100&nbsp;px de largura, inline abaixo. A largura é medida no próprio painel (não na janela), então abrir a lista de PRs ou a árvore de arquivos pode disparar o modo inline.
+        {t("settings.diff.auto_hint")}
       </p>
 
       <div style={{ display: "flex", gap: "var(--space-4)", marginTop: "var(--space-6)" }}>
         <div style={{ flex: 1 }}>
           <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
-            Fonte
+            {t("settings.diff.font")}
           </label>
           <Dropdown value={font.family} onChange={e => setFamily(e.target.value)} size="sm">
             {FONT_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
@@ -71,7 +73,7 @@ export function DiffSection() {
         </div>
         <div style={{ width: 96 }}>
           <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
-            Tamanho
+            {t("settings.diff.size")}
           </label>
           <Input
             type="number"

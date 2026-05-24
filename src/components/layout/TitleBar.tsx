@@ -5,6 +5,7 @@ import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { useDraftsStore } from "../../state/draftsStore";
 import { closeWindow, isWindowMaximized, minimizeWindow, subscribeWindowResized, toggleMaximizeWindow } from "../../util/window";
+import { useT } from "../../i18n";
 
 interface Props {
   onOpenSettings: () => void;
@@ -20,6 +21,7 @@ interface Props {
  * still receive clicks.
  */
 export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props) {
+  const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
   const closePr = usePrsStore(s => s.closePr);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
@@ -57,8 +59,8 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             variant="icon"
             size="sm"
             onClick={() => { closePr(); setPrListCollapsed(false); }}
-            title="Voltar para a lista"
-            aria-label="Voltar para a lista"
+            title={t("titlebar.back_to_list")}
+            aria-label={t("titlebar.back_to_list")}
           >
             <ArrowLeft size={14} />
           </Button>
@@ -145,15 +147,15 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             flex: 1,
           }}
         >
-          Pull Requests
+          {t("titlebar.pull_requests")}
         </span>
       )}
 
       <span {...noDrag} style={{ display: "inline-flex", gap: "var(--space-3)", alignItems: "center" }}>
         <button
           onClick={onOpenPalette}
-          title="Abrir paleta de comandos (Ctrl+K)"
-          aria-label="Paleta de comandos"
+          title={t("titlebar.open_command_palette")}
+          aria-label={t("titlebar.command_palette")}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -175,7 +177,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         {currentPr && (
           <button
             onClick={onOpenSubmit}
-            title="Enviar review"
+            title={t("titlebar.submit_review")}
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 11,
@@ -189,7 +191,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
               lineHeight: 1,
             }}
           >
-            revisar{draftCount > 0 ? ` (${draftCount})` : ""}
+            {t("titlebar.review")}{draftCount > 0 ? ` (${draftCount})` : ""}
           </button>
         )}
 
@@ -197,8 +199,8 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
           variant="icon"
           size="sm"
           onClick={onOpenSettings}
-          title="Configurações"
-          aria-label="Configurações"
+          title={t("titlebar.settings")}
+          aria-label={t("titlebar.settings")}
         >
           <Settings size={14} />
         </Button>
@@ -212,17 +214,17 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         borderLeft: "1px solid var(--c-line)",
         paddingLeft: "var(--space-2)",
       }}>
-        <WindowButton onClick={minimizeWindow} title="Minimizar" aria-label="Minimizar">
+        <WindowButton onClick={minimizeWindow} title={t("titlebar.minimize")} aria-label={t("titlebar.minimize")}>
           <Minus size={14} />
         </WindowButton>
         <WindowButton
           onClick={toggleMaximizeWindow}
-          title={maximized ? "Restaurar" : "Maximizar"}
-          aria-label={maximized ? "Restaurar" : "Maximizar"}
+          title={maximized ? t("titlebar.restore") : t("titlebar.maximize")}
+          aria-label={maximized ? t("titlebar.restore") : t("titlebar.maximize")}
         >
           {maximized ? <Minimize2 size={12} /> : <Square size={12} />}
         </WindowButton>
-        <WindowButton onClick={closeWindow} title="Fechar" aria-label="Fechar" danger>
+        <WindowButton onClick={closeWindow} title={t("titlebar.close")} aria-label={t("titlebar.close")} danger>
           <X size={14} />
         </WindowButton>
       </span>

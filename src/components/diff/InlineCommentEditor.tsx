@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Textarea } from "../ui";
 import { inlineWidgetShell } from "./inlineWidgetStyle";
+import { useT } from "../../i18n";
 
 interface Props {
   line: number;
@@ -21,11 +22,12 @@ interface Props {
  * "salvar rascunho" with tone="accent".
  */
 export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }: Props) {
+  const t = useT();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
 
   const isRange = typeof startLine === "number" && startLine !== line;
-  const sideLabel = side === "RIGHT" ? "direita" : "esquerda";
+  const sideLabel = side === "RIGHT" ? t("comment.side_right") : t("comment.side_left");
   const lineLabel = isRange ? `L${startLine}–${line}` : `L${line}`;
 
   const submit = async () => {
@@ -58,17 +60,17 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
       }}>
         <span>
           <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{lineLabel}</b>
-          {` · ${sideLabel} · novo`}
+          {` · ${sideLabel} · ${t("comment.new")}`}
         </span>
         <span style={{
           fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--c-warn)",
-        }}>RASCUNHO</span>
+        }}>{t("comment.draft_state_upper")}</span>
       </div>
 
       <Textarea
         autoFocus
         rows={3}
-        placeholder="comentário (Markdown)…"
+        placeholder={t("comment.body_placeholder")}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => {
@@ -81,9 +83,9 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
       <div style={{
         display: "flex", justifyContent: "flex-end", gap: 16, marginTop: 10,
       }}>
-        <Button variant="link" onClick={onCancel} disabled={busy}>cancelar</Button>
+        <Button variant="link" onClick={onCancel} disabled={busy}>{t("common.cancel")}</Button>
         <Button variant="link" tone="accent" onClick={submit} disabled={busy || !body.trim()}>
-          {busy ? "salvando…" : "salvar rascunho"}
+          {busy ? t("common.saving") : t("comment.save_draft")}
         </Button>
       </div>
     </div>

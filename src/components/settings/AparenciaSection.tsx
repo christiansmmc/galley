@@ -1,18 +1,25 @@
 import type { CSSProperties } from "react";
 import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
-import type { AccentColor, Density, ThemeChoice } from "../../ipc/types";
+import type { AccentColor, Density, LanguageChoice, ThemeChoice } from "../../ipc/types";
+import { useT } from "../../i18n";
 
-const THEME_LABEL: Record<ThemeChoice, string> = {
-  system: "system",
-  light: "claro",
-  dark: "escuro",
+const THEME_LABEL_KEY: Record<ThemeChoice, string> = {
+  system: "settings.appearance.theme_system",
+  light: "settings.appearance.theme_light",
+  dark: "settings.appearance.theme_dark",
 };
 
-const DENSITY_LABEL: Record<Density, string> = {
-  compact: "compacta",
-  comfortable: "confortável",
-  spacious: "espaçosa",
+const DENSITY_LABEL_KEY: Record<Density, string> = {
+  compact: "settings.appearance.density_compact",
+  comfortable: "settings.appearance.density_comfortable",
+  spacious: "settings.appearance.density_spacious",
+};
+
+const LANGUAGE_LABEL_KEY: Record<LanguageChoice, string> = {
+  auto: "settings.appearance.language_auto",
+  en: "settings.appearance.language_en",
+  "pt-BR": "settings.appearance.language_pt_br",
 };
 
 const ACCENT_OPTIONS: Array<{ id: AccentColor; label: string; paperHex: string; linenHex: string }> = [
@@ -91,6 +98,7 @@ function Segmented<T extends string>({
 }
 
 export function AparenciaSection() {
+  const t = useT();
   const { choice, setChoice, resolved } = useTheme();
   const settings = useSettingsStore(s => s.settings);
   const save = useSettingsStore(s => s.save);
@@ -99,6 +107,7 @@ export function AparenciaSection() {
   const density = settings?.ui.density ?? "comfortable";
   const accent = settings?.ui.accent_color ?? "sage";
   const creed = settings?.ui.creed ?? CREEDS[0];
+  const language: LanguageChoice = settings?.ui.language ?? "auto";
 
   const patch = (ui: Partial<NonNullable<typeof settings>["ui"]>) => {
     if (!settings) return;
@@ -107,20 +116,30 @@ export function AparenciaSection() {
 
   return (
     <section>
-      <h3 className="settings-section-title">Aparência</h3>
+      <h3 className="settings-section-title">{t("settings.appearance.title")}</h3>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>Tema</label>
+        <label style={labelStyle}>{t("settings.appearance.theme")}</label>
         <Segmented<ThemeChoice>
-          ariaLabel="Tema"
+          ariaLabel={t("settings.appearance.theme")}
           value={choice}
           onChange={setChoice}
-          options={(["system", "light", "dark"] as const).map(t => ({ value: t, label: THEME_LABEL[t] }))}
+          options={(["system", "light", "dark"] as const).map(th => ({ value: th, label: t(THEME_LABEL_KEY[th]) }))}
         />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>Acento</label>
+        <label style={labelStyle}>{t("settings.appearance.language")}</label>
+        <Segmented<LanguageChoice>
+          ariaLabel={t("settings.appearance.language")}
+          value={language}
+          onChange={l => patch({ language: l })}
+          options={(["auto", "en", "pt-BR"] as const).map(l => ({ value: l, label: t(LANGUAGE_LABEL_KEY[l]) }))}
+        />
+      </div>
+
+      <div style={fieldStyle}>
+        <label style={labelStyle}>{t("settings.appearance.accent")}</label>
         <div style={{ display: "flex", gap: 12 }}>
           {ACCENT_OPTIONS.map(opt => {
             const active = accent === opt.id;
@@ -130,7 +149,7 @@ export function AparenciaSection() {
                 key={opt.id}
                 onClick={() => patch({ accent_color: opt.id })}
                 aria-pressed={active}
-                aria-label={`Acento ${opt.label}`}
+                aria-label={t("settings.appearance.accent_aria", { label: opt.label })}
                 title={opt.label}
                 style={{
                   width: 28,
@@ -149,12 +168,12 @@ export function AparenciaSection() {
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>Densidade</label>
+        <label style={labelStyle}>{t("settings.appearance.density")}</label>
         <Segmented<Density>
-          ariaLabel="Densidade"
+          ariaLabel={t("settings.appearance.density")}
           value={density}
           onChange={d => patch({ density: d })}
-          options={(["compact", "comfortable", "spacious"] as const).map(d => ({ value: d, label: DENSITY_LABEL[d] }))}
+          options={(["compact", "comfortable", "spacious"] as const).map(d => ({ value: d, label: t(DENSITY_LABEL_KEY[d]) }))}
         />
       </div>
 
@@ -164,7 +183,7 @@ export function AparenciaSection() {
             type="checkbox"
             checked={compactPaths}
             onChange={() => patch({ compact_paths: !compactPaths })}
-            aria-label="Caminhos compactos"
+            aria-label={t("settings.appearance.compact_paths_aria")}
             style={{
               appearance: "none",
               WebkitAppearance: "none",
@@ -179,13 +198,13 @@ export function AparenciaSection() {
             }}
           />
           <span style={{ fontFamily: "var(--font-ui)", fontSize: 12.5, color: "var(--c-text)" }}>
-            Caminhos compactos na árvore de arquivos
+            {t("settings.appearance.compact_paths")}
           </span>
         </label>
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle} htmlFor="creed-select">Voz</label>
+        <label style={labelStyle} htmlFor="creed-select">{t("settings.appearance.voice")}</label>
         <select
           id="creed-select"
           value={creed}
