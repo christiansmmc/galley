@@ -22,8 +22,10 @@ function build(p: Palette, base: "vs" | "vs-dark"): editor.IStandaloneThemeData 
       "editorCursor.foreground": p.accent,
       "editor.selectionBackground": p.surface2,
       "editor.lineHighlightBackground": p.mantle,
-      "diffEditor.insertedTextBackground": p.success + "26",
-      "diffEditor.removedTextBackground": p.danger + "26",
+      "diffEditor.insertedTextBackground": p.success + "1A",
+      "diffEditor.removedTextBackground": p.danger + "1A",
+      "diffEditor.insertedLineBackground": p.success + "14",
+      "diffEditor.removedLineBackground": p.danger + "14",
     },
   };
 }

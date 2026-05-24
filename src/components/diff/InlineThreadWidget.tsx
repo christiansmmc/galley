@@ -106,9 +106,12 @@ export function InlineThreadWidget({ thread }: Props) {
         fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
         marginBottom: 10,
       }}>
-        <span>{`${lineLabel} · ${sideLabel} · ${lastAuthor} · ${age}`}</span>
+        <span>
+          <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{lineLabel}</b>
+          {` · ${sideLabel} · ${lastAuthor} · ${age}`}
+        </span>
         <span style={{
-          fontSize: 10, letterSpacing: "0.08em", color: tagColor,
+          fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: tagColor,
         }}>{tagLabel}</span>
       </div>
 

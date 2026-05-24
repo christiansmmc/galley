@@ -13,6 +13,7 @@ import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
 import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
 import { splitPath } from "../../util/path";
+import { PrMetaStrip } from "../prs/PrMetaStrip";
 
 interface ParsedDiff {
   original: string;
@@ -496,10 +497,13 @@ export function DiffPanel() {
     );
     if (currentPr) {
       return (
-        <EmptyState
-          title="Selecione um arquivo."
-          description="escolha um item na árvore."
-        />
+        <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <PrMetaStrip pr={currentPr} />
+          <EmptyState
+            title="Selecione um arquivo."
+            description="escolha um item na árvore."
+          />
+        </div>
       );
     }
     return (
@@ -529,6 +533,7 @@ export function DiffPanel() {
       data-diff-mode={renderSideBySide ? "side-by-side" : "inline"}
       style={{ height: "100%", display: "flex", flexDirection: "column" }}
     >
+      {currentPr && <PrMetaStrip pr={currentPr} />}
       <div style={{
         padding: "10px 24px",
         borderBottom: "1px solid var(--c-line)",

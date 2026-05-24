@@ -92,10 +92,14 @@ export function FileTreePanel() {
         background: "var(--c-mantle)",
       }}>
         <span style={{
-          fontWeight: "var(--weight-semibold)" as unknown as number,
-          fontSize: "var(--text-md)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          fontWeight: 500,
+          letterSpacing: "0.10em",
+          textTransform: "uppercase",
+          color: "var(--c-overlay)",
         }}>
-          Arquivos
+          arquivos{filteredDiff.length > 0 && ` · ${filteredDiff.length}`}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           <div role="group" aria-label="Modo de visualização" style={{ display: "flex", gap: 0 }}>
@@ -138,11 +142,13 @@ export function FileTreePanel() {
             color: "var(--c-subtext)", pointerEvents: "none",
           }} />
           <Input
+            mono
+            size="sm"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Filtrar arquivos…"
+            placeholder="filtrar arquivos"
             aria-label="Filtrar arquivos"
-            style={{ paddingLeft: "calc(var(--space-3) + 18px)" }}
+            style={{ paddingLeft: "calc(var(--space-3) + 18px)", fontSize: 12 }}
           />
         </div>
       </div>
@@ -206,21 +212,39 @@ function FlatView({ rows, selectedFile, onSelect }: {
               color: "var(--c-text)",
               cursor: "pointer",
               fontSize: "var(--text-base)",
-              opacity: viewed ? 0.55 : 1,
-              textDecoration: viewed ? "line-through" : "none",
-              transition: "background var(--transition-fast), opacity var(--transition-fast)",
+              transition: "background var(--transition-fast)",
             }}
           >
             <File size={12} style={{ color: STATUS_COLORS[r.status] ?? "var(--c-subtext)", flexShrink: 0 }} />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{r.name}</span>
             <span style={{
-              fontSize: "var(--text-xs)", color: "var(--c-subtext)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+              fontFamily: "var(--font-mono)", fontSize: 12,
+              color: viewed ? "var(--c-subtext)" : "var(--c-text)",
+            }}>{r.name}</span>
+            <span style={{
+              fontFamily: "var(--font-mono)", fontSize: 10.5,
+              color: "var(--c-subtext)",
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               maxWidth: "45%", textAlign: "right",
             }}>{r.dir}</span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--c-subtext)", flexShrink: 0 }}>
-              +{r.additions} −{r.deletions}
+            <span style={{
+              fontFamily: "var(--font-mono)", fontSize: 10.5,
+              display: "inline-flex", gap: 6, flexShrink: 0,
+            }}>
+              <span style={{ color: "var(--c-success)" }}>+{r.additions}</span>
+              <span style={{ color: "var(--c-danger)" }}>−{r.deletions}</span>
             </span>
+            <span
+              aria-label={viewed ? "visto" : "não visto"}
+              style={{
+                marginLeft: 4,
+                width: 6, height: 6,
+                borderRadius: "var(--radius-pill)",
+                border: `1.5px solid ${viewed ? "var(--c-accent)" : "var(--c-overlay)"}`,
+                background: viewed ? "var(--c-accent)" : "transparent",
+                flexShrink: 0,
+              }}
+            />
           </button>
         );
       })}

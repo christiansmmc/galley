@@ -56,9 +56,12 @@ export function InlineCommentEditor({ line, side, startLine, onSave, onCancel }:
         fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
         marginBottom: 10,
       }}>
-        <span>{`${lineLabel} · ${sideLabel} · novo`}</span>
+        <span>
+          <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{lineLabel}</b>
+          {` · ${sideLabel} · novo`}
+        </span>
         <span style={{
-          fontSize: 10, letterSpacing: "0.08em", color: "var(--c-warn)",
+          fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--c-warn)",
         }}>RASCUNHO</span>
       </div>
 

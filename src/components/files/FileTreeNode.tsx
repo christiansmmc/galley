@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Check, File } from "lucide-react";
+import { ChevronDown, ChevronRight, File } from "lucide-react";
 import { useState } from "react";
 import { usePrsStore } from "../../state/prsStore";
 
@@ -51,18 +51,34 @@ export function FileTreeNode({ node, selectedPath, onSelect, depth = 0 }: Props)
           color: "var(--c-text)",
           cursor: "pointer",
           fontSize: "var(--text-base)",
-          opacity: viewed ? 0.55 : 1,
-          textDecoration: viewed ? "line-through" : "none",
-          transition: "background var(--transition-fast), opacity var(--transition-fast)",
+          transition: "background var(--transition-fast)",
         }}
       >
-        {viewed
-          ? <Check size={12} style={{ color: "var(--c-success)" }} />
-          : <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)" }} />}
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.path.split("/").pop()}</span>
-        <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--c-subtext)" }}>
-          +{node.additions} −{node.deletions}
+        <File size={12} style={{ color: STATUS_COLORS[node.status] ?? "var(--c-subtext)", flexShrink: 0 }} />
+        <span style={{
+          flex: 1, minWidth: 0,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontFamily: "var(--font-mono)", fontSize: 12,
+          color: viewed ? "var(--c-subtext)" : "var(--c-text)",
+        }}>{node.path.split("/").pop()}</span>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: 10.5,
+          color: "var(--c-subtext)", display: "inline-flex", gap: 6, flexShrink: 0,
+        }}>
+          <span style={{ color: "var(--c-success)" }}>+{node.additions}</span>
+          <span style={{ color: "var(--c-danger)" }}>−{node.deletions}</span>
         </span>
+        <span
+          aria-label={viewed ? "visto" : "não visto"}
+          style={{
+            marginLeft: 4,
+            width: 6, height: 6,
+            borderRadius: "var(--radius-pill)",
+            border: `1.5px solid ${viewed ? "var(--c-accent)" : "var(--c-overlay)"}`,
+            background: viewed ? "var(--c-accent)" : "transparent",
+            flexShrink: 0,
+          }}
+        />
       </button>
     );
   }

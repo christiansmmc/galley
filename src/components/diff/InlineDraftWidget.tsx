@@ -41,9 +41,12 @@ export function InlineDraftWidget({ draft }: Props) {
         fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
         marginBottom: 10,
       }}>
-        <span>{`${lineLabel} · ${sideLabel} · rascunho · ${age}`}</span>
+        <span>
+          <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{lineLabel}</b>
+          {` · ${sideLabel} · rascunho · ${age}`}
+        </span>
         <span style={{
-          fontSize: 10, letterSpacing: "0.08em", color: "var(--c-warn)",
+          fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--c-warn)",
         }}>RASCUNHO</span>
       </div>
 

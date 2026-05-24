@@ -88,8 +88,9 @@ export function PrListRail({ onExpand }: Props) {
               aria-label={`Abrir #${p.number} ${p.title}`}
               aria-current={active || undefined}
               style={{
-                width: 14,
-                height: 14,
+                position: "relative",
+                width: 28,
+                height: 22,
                 padding: 0,
                 border: 0,
                 background: "transparent",
@@ -99,13 +100,28 @@ export function PrListRail({ onExpand }: Props) {
                 justifyContent: "center",
               }}
             >
+              {active && (
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 2,
+                    bottom: 2,
+                    width: 2,
+                    background: "var(--c-accent)",
+                  }}
+                />
+              )}
               <span
                 style={{
-                  width: 6,
-                  height: 6,
+                  width: 7,
+                  height: 7,
                   borderRadius: "var(--radius-pill)",
                   background: CI_COLOR[p.ci_status],
-                  boxShadow: active ? "0 0 0 1px var(--c-accent)" : undefined,
+                  boxShadow: active
+                    ? "0 0 0 2px var(--c-mantle), 0 0 0 3px var(--c-accent)"
+                    : undefined,
                 }}
               />
             </button>

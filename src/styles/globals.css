@@ -191,6 +191,8 @@ select.prr-input option {
   border-color: var(--c-accent);
   box-shadow: var(--shadow-focus);
 }
+.prr-input::placeholder { color: var(--c-overlay); }
+.prr-input::-webkit-input-placeholder { color: var(--c-overlay); }
 
 /* Etapa 3 S7: settings section title. Serif italic 18, opens each
    section's body in the modal's right pane. */

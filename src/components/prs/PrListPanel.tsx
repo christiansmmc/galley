@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import type { PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
@@ -67,6 +67,38 @@ export function PrListPanel() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
       <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "10px 14px 8px",
+        background: "var(--c-mantle)",
+      }}>
+        <span style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          fontWeight: 500,
+          letterSpacing: "0.10em",
+          textTransform: "uppercase",
+          color: "var(--c-overlay)",
+        }}>
+          pull requests
+        </span>
+        {currentPr && (
+          <button
+            type="button"
+            onClick={() => setPrListCollapsed(true)}
+            title="Recolher lista (Ctrl+1)"
+            aria-label="Recolher lista"
+            style={{
+              background: "transparent", border: 0,
+              color: "var(--c-overlay)", cursor: "pointer",
+              padding: 0, lineHeight: 1,
+              fontFamily: "var(--font-mono)", fontSize: 14,
+            }}
+          >
+            ⟨
+          </button>
+        )}
+      </div>
+      <div style={{
         padding: "var(--space-4) var(--space-5)",
         borderBottom: "1px solid var(--c-surface0)",
         background: "var(--c-mantle)",
@@ -86,11 +118,12 @@ export function PrListPanel() {
         <Input
           ref={searchRef}
           size="sm"
-          placeholder="Buscar título, autor, #..."
+          mono
+          placeholder="buscar título, autor, #"
           value={query}
           onChange={e => setQuery(e.target.value)}
           aria-label="Buscar PRs"
-          style={{ paddingLeft: "var(--space-9)" }}
+          style={{ paddingLeft: "var(--space-9)", fontSize: 12 }}
         />
       </div>
 
@@ -102,29 +135,16 @@ export function PrListPanel() {
           { id: "mine", label: `Meus (${filteredMine.length})` },
         ]}
         trailing={
-          <>
-            {currentPr && (
-              <Button
-                variant="icon"
-                size="md"
-                onClick={() => setPrListCollapsed(true)}
-                title="Recolher lista (Ctrl+1)"
-                aria-label="Recolher lista"
-              >
-                <ChevronLeft size={14} />
-              </Button>
-            )}
-            <Button
-              variant="icon"
-              size="md"
-              onClick={refreshLists}
-              disabled={loadingLists}
-              title="Atualizar"
-              aria-label="Atualizar"
-            >
-              {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
-            </Button>
-          </>
+          <Button
+            variant="icon"
+            size="md"
+            onClick={refreshLists}
+            disabled={loadingLists}
+            title="Atualizar"
+            aria-label="Atualizar"
+          >
+            {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
+          </Button>
         }
       />
 

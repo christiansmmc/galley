@@ -8,7 +8,6 @@ import { CommandPalette } from "./components/layout/CommandPalette";
 import { PatSection } from "./components/settings/PatSection";
 import { SettingsModal } from "./components/settings/SettingsModal";
 import { PrListPanel } from "./components/prs/PrListPanel";
-import { PrMetaStrip } from "./components/prs/PrMetaStrip";
 import { FileTreePanel } from "./components/files/FileTreePanel";
 import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitPanel } from "./components/review/ReviewSubmitPanel";
@@ -71,7 +70,6 @@ export default function App() {
         onOpenSubmit={() => setSubmitOpen(true)}
         onOpenPalette={() => setPaletteOpen(true)}
       />
-      {currentPr && <PrMetaStrip pr={currentPr} />}
       <div style={{ flex: 1, minHeight: 0 }}>
         <Layout
           prList={<PrListPanel />}
