@@ -305,11 +305,18 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       >
         <div style={{
           padding: "var(--space-3) var(--space-5)",
-          borderBottom: "1px solid var(--c-surface0)",
+          borderBottom: "1px solid var(--c-line)",
           display: "flex",
           alignItems: "center",
           gap: "var(--space-3)",
         }}>
+          <span aria-hidden="true" style={{
+            color: "var(--c-overlay)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 13,
+            lineHeight: 1,
+            flex: "0 0 auto",
+          }}>⌕</span>
           {scope && (
             <button
               onClick={() => { setScope(null); setQuery(""); setActive(0); inputRef.current?.focus(); }}
@@ -320,17 +327,19 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
                 alignItems: "center",
                 gap: "var(--space-2)",
                 padding: "2px var(--space-3)",
-                background: "var(--c-surface0)",
-                color: "var(--c-text)",
-                border: "1px solid var(--c-surface1)",
-                borderRadius: "var(--radius-pill)",
+                background: "var(--c-accent-soft)",
+                color: "var(--c-accent)",
+                border: "1px solid var(--c-accent)",
+                borderRadius: "var(--radius-sm)",
                 cursor: "pointer",
-                fontSize: "var(--text-sm)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                lineHeight: 1.4,
               }}
             >
               <FolderGit2 size={12} />
               <span>{scope.owner}/{scope.name}</span>
-              <X size={12} style={{ color: "var(--c-subtext)" }} />
+              <X size={12} />
             </button>
           )}
           <input
@@ -350,6 +359,13 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
               minWidth: 0,
             }}
           />
+          <span aria-hidden="true" style={{
+            color: "var(--c-overlay)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10.5,
+            letterSpacing: "0.04em",
+            flex: "0 0 auto",
+          }}>esc</span>
         </div>
 
         <div
@@ -395,17 +411,34 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
 
         <div style={{
           padding: "var(--space-2) var(--space-5)",
-          borderTop: "1px solid var(--c-surface0)",
+          borderTop: "1px solid var(--c-line)",
           color: "var(--c-overlay)",
-          fontSize: "var(--text-sm)",
           display: "flex",
+          alignItems: "center",
           gap: "var(--space-5)",
-          flexWrap: "wrap",
         }}>
-          <span>↑↓ navegar</span>
-          <span>↵ selecionar</span>
-          <span>esc {scope ? "sair do escopo" : "fechar"}</span>
-          <span>{"> "}prefixo = comandos</span>
+          <div style={{
+            display: "flex",
+            gap: "var(--space-5)",
+            flexWrap: "wrap",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10.5,
+            letterSpacing: "0.04em",
+          }}>
+            <span>↑↓ navegar</span>
+            <span>↵ selecionar</span>
+            <span>esc {scope ? "sair do escopo" : "fechar"}</span>
+            <span>{"> "}prefixo = comandos</span>
+          </div>
+          {query === "" && !scope && (
+            <span style={{
+              marginLeft: "auto",
+              fontFamily: "var(--font-serif)",
+              fontStyle: "italic",
+              fontSize: 12.5,
+              color: "var(--c-subtext)",
+            }}>sem sugestões. apenas o que você buscar.</span>
+          )}
         </div>
       </div>
     </div>
@@ -417,12 +450,19 @@ export function CommandGroup({ label, children }: { label: string; children: Rea
     <div>
       <div style={{
         padding: "var(--space-2) var(--space-5)",
-        fontSize: "var(--text-sm)",
-        color: "var(--c-subtext)",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-3)",
+        fontFamily: "var(--font-mono)",
+        fontSize: 10,
+        color: "var(--c-overlay)",
         textTransform: "uppercase",
-        letterSpacing: 0.4,
+        letterSpacing: "0.10em",
         background: "var(--c-mantle)",
-      }}>{label}</div>
+      }}>
+        <span>{label}</span>
+        <span style={{ flex: 1, height: 1, background: "var(--c-line-soft)" }} />
+      </div>
       {children}
     </div>
   );
@@ -452,7 +492,8 @@ export function CommandItem({
         gap: "var(--space-3)",
         padding: "var(--space-3) var(--space-5)",
         cursor: "pointer",
-        background: active ? "var(--c-surface0)" : "transparent",
+        background: active ? "var(--c-mantle)" : "transparent",
+        boxShadow: active ? "inset 2px 0 0 0 var(--c-accent)" : "none",
       }}
     >
       <span style={{ color: "var(--c-subtext)", display: "inline-flex", flex: "0 0 auto" }}>{icon}</span>
@@ -464,7 +505,13 @@ export function CommandItem({
         whiteSpace: "nowrap",
       }}>{label}</span>
       {hint && (
-        <span style={{ color: "var(--c-overlay)", fontSize: "var(--text-sm)", flex: "0 0 auto" }}>{hint}</span>
+        <span style={{
+          color: "var(--c-overlay)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10.5,
+          letterSpacing: "0.02em",
+          flex: "0 0 auto",
+        }}>{hint}</span>
       )}
     </div>
   );
