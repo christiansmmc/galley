@@ -146,6 +146,13 @@
       "compact_paths": "Compact paths in file tree",
       "compact_paths_aria": "Compact paths",
       "voice": "Voice",
+      "voice_options": {
+        "reading": "reading. no summaries.",
+        "code_first": "code over commentary.",
+        "no_shortcuts": "no unprompted shortcuts.",
+        "one_diff": "one diff at a time.",
+        "you_review": "you are the reviewer."
+      },
       "language": "Language",
       "language_auto": "system",
       "language_en": "english",

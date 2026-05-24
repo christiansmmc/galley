@@ -3,8 +3,7 @@ import { useDraftsStore } from "../../state/draftsStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import type { CiStatus } from "../../ipc/types";
 import { useT } from "../../i18n";
-
-const CREED_FALLBACK = "lendo. sem resumos.";
+import { resolveCreed } from "../../i18n/creed";
 
 function ciDotColor(status: CiStatus | undefined): string {
   switch (status) {
@@ -19,7 +18,7 @@ export function StatusLine() {
   const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
   const draftCount = useDraftsStore(s => s.drafts.length);
-  const creed = useSettingsStore(s => s.settings?.ui.creed) || CREED_FALLBACK;
+  const creed = resolveCreed(useSettingsStore(s => s.settings?.ui.creed), t);
 
   const summary = currentPr?.summary;
   const repoFullName = summary ? `${summary.owner}/${summary.repo}` : null;

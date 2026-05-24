@@ -3,6 +3,7 @@ import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
 import type { AccentColor, Density, LanguageChoice, ThemeChoice } from "../../ipc/types";
 import { useT } from "../../i18n";
+import { CREED_IDS, normalizeCreed, resolveCreed } from "../../i18n/creed";
 
 const THEME_LABEL_KEY: Record<ThemeChoice, string> = {
   system: "settings.appearance.theme_system",
@@ -27,14 +28,6 @@ const ACCENT_OPTIONS: Array<{ id: AccentColor; label: string; paperHex: string; 
   { id: "ochre", label: "ochre", paperHex: "#8E6A2C", linenHex: "#C9A35A" },
   { id: "ink",   label: "ink",   paperHex: "#3B5570", linenHex: "#7AA5C9" },
   { id: "rust",  label: "rust",  paperHex: "#8B4A38", linenHex: "#C78866" },
-];
-
-const CREEDS = [
-  "lendo. sem resumos.",
-  "código antes do colega.",
-  "sem atalhos não pedidos.",
-  "um diff por vez.",
-  "você é o revisor.",
 ];
 
 const labelStyle: CSSProperties = {
@@ -106,7 +99,7 @@ export function AparenciaSection() {
   const compactPaths = settings?.ui.compact_paths ?? true;
   const density = settings?.ui.density ?? "comfortable";
   const accent = settings?.ui.accent_color ?? "sage";
-  const creed = settings?.ui.creed ?? CREEDS[0];
+  const creed = normalizeCreed(settings?.ui.creed);
   const language: LanguageChoice = settings?.ui.language ?? "auto";
 
   const patch = (ui: Partial<NonNullable<typeof settings>["ui"]>) => {
@@ -221,7 +214,9 @@ export function AparenciaSection() {
             cursor: "pointer",
           }}
         >
-          {CREEDS.map(c => <option key={c} value={c}>{c}</option>)}
+          {CREED_IDS.map(id => (
+            <option key={id} value={id}>{resolveCreed(id, t)}</option>
+          ))}
         </select>
       </div>
     </section>
