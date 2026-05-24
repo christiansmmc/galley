@@ -4,8 +4,9 @@ import { api } from "../../ipc/client";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { userMessage } from "../../ipc/errors";
-import { Avatar, Button, Textarea } from "../ui";
+import { Button, Textarea } from "../ui";
 import { inlineWidgetShell } from "./inlineWidgetStyle";
+import { formatAge } from "../../util/time";
 
 interface Props {
   thread: ReviewThread;
@@ -15,6 +16,11 @@ interface Props {
  * Read-only thread renderer with a reply textarea below the conversation.
  * Submits via api.replyToThread; on success calls refreshThreads to
  * re-pull the conversation so the new reply renders.
+ *
+ * Etapa 3 · S6 visual: 2px left rule + state tag carry the open/resolved
+ * signal. No avatar, no badge, no filled buttons. Actions are hairline
+ * text links (Button variant="link"); "resolver" is tone="accent",
+ * "responder" is tone="neutral".
  */
 export function InlineThreadWidget({ thread }: Props) {
   const currentPr = usePrsStore(s => s.currentPr);
@@ -25,7 +31,16 @@ export function InlineThreadWidget({ thread }: Props) {
   const [resolving, setResolving] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  const lastCommentId = thread.comments[thread.comments.length - 1]?.id ?? thread.id;
+  const lastComment = thread.comments[thread.comments.length - 1];
+  const lastCommentId = lastComment?.id ?? thread.id;
+  const lastAuthor = lastComment?.author ?? "—";
+  const age = formatAge(lastComment?.created_at ?? "");
+  const isRange = thread.start_line != null && thread.start_line !== thread.line;
+  const sideLabel = thread.side === "RIGHT" ? "direita" : "esquerda";
+  const lineLabel = isRange
+    ? `L${thread.start_line}–${thread.line ?? "?"}`
+    : `L${thread.line ?? "?"}`;
+  const isResolved = thread.resolved;
 
   const submitReply = async () => {
     if (!currentPr) return;
@@ -69,77 +84,87 @@ export function InlineThreadWidget({ thread }: Props) {
     }
   };
 
+  const ruleColor = isResolved ? "var(--c-overlay)" : "var(--c-accent)";
+  const tagColor = isResolved ? "var(--c-overlay)" : "var(--c-accent)";
+  const tagLabel = isResolved ? "RESOLVIDO" : "ABERTO";
+
   return (
     <div
+      className="prr-inline-widget"
       style={{
         ...inlineWidgetShell,
-        border: "1px solid var(--c-surface1)",
+        borderLeft: `2px solid ${ruleColor}`,
+        paddingLeft: 14,
+        opacity: isResolved ? 0.7 : 1,
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
       <div style={{
-        fontSize: "var(--text-sm)",
-        color: "var(--c-subtext)",
-        marginBottom: "var(--space-3)",
-        fontFamily: "var(--font-mono)",
-        display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
+        marginBottom: 10,
       }}>
-        <span>
-          {thread.start_line != null && thread.start_line !== thread.line
-            ? `Thread · L${thread.start_line}–${thread.line ?? "?"} · ${thread.side}`
-            : `Thread · L${thread.line ?? "?"} · ${thread.side}`}
-        </span>
-        {thread.node_id && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={resolve}
-            disabled={resolving}
-            title="Marcar thread como resolvida"
-          >
-            {resolving ? "Resolvendo…" : "Resolver"}
-          </Button>
-        )}
+        <span>{`${lineLabel} · ${sideLabel} · ${lastAuthor} · ${age}`}</span>
+        <span style={{
+          fontSize: 10, letterSpacing: "0.08em", color: tagColor,
+        }}>{tagLabel}</span>
       </div>
+
       {thread.comments.map((c, i) => (
         <div
           key={c.id}
           style={{
-            paddingTop: i === 0 ? 0 : "var(--space-3)",
-            marginTop: i === 0 ? 0 : "var(--space-3)",
-            borderTop: i === 0 ? "none" : "1px solid var(--c-surface0)",
-            display: "flex",
-            gap: "var(--space-4)",
-            alignItems: "flex-start",
+            paddingTop: i === 0 ? 0 : 8,
+            marginTop: i === 0 ? 0 : 8,
+            borderTop: i === 0 ? "none" : "1px solid var(--c-line-soft)",
           }}
         >
-          <Avatar login={c.author} size={20} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "var(--text-sm)", fontWeight: "var(--weight-semibold)" as unknown as number, color: "var(--c-subtext)" }}>{c.author}</div>
-            <div style={{ fontSize: "var(--text-md)", color: "var(--c-text)", whiteSpace: "pre-wrap", marginTop: "var(--space-1)" }}>{c.body}</div>
-          </div>
+          <div style={{
+            fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
+            marginBottom: 2,
+          }}>{c.author}</div>
+          <div style={{
+            fontSize: 12.5, lineHeight: 1.55, color: "var(--c-text)",
+            whiteSpace: "pre-wrap",
+          }}>{c.body}</div>
         </div>
       ))}
-      <div style={{ marginTop: "var(--space-4)", paddingTop: "var(--space-4)", borderTop: "1px solid var(--c-surface0)" }}>
-        <Textarea
-          rows={focused || reply.length > 0 ? 4 : 2}
-          placeholder="Responder…"
-          value={reply}
-          onChange={(e) => setReply(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitReply(); }
-          }}
-        />
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--space-2)" }}>
-          <Button variant="link" tone="accent" onClick={submitReply} disabled={busy || !reply.trim()}>
-            {busy ? "Enviando…" : "Responder"}
-          </Button>
+
+      {!isResolved && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--c-line-soft)" }}>
+          <Textarea
+            rows={focused || reply.length > 0 ? 4 : 2}
+            placeholder="responder…"
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitReply(); }
+            }}
+          />
+          <div style={{
+            display: "flex", justifyContent: "flex-end", gap: 16, marginTop: 8,
+          }}>
+            {thread.node_id && (
+              <Button
+                variant="link"
+                tone="accent"
+                onClick={resolve}
+                disabled={resolving}
+                title="Marcar thread como resolvida"
+              >
+                {resolving ? "resolvendo…" : "resolver"}
+              </Button>
+            )}
+            <Button variant="link" onClick={submitReply} disabled={busy || !reply.trim()}>
+              {busy ? "enviando…" : "responder"}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

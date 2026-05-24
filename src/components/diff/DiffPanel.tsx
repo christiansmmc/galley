@@ -277,19 +277,18 @@ export function DiffPanel() {
       // overflow into the next code line. ResizeObserver-based exact measure
       // is deferred to sub-phase 2.4.
       //
-      // Budget per piece (in Monaco "lines"):
-      //   header label                       1
-      //   per comment: author(1) + body(N) + separator(1)
+      // Budget per piece (in Monaco "lines"), S6 layout:
+      //   ribbon row                         1
+      //   per comment: author(1) + body(N) + gap(1)
       //     where N = max(1, body lines), capped at 4 to avoid runaway height
-      //   reply textarea (rows=2) + button   4
-      //   range header adds                  1
-      //   outer padding/border               2
-      const isRange = t.start_line != null && t.start_line !== t.line;
+      //   reply textarea (rows=2) + actions  4   (skipped when resolved)
+      //   outer padding (10px top + 12px bot) 2
       const commentLines = t.comments.reduce((sum, c) => {
         const bodyLines = Math.max(1, Math.min(4, c.body.split("\n").length));
         return sum + 1 + bodyLines + 1;
       }, 0);
-      const heightInLines = Math.max(6, 1 + commentLines + 4 + (isRange ? 1 : 0) + 2);
+      const replyLines = t.resolved ? 0 : 4;
+      const heightInLines = Math.max(5, 1 + commentLines + replyLines + 2);
       specs.push({
         key: `thread:${t.id}`,
         side: "RIGHT",
@@ -306,9 +305,9 @@ export function DiffPanel() {
         console.warn(`[DiffPanel] draft ${d.id} line ${d.line} not in current diff; skipping zone`);
         continue;
       }
-      // Header (1) + body (capped) + Apagar button (1) + padding (2).
+      // S6 layout: ribbon (1) + body (capped) + actions (1) + padding (2).
       const lineCount = Math.max(1, Math.min(d.body.split("\n").length, 6));
-      const heightInLines = Math.max(4, 1 + lineCount + 1 + 2);
+      const heightInLines = Math.max(5, 1 + lineCount + 1 + 2);
       specs.push({
         key: `draft:${d.id}`,
         side: "RIGHT",
@@ -327,7 +326,7 @@ export function DiffPanel() {
         key: "pending:current",
         side: pending.anchor.side,
         afterLineNumber: pending.anchor.editorLine,
-        heightInLines: 6,
+        heightInLines: 7,
         render: () => (
           <InlineCommentEditor
             line={pending.target.line}
@@ -518,7 +517,11 @@ export function DiffPanel() {
   };
 
   return (
-    <div ref={setPanelEl} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div
+      ref={setPanelEl}
+      data-diff-mode={renderSideBySide ? "side-by-side" : "inline"}
+      style={{ height: "100%", display: "flex", flexDirection: "column" }}
+    >
       <div style={{
         padding: "10px 24px",
         borderBottom: "1px solid var(--c-line)",

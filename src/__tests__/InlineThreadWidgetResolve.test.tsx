@@ -38,7 +38,7 @@ describe("InlineThreadWidget resolve", () => {
       comments: [{ id: 100, author: "alice", body: "nit", created_at: "", in_reply_to_id: null }],
     };
     render(<InlineThreadWidget thread={thread} />);
-    fireEvent.click(screen.getByText("Resolver"));
+    fireEvent.click(screen.getByText("resolver"));
     await waitFor(() => expect(resolveThread).toHaveBeenCalled());
     expect(resolveThread).toHaveBeenCalledWith("x", "y", 42, "PRT_node_abc");
     await waitFor(() => expect(refreshThreads).toHaveBeenCalled());
@@ -52,6 +52,6 @@ describe("InlineThreadWidget resolve", () => {
       comments: [{ id: 100, author: "alice", body: "nit", created_at: "", in_reply_to_id: null }],
     };
     render(<InlineThreadWidget thread={thread} />);
-    expect(screen.queryByText("Resolver")).toBeNull();
+    expect(screen.queryByText("resolver")).toBeNull();
   });
 });

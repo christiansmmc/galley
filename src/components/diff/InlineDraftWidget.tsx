@@ -1,51 +1,67 @@
 import type { CommentDraft } from "../../ipc/types";
 import { useDraftsStore } from "../../state/draftsStore";
+import { Button } from "../ui";
 import { inlineWidgetShell } from "./inlineWidgetStyle";
+import { formatAge } from "../../util/time";
 
 interface Props {
   draft: CommentDraft;
 }
 
-/** Saved-draft preview rendered inline as a Monaco view zone. */
+/**
+ * Saved-draft preview rendered inline as a Monaco view zone.
+ *
+ * Etapa 3 · S6 visual: dashed warn left rule + RASCUNHO tag carry the
+ * pending state. "incluir no review" opens the global review submit
+ * panel via a window event (App owns the modal state).
+ */
 export function InlineDraftWidget({ draft }: Props) {
   const remove = useDraftsStore(s => s.remove);
   const isRange = draft.start_line != null && draft.start_line !== draft.line;
+  const sideLabel = draft.side === "RIGHT" ? "direita" : "esquerda";
+  const lineLabel = isRange
+    ? `L${draft.start_line}–${draft.line}`
+    : `L${draft.line}`;
+  const age = formatAge(draft.created_at);
 
   return (
     <div
+      className="prr-inline-widget"
       style={{
         ...inlineWidgetShell,
-        border: "1px solid var(--c-warn)",
+        borderLeft: "2px dashed var(--c-warn)",
+        paddingLeft: 14,
       }}
       onMouseDownCapture={(e) => e.stopPropagation()}
       onMouseUpCapture={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
       <div style={{
-        fontSize: "var(--text-sm)",
-        color: "var(--c-warn)",
-        marginBottom: "var(--space-2)",
-        fontFamily: "var(--font-mono)",
-        display: "flex", justifyContent: "space-between", alignItems: "center",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--c-subtext)",
+        marginBottom: 10,
       }}>
-        <span>
-          {isRange
-            ? `Rascunho · L${draft.start_line}–${draft.line} · ${draft.side === "RIGHT" ? "Depois" : "Antes"}`
-            : `Rascunho · L${draft.line} · ${draft.side === "RIGHT" ? "Depois" : "Antes"}`}
-        </span>
-        <button
-          onClick={() => remove(draft.id)}
-          style={{
-            background: "transparent",
-            border: 0,
-            color: "var(--c-danger)",
-            cursor: "pointer",
-            fontSize: "var(--text-sm)",
-            padding: 0,
-          }}
-        >Apagar</button>
+        <span>{`${lineLabel} · ${sideLabel} · rascunho · ${age}`}</span>
+        <span style={{
+          fontSize: 10, letterSpacing: "0.08em", color: "var(--c-warn)",
+        }}>RASCUNHO</span>
       </div>
-      <div style={{ fontSize: "var(--text-md)", color: "var(--c-text)", whiteSpace: "pre-wrap" }}>{draft.body}</div>
+
+      <div style={{
+        fontSize: 12.5, lineHeight: 1.55, color: "var(--c-subtext)",
+        fontStyle: "italic", whiteSpace: "pre-wrap",
+      }}>{draft.body}</div>
+
+      <div style={{
+        display: "flex", justifyContent: "flex-end", gap: 16, marginTop: 10,
+      }}>
+        <Button variant="link" onClick={() => remove(draft.id)}>descartar</Button>
+        <Button
+          variant="link"
+          tone="accent"
+          onClick={() => window.dispatchEvent(new CustomEvent("prr:open-submit"))}
+        >incluir no review</Button>
+      </div>
     </div>
   );
 }
