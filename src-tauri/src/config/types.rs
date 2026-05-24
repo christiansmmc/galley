@@ -31,6 +31,8 @@ pub struct UiPrefs {
     pub accent_color: AccentColor,
     #[serde(default = "default_creed")]
     pub creed: String,
+    #[serde(default)]
+    pub language: LanguageChoice,
 }
 
 fn default_true() -> bool { true }
@@ -51,8 +53,23 @@ impl Default for UiPrefs {
             palette_sources: PaletteSources::default(),
             accent_color: AccentColor::default(),
             creed: default_creed(),
+            language: LanguageChoice::default(),
         }
     }
+}
+
+/// User language preference for the UI. "Auto" defers to the OS locale
+/// (resolved on the frontend via navigator.language → en / pt-BR), with
+/// English as the fallback. The Rust side just persists the raw choice.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum LanguageChoice {
+    #[default]
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "en")]
+    En,
+    #[serde(rename = "pt-BR")]
+    PtBr,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]

@@ -14,6 +14,7 @@ import { useDiffRenderMode } from "./useDiffRenderMode";
 import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
 import { splitPath } from "../../util/path";
 import { PrMetaStrip } from "../prs/PrMetaStrip";
+import { useT } from "../../i18n";
 
 interface ParsedDiff {
   original: string;
@@ -149,6 +150,7 @@ interface RangeSelection {
 }
 
 export function DiffPanel() {
+  const t = useT();
   const { diff, selectedFile, threads } = usePrsStore();
   const loadingPr = usePrsStore(s => s.loadingPr);
   const drafts = useDraftsStore(s => s.drafts);
@@ -404,7 +406,7 @@ export function DiffPanel() {
           options: {
             isWholeLine: false,
             glyphMarginClassName: "prr-comment-glyph",
-            glyphMarginHoverMessage: { value: "Comentar nesta linha" },
+            glyphMarginHoverMessage: { value: t("diff.comment_on_line") },
           },
         },
       ]);
@@ -482,13 +484,13 @@ export function DiffPanel() {
     }));
 
     return () => { for (const d of disposables) d.dispose(); };
-  }, [diffEd, modifiedLineMap, commentableModified]);
+  }, [diffEd, modifiedLineMap, commentableModified, t]);
 
   if (!file) {
     if (loadingPr) return (
       <div
         role="status"
-        aria-label="Carregando PR"
+        aria-label={t("diff.loading_pr")}
         style={{ height: "100%", position: "relative" }}
       >
         <Sweep />
@@ -500,16 +502,16 @@ export function DiffPanel() {
         <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
           <PrMetaStrip pr={currentPr} />
           <EmptyState
-            title="Selecione um arquivo."
-            description="escolha um item na árvore."
+            title={t("diff.empty_select_file_title")}
+            description={t("diff.empty_select_file_desc")}
           />
         </div>
       );
     }
     return (
       <EmptyState
-        title="Escolha um PR à esquerda."
-        description="nada está selecionado."
+        title={t("diff.empty_select_pr_title")}
+        description={t("diff.empty_select_pr_desc")}
       />
     );
   }
@@ -542,8 +544,8 @@ export function DiffPanel() {
       }}>
         <button
           onClick={() => setViewed(file.path, !isViewed)}
-          title={isViewed ? "desmarcar como visto · v" : "marcar como visto · v"}
-          aria-label={isViewed ? "desmarcar como visto" : "marcar como visto"}
+          title={isViewed ? t("diff.unmark_viewed") : t("diff.mark_viewed")}
+          aria-label={isViewed ? t("diff.unmark_viewed_aria") : t("diff.mark_viewed_aria")}
           aria-pressed={isViewed}
           style={{
             flex: "0 0 auto",
@@ -579,18 +581,18 @@ export function DiffPanel() {
         <Button
           variant="link"
           onClick={copyPath}
-          title="copiar caminho"
+          title={t("diff.copy_path")}
         >
-          copiar caminho
+          {t("diff.copy_path")}
         </Button>
         <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
         <Button
           variant="link"
           onClick={toggleRenderMode}
-          title={renderSideBySide ? "alternar para inline" : "alternar para lado a lado"}
+          title={renderSideBySide ? t("diff.switch_to_inline") : t("diff.switch_to_side_by_side")}
           disabled={!settings}
         >
-          {renderSideBySide ? "inline" : "lado a lado"}
+          {renderSideBySide ? t("diff.inline") : t("diff.side_by_side")}
         </Button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
@@ -653,7 +655,7 @@ export function DiffPanel() {
               zIndex: "var(--z-overlay-widget)" as unknown as number,
             }}
           >
-            Comentar {rangeSel.target.endLine - rangeSel.target.startLine + 1} linhas
+            {t("diff.comment_n_lines", { count: rangeSel.target.endLine - rangeSel.target.startLine + 1 })}
           </button>
         )}
       </div>

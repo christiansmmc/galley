@@ -8,6 +8,7 @@ import { useSettingsStore } from "../../state/settingsStore";
 import { FileTreeNode } from "./FileTreeNode";
 import { buildTree, buildFlat, FlatRow } from "./treeBuild";
 import { Button, EmptyState, Input, SkeletonBars, Sweep } from "../ui";
+import { useT } from "../../i18n";
 
 function matchesGlob(pattern: string, path: string): boolean {
   const re = "^" + pattern
@@ -35,6 +36,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function FileTreePanel() {
+  const t = useT();
   const { diff, currentPr, selectedFile, selectFile } = usePrsStore();
   const loadingPr = usePrsStore(s => s.loadingPr);
   const setFileTreeCollapsed = useUiStore(s => s.setFileTreeCollapsed);
@@ -65,7 +67,7 @@ export function FileTreePanel() {
       return (
         <div
           role="status"
-          aria-label="Carregando arquivos"
+          aria-label={t("files.loading")}
           style={{ height: "100%", position: "relative" }}
         >
           <Sweep />
@@ -75,8 +77,8 @@ export function FileTreePanel() {
     }
     return (
       <EmptyState
-        title="Nenhum PR aberto."
-        description="abra um para ver os arquivos."
+        title={t("files.empty_no_pr_title")}
+        description={t("files.empty_no_pr_desc")}
       />
     );
   }
@@ -99,16 +101,16 @@ export function FileTreePanel() {
           textTransform: "uppercase",
           color: "var(--c-overlay)",
         }}>
-          arquivos{filteredDiff.length > 0 && ` · ${filteredDiff.length}`}
+          {t("files.label")}{filteredDiff.length > 0 && ` · ${filteredDiff.length}`}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-          <div role="group" aria-label="Modo de visualização" style={{ display: "flex", gap: 0 }}>
+          <div role="group" aria-label={t("files.view_group_aria")} style={{ display: "flex", gap: 0 }}>
             <Button
               variant={view === "tree" ? "subtle" : "ghost"}
               size="sm"
               onClick={() => setView("tree")}
-              title="Árvore"
-              aria-label="Árvore"
+              title={t("files.view_tree")}
+              aria-label={t("files.view_tree")}
               aria-pressed={view === "tree"}
             >
               <FolderTree size={12} />
@@ -117,8 +119,8 @@ export function FileTreePanel() {
               variant={view === "flat" ? "subtle" : "ghost"}
               size="sm"
               onClick={() => setView("flat")}
-              title="Lista"
-              aria-label="Lista"
+              title={t("files.view_flat")}
+              aria-label={t("files.view_flat")}
               aria-pressed={view === "flat"}
             >
               <ListIcon size={12} />
@@ -128,8 +130,8 @@ export function FileTreePanel() {
             variant="icon"
             size="sm"
             onClick={() => setFileTreeCollapsed(true)}
-            title="Esconder (Ctrl+2)"
-            aria-label="Esconder arquivos"
+            title={t("files.hide")}
+            aria-label={t("files.hide_aria")}
           >
             <PanelLeftClose size={14} />
           </Button>
@@ -146,8 +148,8 @@ export function FileTreePanel() {
             size="sm"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="filtrar arquivos"
-            aria-label="Filtrar arquivos"
+            placeholder={t("files.filter_placeholder")}
+            aria-label={t("files.filter_aria")}
             style={{ paddingLeft: "calc(var(--space-3) + 18px)", fontSize: 12 }}
           />
         </div>
@@ -182,12 +184,13 @@ function FlatView({ rows, selectedFile, onSelect }: {
   selectedFile: string | null;
   onSelect: (p: string) => void;
 }) {
+  const t = useT();
   const viewedFiles = usePrsStore(s => s.viewedFiles);
   if (rows.length === 0) {
     return (
       <EmptyState
-        title="Nenhum arquivo."
-        description="nada bate com esse filtro."
+        title={t("files.empty_filter_title")}
+        description={t("files.empty_filter_desc")}
       />
     );
   }
@@ -235,7 +238,7 @@ function FlatView({ rows, selectedFile, onSelect }: {
               <span style={{ color: "var(--c-danger)" }}>−{r.deletions}</span>
             </span>
             <span
-              aria-label={viewed ? "visto" : "não visto"}
+              aria-label={viewed ? t("files.viewed") : t("files.not_viewed")}
               style={{
                 marginLeft: 4,
                 width: 6, height: 6,

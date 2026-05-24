@@ -1,14 +1,17 @@
 import { useSettingsStore } from "../../state/settingsStore";
 import type { PaletteSources } from "../../ipc/types";
+import { Trans } from "react-i18next";
+import { useT } from "../../i18n";
 
-const ROWS: Array<{ key: keyof PaletteSources; label: string; desc: string }> = [
-  { key: "prs", label: "Pull Requests", desc: "Lista todos os PRs configurados (Mine + Pra revisar)." },
-  { key: "files", label: "Arquivos", desc: "Lista arquivos do PR atualmente aberto." },
-  { key: "repos", label: "Repositórios", desc: "Lista repos configurados; selecionar escopa a busca a aquele repo." },
-  { key: "commands", label: "Comandos", desc: "Refresh, Configurações, Tema, Enviar review. Sempre disponíveis no modo > prefixo." },
+const ROWS: Array<{ key: keyof PaletteSources; labelKey: string; descKey: string }> = [
+  { key: "prs", labelKey: "settings.palette.prs_label", descKey: "settings.palette.prs_desc" },
+  { key: "files", labelKey: "settings.palette.files_label", descKey: "settings.palette.files_desc" },
+  { key: "repos", labelKey: "settings.palette.repos_label", descKey: "settings.palette.repos_desc" },
+  { key: "commands", labelKey: "settings.palette.commands_label", descKey: "settings.palette.commands_desc" },
 ];
 
 export function PaletteSection() {
+  const t = useT();
   const settings = useSettingsStore(s => s.settings);
   const save = useSettingsStore(s => s.save);
 
@@ -24,9 +27,9 @@ export function PaletteSection() {
 
   return (
     <section>
-      <h3 className="settings-section-title">Paleta de comandos</h3>
+      <h3 className="settings-section-title">{t("settings.palette.title")}</h3>
       <p style={{ marginTop: 0, marginBottom: "var(--space-5)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-        Controla quais fontes a paleta (<kbd>Ctrl+K</kbd>) inclui. Desativar uma fonte esconde os itens dela.
+        <Trans i18nKey="settings.palette.intro" components={[<kbd key="kbd" />]} />
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -45,15 +48,15 @@ export function PaletteSection() {
               type="checkbox"
               checked={sources[row.key]}
               onChange={() => toggle(row.key)}
-              aria-label={row.label}
+              aria-label={t(row.labelKey)}
               style={{ marginTop: 3 }}
             />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: "var(--text-base)", color: "var(--c-text)", fontWeight: "var(--weight-medium)" as unknown as number }}>
-                {row.label}
+                {t(row.labelKey)}
               </div>
               <div style={{ fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginTop: 2 }}>
-                {row.desc}
+                {t(row.descKey)}
               </div>
             </div>
           </label>

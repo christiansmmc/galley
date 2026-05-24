@@ -5,10 +5,12 @@ import { userMessage } from "../../ipc/errors";
 import { useDraftsStore } from "../../state/draftsStore";
 import { usePrsStore } from "../../state/prsStore";
 import type { ReviewEvent } from "../../ipc/types";
+import { useT } from "../../i18n";
 
 interface Props { open: boolean; onClose: () => void; }
 
 export function ReviewSubmitPanel({ open, onClose }: Props) {
+  const t = useT();
   const { drafts, clear } = useDraftsStore();
   const { currentPr, refreshThreads } = usePrsStore();
   const [event, setEvent] = useState<ReviewEvent>("COMMENT");
@@ -37,13 +39,13 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
 
   return (
     <SlidePanel
-      title="Enviar review"
+      title={t("review_submit.title")}
       open={open}
       onClose={onClose}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancelar</Button>
-          <Button variant="subtle" onClick={submit} disabled={busy}>{busy ? "Enviando…" : "Enviar"}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>{t("review_submit.cancel")}</Button>
+          <Button variant="subtle" onClick={submit} disabled={busy}>{busy ? t("review_submit.sending") : t("review_submit.send")}</Button>
         </>
       }
     >
@@ -63,7 +65,7 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
             }}
           >
             <input type="radio" name="event" checked={event === ev} onChange={() => setEvent(ev)} style={{ accentColor: "var(--c-accent)" }} />
-            <span>{ev === "APPROVE" ? "Aprovar" : ev === "COMMENT" ? "Comentar" : "Pedir mudanças"}</span>
+            <span>{ev === "APPROVE" ? t("review_submit.event_approve") : ev === "COMMENT" ? t("review_submit.event_comment") : t("review_submit.event_request_changes")}</span>
           </label>
         ))}
       </div>
@@ -71,10 +73,10 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
         value={body}
         onChange={e => setBody(e.target.value)}
         rows={5}
-        placeholder="Resumo (opcional)"
+        placeholder={t("review_submit.body_placeholder")}
       />
       <div style={{ marginTop: "var(--space-5)", fontSize: "var(--text-base)", color: "var(--c-subtext)" }}>
-        {drafts.length} rascunho{drafts.length === 1 ? "" : "s"} inline.
+        {t("review_submit.drafts_count", { count: drafts.length })}
       </div>
       {err && <div style={{ color: "var(--c-danger)", marginTop: "var(--space-4)", fontSize: "var(--text-base)" }}>{err}</div>}
     </SlidePanel>

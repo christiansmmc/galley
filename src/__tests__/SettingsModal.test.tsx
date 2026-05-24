@@ -47,6 +47,7 @@ const baseUi = {
   palette_sources: { prs: true, files: true, repos: true, commands: true },
   accent_color: "sage" as const,
   creed: "lendo. sem resumos.",
+  language: "auto" as const,
 };
 
 beforeEach(() => {

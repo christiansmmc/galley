@@ -3,8 +3,11 @@ import { LogOut, RefreshCcw } from "lucide-react";
 import { api } from "../../ipc/client";
 import { useSettingsStore } from "../../state/settingsStore";
 import { Avatar, Button, Input } from "../ui";
+import { Trans } from "react-i18next";
+import { useT } from "../../i18n";
 
 export function ContaSection() {
+  const t = useT();
   const checkPat = useSettingsStore(s => s.checkPat);
   const [user, setUser] = useState<string | null>(null);
   const [replacing, setReplacing] = useState(false);
@@ -39,7 +42,7 @@ export function ContaSection() {
 
   return (
     <section>
-      <h3 className="settings-section-title">Conta</h3>
+      <h3 className="settings-section-title">{t("settings.account.title")}</h3>
 
       {user ? (
         <div style={{
@@ -55,13 +58,13 @@ export function ContaSection() {
               {user}
             </div>
             <div style={{ fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-              Conectado via Personal Access Token
+              {t("settings.account.connected_via_pat")}
             </div>
           </div>
         </div>
       ) : (
         <p style={{ fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
-          Sem token configurado.
+          {t("settings.account.no_token")}
         </p>
       )}
 
@@ -69,7 +72,7 @@ export function ContaSection() {
         <div style={{ display: "flex", gap: "var(--space-3)" }}>
           <Button variant="ghost" size="sm" onClick={() => setReplacing(true)}>
             <RefreshCcw size={12} style={{ marginRight: "var(--space-2)" }} />
-            Substituir token
+            {t("settings.account.replace_token")}
           </Button>
           {user && (
             <Button
@@ -79,7 +82,7 @@ export function ContaSection() {
               style={{ color: "var(--c-danger)" }}
             >
               <LogOut size={12} style={{ marginRight: "var(--space-2)" }} />
-              Sair
+              {t("settings.account.logout")}
             </Button>
           )}
         </div>
@@ -88,7 +91,7 @@ export function ContaSection() {
       {replacing && (
         <div style={{ marginTop: "var(--space-3)" }}>
           <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
-            Novo token (escopo <code>repo</code>)
+            <Trans i18nKey="settings.account.new_token_label" components={[<code key="code" />]} />
           </label>
           <Input
             type="password"
@@ -104,10 +107,10 @@ export function ContaSection() {
           )}
           <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
             <Button variant="subtle" size="sm" onClick={replace} disabled={busy || !token.trim()}>
-              {busy ? "Salvando…" : "Salvar"}
+              {busy ? t("settings.account.saving") : t("settings.account.save")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => { setReplacing(false); setToken(""); setErr(null); }}>
-              Cancelar
+              {t("settings.account.cancel")}
             </Button>
           </div>
         </div>

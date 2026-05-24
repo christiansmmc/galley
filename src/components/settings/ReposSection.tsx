@@ -4,8 +4,12 @@ import { api } from "../../ipc/client";
 import type { RepoConfig } from "../../ipc/types";
 import { Button, EmptyState, Input } from "../ui";
 import { BrowseReposModal } from "./BrowseReposModal";
+import { useT } from "../../i18n";
+
+type TFn = ReturnType<typeof useT>;
 
 export function ReposSection() {
+  const t = useT();
   const [repos, setRepos] = useState<RepoConfig[]>([]);
   const [paste, setPaste] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -26,7 +30,7 @@ export function ReposSection() {
       }
       setPaste("");
     } catch (e) {
-      setErr(translate(e));
+      setErr(translate(e, t));
     } finally {
       setBusy(false);
     }
@@ -34,13 +38,13 @@ export function ReposSection() {
 
   return (
     <section>
-      <h3 className="settings-section-title">Repositórios</h3>
+      <h3 className="settings-section-title">{t("settings.repos.title")}</h3>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", marginBottom: "var(--space-6)" }}>
         {repos.length === 0 && (
           <EmptyState
-            title="Nenhum repositório."
-            description="cole uma URL abaixo ou abra a busca."
+            title={t("settings.repos.empty_title")}
+            description={t("settings.repos.empty_desc")}
           />
         )}
         {repos.map(r => (
@@ -57,7 +61,7 @@ export function ReposSection() {
             <Button
               variant="icon"
               size="sm"
-              aria-label="Remover"
+              aria-label={t("settings.repos.remove_aria")}
               onClick={async () => { await api.removeRepo(r.owner, r.name); refresh(); }}
               style={{ color: "var(--c-danger)" }}
             >
@@ -68,21 +72,21 @@ export function ReposSection() {
       </div>
 
       <label style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--c-subtext)", marginBottom: "var(--space-2)" }}>
-        Adicionar por URL ou <code>owner/repo</code>
+        {t("settings.repos.add_label")}
       </label>
       <div style={{ display: "flex", gap: "var(--space-3)" }}>
         <Input
           value={paste}
           onChange={e => { setPaste(e.target.value); setErr(null); }}
           onKeyDown={e => { if (e.key === "Enter") submit(); }}
-          placeholder="https://github.com/owner/repo  •  owner/repo"
+          placeholder={t("settings.repos.add_placeholder")}
           mono
           size="sm"
           invalid={Boolean(err)}
-          aria-label="Adicionar repositório"
+          aria-label={t("settings.repos.add_aria")}
         />
         <Button variant="subtle" size="sm" onClick={submit} disabled={busy || !paste.trim()}>
-          {busy ? "Validando…" : "Adicionar"}
+          {busy ? t("settings.repos.add_validating") : t("settings.repos.add_button")}
         </Button>
       </div>
       {err && (
@@ -94,7 +98,7 @@ export function ReposSection() {
       <div style={{ marginTop: "var(--space-5)" }}>
         <Button variant="ghost" size="sm" onClick={() => setBrowseOpen(true)}>
           <Search size={12} style={{ marginRight: "var(--space-2)" }} />
-          Procurar meus repos no GitHub
+          {t("settings.repos.browse")}
         </Button>
       </div>
 
@@ -108,18 +112,18 @@ export function ReposSection() {
   );
 }
 
-function translate(e: unknown): string {
+function translate(e: unknown, t: TFn): string {
   const kind = (e as { kind?: string } | null)?.kind;
   const details = (e as { details?: string } | null)?.details ?? "";
-  if (kind === "NotFound") return "Repo não acessível com seu PAT.";
-  if (kind === "Auth") return "Token não configurado.";
+  if (kind === "NotFound") return t("settings.repos.error_not_accessible");
+  if (kind === "Auth") return t("settings.repos.error_no_token");
   if (kind === "Config" && details.includes("Formato inválido")) {
-    return "Formato inválido. Use https://github.com/owner/repo ou owner/repo.";
+    return t("settings.repos.error_invalid_format");
   }
   const s = `${kind ?? ""} ${details}`.trim() || String(e);
-  if (s.includes("Formato inválido")) return "Formato inválido. Use https://github.com/owner/repo ou owner/repo.";
+  if (s.includes("Formato inválido")) return t("settings.repos.error_invalid_format");
   if (s.toLowerCase().includes("not found") || s.includes("404") || s.includes("403")) {
-    return "Repo não acessível com seu PAT.";
+    return t("settings.repos.error_not_accessible");
   }
   return details || s;
 }

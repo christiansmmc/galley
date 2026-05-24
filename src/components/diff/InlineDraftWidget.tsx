@@ -3,6 +3,7 @@ import { useDraftsStore } from "../../state/draftsStore";
 import { Button } from "../ui";
 import { inlineWidgetShell } from "./inlineWidgetStyle";
 import { formatAge } from "../../util/time";
+import { useT } from "../../i18n";
 
 interface Props {
   draft: CommentDraft;
@@ -16,9 +17,10 @@ interface Props {
  * panel via a window event (App owns the modal state).
  */
 export function InlineDraftWidget({ draft }: Props) {
+  const t = useT();
   const remove = useDraftsStore(s => s.remove);
   const isRange = draft.start_line != null && draft.start_line !== draft.line;
-  const sideLabel = draft.side === "RIGHT" ? "direita" : "esquerda";
+  const sideLabel = draft.side === "RIGHT" ? t("comment.side_right") : t("comment.side_left");
   const lineLabel = isRange
     ? `L${draft.start_line}–${draft.line}`
     : `L${draft.line}`;
@@ -43,11 +45,11 @@ export function InlineDraftWidget({ draft }: Props) {
       }}>
         <span>
           <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{lineLabel}</b>
-          {` · ${sideLabel} · rascunho · ${age}`}
+          {` · ${sideLabel} · ${t("comment.draft_state")} · ${age}`}
         </span>
         <span style={{
           fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--c-warn)",
-        }}>RASCUNHO</span>
+        }}>{t("comment.draft_state_upper")}</span>
       </div>
 
       <div style={{
@@ -58,12 +60,12 @@ export function InlineDraftWidget({ draft }: Props) {
       <div style={{
         display: "flex", justifyContent: "flex-end", gap: 16, marginTop: 10,
       }}>
-        <Button variant="link" onClick={() => remove(draft.id)}>descartar</Button>
+        <Button variant="link" onClick={() => remove(draft.id)}>{t("comment.discard")}</Button>
         <Button
           variant="link"
           tone="accent"
           onClick={() => window.dispatchEvent(new CustomEvent("prr:open-submit"))}
-        >incluir no review</Button>
+        >{t("comment.include_in_review")}</Button>
       </div>
     </div>
   );

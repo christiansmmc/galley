@@ -18,8 +18,10 @@ import { usePrsStore } from "./state/prsStore";
 import { useDraftsStore } from "./state/draftsStore";
 import { useUiStore } from "./state/uiStore";
 import { UiGallery } from "./components/ui/UiGallery";
+import { useT } from "./i18n";
 
 export default function App() {
+  const t = useT();
   const { hasPat, checkPat, load } = useSettingsStore();
   const currentPr = usePrsStore(s => s.currentPr);
   const loadDrafts = useDraftsStore(s => s.load);
@@ -57,10 +59,10 @@ export default function App() {
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       {authBanner && (
         <ErrorBlock
-          source="github.com"
-          message="responded 401 unauthorized."
+          source={t("auth.source_github")}
+          message={t("auth.unauthorized")}
           action={{
-            label: "reautenticar",
+            label: t("auth.reauth"),
             onClick: () => { setSettingsOpen(true); setAuthBanner(false); },
           }}
         />

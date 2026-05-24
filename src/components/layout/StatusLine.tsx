@@ -2,6 +2,7 @@ import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import type { CiStatus } from "../../ipc/types";
+import { useT } from "../../i18n";
 
 const CREED_FALLBACK = "lendo. sem resumos.";
 
@@ -15,6 +16,7 @@ function ciDotColor(status: CiStatus | undefined): string {
 }
 
 export function StatusLine() {
+  const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
   const draftCount = useDraftsStore(s => s.drafts.length);
   const creed = useSettingsStore(s => s.settings?.ui.creed) || CREED_FALLBACK;
@@ -72,7 +74,7 @@ export function StatusLine() {
 
       {currentPr && typeof changedFiles === "number" && typeof additions === "number" && typeof deletions === "number" && (
         <span>
-          <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{changedFiles}</b> arq
+          <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{changedFiles}</b> {t("status_line.files_short")}
           {" "}
           <span style={{ color: "var(--c-overlay)" }}>·</span>
           {" "}
@@ -84,7 +86,7 @@ export function StatusLine() {
 
       {currentPr && draftCount > 0 && (
         <span>
-          <span aria-hidden="true">∗</span> <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{draftCount}</b> rascunho
+          <span aria-hidden="true">∗</span> <b style={{ color: "var(--c-text)", fontWeight: 500 }}>{draftCount}</b> {t("status_line.draft_label")}
         </span>
       )}
 

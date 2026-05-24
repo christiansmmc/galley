@@ -6,6 +6,9 @@ import { useSettingsStore } from "../../state/settingsStore";
 import { useTheme } from "../../theme/ThemeProvider";
 import { fuzzyScore } from "../../util/fuzzy";
 import type { PrSummary, RepoConfig } from "../../ipc/types";
+import { useT } from "../../i18n";
+
+type TFn = ReturnType<typeof useT>;
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -29,6 +32,7 @@ interface Item {
 }
 
 export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: CommandPaletteProps) {
+  const t = useT();
   const mine = usePrsStore(s => s.mine);
   const reviewRequested = usePrsStore(s => s.reviewRequested);
   const currentPr = usePrsStore(s => s.currentPr);
@@ -97,7 +101,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         if (sources.prs) {
           for (const p of allPrs) {
             if (p.owner === scope.owner && p.repo === scope.name) {
-              out.push(prItem(p, openPr, onClose));
+              out.push(prItem(p, openPr, onClose, t));
             }
           }
         }
@@ -108,9 +112,9 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
             out.push({
               id: `repo:${r.owner}/${r.name}`,
               kind: "repo",
-              group: "Repositórios",
+              group: t("command_palette.group_repos"),
               label: `${r.owner}/${r.name}`,
-              hint: count > 0 ? `${count} PR${count === 1 ? "" : "s"}` : undefined,
+              hint: count > 0 ? t("command_palette.pr_count", { count }) : undefined,
               icon: <FolderGit2 size={14} />,
               match: `${r.owner}/${r.name} ${r.name} ${r.owner}`,
               run: () => { enterScope(r); return true; },
@@ -119,7 +123,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         }
         if (sources.prs) {
           for (const p of allPrs) {
-            out.push(prItem(p, openPr, onClose));
+            out.push(prItem(p, openPr, onClose, t));
           }
         }
       }
@@ -130,7 +134,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
           out.push({
             id: `file:${f.path}`,
             kind: "file",
-            group: "Arquivos",
+            group: t("command_palette.group_files"),
             label: f.path,
             hint: `+${f.additions} −${f.deletions}`,
             icon: <FileText size={14} />,
@@ -147,31 +151,31 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       out.push({
         id: "cmd:refresh",
         kind: "command",
-        group: "Comandos",
-        label: "Atualizar lista de PRs",
-        hint: "refresh",
+        group: t("command_palette.group_commands"),
+        label: t("command_palette.cmd_refresh"),
+        hint: t("command_palette.cmd_refresh_hint"),
         icon: <RefreshCw size={14} />,
-        match: "atualizar lista prs refresh",
+        match: "atualizar lista prs refresh update",
         run: () => { refreshLists(); onClose(); },
       });
       out.push({
         id: "cmd:settings",
         kind: "command",
-        group: "Comandos",
-        label: "Abrir configurações",
-        hint: "settings",
+        group: t("command_palette.group_commands"),
+        label: t("command_palette.cmd_settings"),
+        hint: t("command_palette.cmd_settings_hint"),
         icon: <Settings size={14} />,
-        match: "abrir configurações settings",
+        match: "abrir configurações settings open",
         run: () => { onOpenSettings(); onClose(); },
       });
       out.push({
         id: "cmd:theme",
         kind: "command",
-        group: "Comandos",
-        label: `Alternar tema (atual: ${theme.choice})`,
-        hint: "theme",
+        group: t("command_palette.group_commands"),
+        label: t("command_palette.cmd_theme", { theme: theme.choice }),
+        hint: t("command_palette.cmd_theme_hint"),
         icon: <Sun size={14} />,
-        match: "alternar tema theme",
+        match: "alternar tema theme toggle",
         run: () => {
           const next = theme.choice === "system" ? "dark" : theme.choice === "dark" ? "light" : "system";
           theme.setChoice(next);
@@ -182,18 +186,18 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         out.push({
           id: "cmd:submit",
           kind: "command",
-          group: "Comandos",
-          label: "Enviar review",
-          hint: "submit review",
+          group: t("command_palette.group_commands"),
+          label: t("command_palette.cmd_submit"),
+          hint: t("command_palette.cmd_submit_hint"),
           icon: <Send size={14} />,
-          match: "enviar review submit",
+          match: "enviar review submit send",
           run: () => { onOpenSubmit(); onClose(); },
         });
       }
     }
 
     return out;
-  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, sources, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit]);
+  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, sources, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit, t]);
 
   const filtered = useMemo(() => {
     if (!effectiveQuery) return items;
@@ -253,7 +257,12 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   // fuzzy ranking is preserved *within* each group. `visualOrder` is the
   // linear traversal the keyboard navigates — its indices are what `active`
   // refers to from this point on.
-  const GROUP_ORDER = ["Repositórios", "Pull Requests", "Arquivos", "Comandos"];
+  const GROUP_ORDER = [
+    t("command_palette.group_repos"),
+    t("command_palette.group_prs"),
+    t("command_palette.group_files"),
+    t("command_palette.group_commands"),
+  ];
   const buckets = new Map<string, Item[]>();
   for (const it of filtered) {
     const b = buckets.get(it.group);
@@ -275,7 +284,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
     <div
       onClick={onClose}
       role="dialog"
-      aria-label="Paleta de comandos"
+      aria-label={t("command_palette.aria_label")}
       style={{
         position: "fixed",
         inset: 0,
@@ -320,8 +329,8 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
           {scope && (
             <button
               onClick={() => { setScope(null); setQuery(""); setActive(0); inputRef.current?.focus(); }}
-              aria-label={`Sair do escopo ${scope.owner}/${scope.name}`}
-              title="Sair do escopo (Esc ou Backspace)"
+              aria-label={t("command_palette.exit_scope_aria", { scope: `${scope.owner}/${scope.name}` })}
+              title={t("command_palette.exit_scope_title")}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -346,8 +355,8 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder={scope ? `PRs em ${scope.owner}/${scope.name}…` : "Buscar PRs, arquivos, repos, ou > comando..."}
-            aria-label="Buscar"
+            placeholder={scope ? t("command_palette.search_in_scope", { scope: `${scope.owner}/${scope.name}` }) : t("command_palette.search_placeholder")}
+            aria-label={t("command_palette.search_aria")}
             style={{
               flex: 1,
               border: 0,
@@ -371,7 +380,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         <div
           ref={listRef}
           role="listbox"
-          aria-label="Resultados"
+          aria-label={t("command_palette.results_aria")}
           onMouseMove={() => { mouseMovedRef.current = true; }}
           style={{ overflowY: "auto", flex: 1 }}
         >
@@ -382,7 +391,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
               color: "var(--c-subtext)",
               fontSize: "var(--text-base)",
             }}>
-              Nada encontrado.
+              {t("command_palette.nothing_found")}
             </div>
           ) : (() => {
             let cursor = 0;
@@ -425,10 +434,10 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
             fontSize: 10.5,
             letterSpacing: "0.04em",
           }}>
-            <span>↑↓ navegar</span>
-            <span>↵ selecionar</span>
-            <span>esc {scope ? "sair do escopo" : "fechar"}</span>
-            <span>{"> "}prefixo = comandos</span>
+            <span>{t("command_palette.footer_navigate")}</span>
+            <span>{t("command_palette.footer_select")}</span>
+            <span>{scope ? t("command_palette.footer_exit_scope") : t("command_palette.footer_close")}</span>
+            <span>{t("command_palette.footer_prefix")}</span>
           </div>
           {query === "" && !scope && (
             <span style={{
@@ -437,7 +446,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
               fontStyle: "italic",
               fontSize: 12.5,
               color: "var(--c-subtext)",
-            }}>sem sugestões. apenas o que você buscar.</span>
+            }}>{t("command_palette.hint_no_suggestions")}</span>
           )}
         </div>
       </div>
@@ -517,11 +526,11 @@ export function CommandItem({
   );
 }
 
-function prItem(p: PrSummary, openPr: (o: string, r: string, n: number) => void, onClose: () => void): Item {
+function prItem(p: PrSummary, openPr: (o: string, r: string, n: number) => void, onClose: () => void, t: TFn): Item {
   return {
     id: `pr:${p.id}`,
     kind: "pr",
-    group: "Pull Requests",
+    group: t("command_palette.group_prs"),
     label: `#${p.number} ${p.title}`,
     hint: `${p.owner}/${p.repo}`,
     icon: <GitPullRequest size={14} />,

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { api } from "../../ipc/client";
 import { useSettingsStore } from "../../state/settingsStore";
 import { Button, Input } from "../ui";
+import { Trans } from "react-i18next";
+import { useT } from "../../i18n";
 
 export function PatSection({ onDone }: { onDone?: () => void }) {
+  const t = useT();
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -40,7 +43,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
           textTransform: "uppercase",
           color: "var(--c-overlay)",
         }}>
-          primeira vez
+          {t("pat.first_time")}
         </div>
         <h1 style={{
           margin: 0,
@@ -52,7 +55,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
           letterSpacing: "-0.01em",
           color: "var(--c-text)",
         }}>
-          Sem token, ainda.
+          {t("pat.no_token_yet")}
         </h1>
         <p style={{
           margin: 0,
@@ -60,7 +63,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
           lineHeight: 1.6,
           color: "var(--c-subtext)",
         }}>
-          Cole um Personal Access Token do GitHub com escopo <code style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>repo</code>. Fica no keyring do sistema — nunca em disco.
+          <Trans i18nKey="pat.instructions" components={[<code key="code" style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />]} />
         </p>
         <Input
           type="password"
@@ -69,7 +72,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
           onChange={e => setToken(e.target.value)}
           placeholder="ghp_..."
           invalid={Boolean(err)}
-          aria-label="Personal Access Token"
+          aria-label={t("pat.aria_label")}
         />
         {err && (
           <div style={{
@@ -78,7 +81,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
             color: "var(--c-danger)",
             whiteSpace: "pre-wrap",
           }}>
-            error: {err}
+            {t("pat.error_prefix")} {err}
           </div>
         )}
         <div style={{ display: "flex", gap: "var(--space-6)", alignItems: "center" }}>
@@ -88,7 +91,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
             onClick={submit}
             disabled={busy || !token.trim()}
           >
-            {busy ? "salvando…" : "salvar token"}
+            {busy ? t("pat.saving") : t("pat.save_token")}
           </Button>
           <button
             type="button"
@@ -110,7 +113,7 @@ export function PatSection({ onDone }: { onDone?: () => void }) {
             onMouseEnter={(e) => { e.currentTarget.style.color = "var(--c-text)"; e.currentTarget.style.borderBottomColor = "var(--c-line)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--c-subtext)"; e.currentTarget.style.borderBottomColor = "transparent"; }}
           >
-            criar token no github ↗
+            {t("pat.create_token")}
           </button>
         </div>
       </div>
