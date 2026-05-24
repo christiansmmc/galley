@@ -46,9 +46,9 @@ describe("InlineThreadWidget", () => {
     };
     render(<InlineThreadWidget thread={thread} />);
 
-    const textarea = screen.getByPlaceholderText("Responder…") as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText("responder…") as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: "thanks" } });
-    fireEvent.click(screen.getByText("Responder"));
+    fireEvent.click(screen.getByText("responder"));
 
     await waitFor(() => expect(replyToThread).toHaveBeenCalled());
     // Reply targets the LAST comment in the thread, not the root, so GitHub
@@ -65,7 +65,7 @@ describe("InlineThreadWidget", () => {
       comments: [{ id: 100, author: "alice", body: "first", created_at: "", in_reply_to_id: null }],
     };
     render(<InlineThreadWidget thread={thread} />);
-    const button = screen.getByText("Responder") as HTMLButtonElement;
+    const button = screen.getByText("responder") as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 });

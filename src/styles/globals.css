@@ -122,6 +122,17 @@ select.prr-input option {
   width: 100%;
 }
 
+/* Etapa 3 · S6: inline comment/draft/thread widgets cap their max-width
+   to a comfortable measure that depends on render mode. side-by-side
+   already halves --diff-viewport-w via Monaco's getLayoutInfo, but the
+   cap keeps actions from sprawling on very wide screens. */
+.prr-inline-widget {
+  max-width: min(680px, calc(var(--diff-viewport-w, 100%) - var(--space-9) - var(--space-9)));
+}
+[data-diff-mode="side-by-side"] .prr-inline-widget {
+  max-width: min(540px, calc(var(--diff-viewport-w, 100%) - var(--space-9) - var(--space-9)));
+}
+
 /* Primitive hover/focus/active states.
    Inline styles cover layout; pseudo-states live here. */
 .prr-btn:not(:disabled):hover { filter: brightness(1.08); }
