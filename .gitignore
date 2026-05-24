@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code session state
+.claude/
+
+# Bundle outputs (rpm/deb/appimage are uploaded as GitHub release
+# assets, not committed). Cargo target + Tauri gen are ignored
+# already by src-tauri/.gitignore but listed here for safety.
+src-tauri/target/
+src-tauri/gen/
+*.rpm
+*.deb
+*.AppImage
+
+# Local secrets — keyring is the source of truth, but block stray dumps
+.env
+.env.*
+*.token

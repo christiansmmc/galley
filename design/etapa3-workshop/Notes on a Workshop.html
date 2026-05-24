@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Notes on a Workshop — design direction for the PR reviewer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+
+<script id="tweak-defaults" type="application/json">
+/*EDITMODE-BEGIN*/{
+  "theme": "dark",
+  "accent": "sage",
+  "density": "comfortable",
+  "creed": "lendo. sem resumos."
+}/*EDITMODE-END*/
+</script>
+<script>
+  // Apply theme + accent BEFORE first paint so the doc doesn't flash.
+  (function () {
+    try {
+      const raw = document.getElementById('tweak-defaults').textContent;
+      const open = raw.indexOf('{'); const close = raw.lastIndexOf('}');
+      const t = JSON.parse(raw.slice(open, close + 1));
+      const root = document.documentElement;
+      root.dataset.theme = t.theme || 'dark';
+      root.dataset.accent = t.accent || 'sage';
+      root.dataset.density = t.density || 'comfortable';
+    } catch (e) { console.warn('tweak defaults parse failed', e); }
+  })();
+</script>
+
+<link rel="stylesheet" href="memo.css">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="artifacts.jsx"></script>
+<script type="text/babel" src="memo.jsx"></script>
+<script type="text/babel" data-presets="react">
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<Memo />);
+</script>
+</body>
+</html>
