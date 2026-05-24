@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Search } from "lucide-react";
+import { ChevronLeft, RefreshCw, Search } from "lucide-react";
 import type { PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
+import { useUiStore } from "../../state/uiStore";
 import { PrListItem } from "./PrListItem";
 import { Button, EmptyState, Input, SkeletonBars, Spinner, Sweep, Tabs } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
@@ -32,6 +33,7 @@ function matchesQuery(pr: PrSummary, q: string): boolean {
 export function PrListPanel() {
   const { mine, reviewRequested, loadingLists, refreshLists, openPr, currentPr } = usePrsStore();
   const pendingPr = usePrsStore(s => s.pendingPr);
+  const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
   const [tab, setTab] = useState<Tab>("review_requested");
   const [query, setQuery] = useState("");
@@ -100,16 +102,29 @@ export function PrListPanel() {
           { id: "mine", label: `Meus (${filteredMine.length})` },
         ]}
         trailing={
-          <Button
-            variant="icon"
-            size="md"
-            onClick={refreshLists}
-            disabled={loadingLists}
-            title="Atualizar"
-            aria-label="Atualizar"
-          >
-            {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
-          </Button>
+          <>
+            {currentPr && (
+              <Button
+                variant="icon"
+                size="md"
+                onClick={() => setPrListCollapsed(true)}
+                title="Recolher lista (Ctrl+1)"
+                aria-label="Recolher lista"
+              >
+                <ChevronLeft size={14} />
+              </Button>
+            )}
+            <Button
+              variant="icon"
+              size="md"
+              onClick={refreshLists}
+              disabled={loadingLists}
+              title="Atualizar"
+              aria-label="Atualizar"
+            >
+              {loadingLists ? <Spinner size={14} /> : <RefreshCw size={14} />}
+            </Button>
+          </>
         }
       />
 
