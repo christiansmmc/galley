@@ -91,14 +91,11 @@ impl GitHubClient {
             }
         }
 
-        // Drop resolved threads. The UI re-fetches after resolve, so a hidden
-        // resolved thread effectively disappears without an explicit filter
-        // toggle. If we ever want a "show resolved" affordance we can lift
-        // this filter to the caller.
-        let mut out: Vec<_> = threads
-            .into_values()
-            .filter(|t| !t.resolved)
-            .collect();
+        // Etapa 3 · S6: keep resolved threads in the response. The UI dims
+        // them (opacity 0.7) with a RESOLVIDO tag instead of hiding them,
+        // so the reader sees prior conversation context without re-toggling
+        // a filter.
+        let mut out: Vec<_> = threads.into_values().collect();
         out.sort_by_key(|t| t.id);
         Ok(out)
     }
