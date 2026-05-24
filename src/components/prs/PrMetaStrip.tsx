@@ -45,7 +45,7 @@ export function PrMetaStrip({ pr }: Props) {
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: "var(--space-2)",
+            gap: 12,
             fontFamily: "var(--font-mono)",
             fontSize: 11,
             color: "var(--c-subtext)",
