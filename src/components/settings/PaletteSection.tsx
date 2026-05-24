@@ -24,7 +24,7 @@ export function PaletteSection() {
 
   return (
     <section>
-      <h4 style={{ margin: "0 0 var(--space-2)" }}>Paleta de comandos</h4>
+      <h3 className="settings-section-title">Paleta de comandos</h3>
       <p style={{ marginTop: 0, marginBottom: "var(--space-5)", fontSize: "var(--text-sm)", color: "var(--c-subtext)" }}>
         Controla quais fontes a paleta (<kbd>Ctrl+K</kbd>) inclui. Desativar uma fonte esconde os itens dela.
       </p>

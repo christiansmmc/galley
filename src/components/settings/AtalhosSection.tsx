@@ -11,7 +11,7 @@ const SHORTCUTS: Shortcut[] = [
 export function AtalhosSection() {
   return (
     <section>
-      <h4 style={{ margin: "0 0 var(--space-4)" }}>Atalhos</h4>
+      <h3 className="settings-section-title">Atalhos</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {SHORTCUTS.map((s, i) => (
           <div

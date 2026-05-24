@@ -192,6 +192,18 @@ select.prr-input option {
   box-shadow: var(--shadow-focus);
 }
 
+/* Etapa 3 S7: settings section title. Serif italic 18, opens each
+   section's body in the modal's right pane. */
+.settings-section-title {
+  margin: 0 0 24px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  color: var(--c-text);
+}
+
 /* Hover affordance for selectable rows in the PR list / file tree.
    Class owns background so the inline-style trap (inline > class) does
    not silently break hover. */

@@ -33,6 +33,7 @@ export default function App() {
   useGlobalShortcuts({ onOpenPalette: () => setPaletteOpen(true) });
 
   const density = useSettingsStore(s => s.settings?.ui.density ?? "comfortable");
+  const accent = useSettingsStore(s => s.settings?.ui.accent_color ?? "sage");
 
   useEffect(() => { checkPat(); load(); }, [checkPat, load]);
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function App() {
     else clearDrafts();
   }, [currentPr, loadDrafts, clearDrafts]);
   useEffect(() => { document.body.dataset.density = density; }, [density]);
-  useEffect(() => { document.body.dataset.accent = "sage"; }, []);
+  useEffect(() => { document.body.dataset.accent = accent; }, [accent]);
   useEffect(() => {
     const handler = () => setSubmitOpen(true);
     window.addEventListener("prr:open-submit", handler);

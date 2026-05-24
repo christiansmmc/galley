@@ -39,7 +39,7 @@ export function ContaSection() {
 
   return (
     <section>
-      <h4 style={{ margin: "0 0 var(--space-4)" }}>Conta</h4>
+      <h3 className="settings-section-title">Conta</h3>
 
       {user ? (
         <div style={{

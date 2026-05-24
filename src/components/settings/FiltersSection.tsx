@@ -26,7 +26,7 @@ export function FiltersSection() {
 
   return (
     <section style={{ marginBottom: "var(--space-7)" }}>
-      <h4 style={{ margin: "0 0 var(--space-4)" }}>Filtros de path</h4>
+      <h3 className="settings-section-title">Filtros de path</h3>
       <Dropdown
         value={selectedRepo}
         onChange={e => setSelectedRepo(e.target.value)}

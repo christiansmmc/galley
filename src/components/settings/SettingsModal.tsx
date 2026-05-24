@@ -38,15 +38,16 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const [active, setActive] = useState<SectionId>("aparencia");
 
   return (
-    <Modal title="Configurações" open={open} onClose={onClose} minWidth={720} maxWidth={920}>
-      <div style={{ display: "flex", gap: "var(--space-7)", minHeight: 480 }}>
+    <Modal title="Configurações" open={open} onClose={onClose} minWidth={760} maxWidth={760}>
+      <div style={{ display: "flex", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
         <nav
           aria-label="Seções"
           style={{
-            width: 180, flex: "0 0 auto",
-            display: "flex", flexDirection: "column", gap: "var(--space-1)",
-            borderRight: "1px solid var(--c-surface0)",
-            paddingRight: "var(--space-4)",
+            width: 200, flex: "0 0 auto",
+            display: "flex", flexDirection: "column",
+            background: "var(--c-mantle)",
+            borderRight: "1px solid var(--c-line)",
+            padding: "16px 0",
           }}
         >
           {NAV.map(item => {
@@ -55,20 +56,20 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
               <button
                 key={item.id}
                 onClick={() => setActive(item.id)}
-                className="prr-row"
-                data-selected={selected}
                 style={{
                   display: "block",
                   width: "100%",
                   textAlign: "left",
-                  padding: "var(--space-3) var(--space-4)",
+                  padding: "8px 20px",
                   border: 0,
-                  background: "transparent",
+                  borderLeft: selected ? "2px solid var(--c-accent)" : "2px solid transparent",
+                  background: selected ? "var(--c-base)" : "transparent",
                   color: selected ? "var(--c-text)" : "var(--c-subtext)",
-                  fontSize: "var(--text-md)",
-                  fontWeight: (selected ? "var(--weight-medium)" : "var(--weight-regular)") as unknown as number,
-                  borderRadius: "var(--radius-md)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: 12.5,
+                  fontWeight: 400,
                   cursor: "pointer",
+                  transition: "color var(--transition-fast), background var(--transition-fast)",
                 }}
                 aria-current={selected ? "page" : undefined}
               >
@@ -77,7 +78,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             );
           })}
         </nav>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, padding: "24px 32px", overflow: "auto" }}>
           {renderSection(active)}
         </div>
       </div>
