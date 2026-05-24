@@ -563,7 +563,7 @@ export function DiffPanel() {
           {head.map((seg, i) => (
             <span key={i}>
               <span style={{ color: "var(--c-subtext)" }}>{seg}</span>
-              <span style={{ color: "var(--c-overlay)" }}>{" / "}</span>
+              <span style={{ color: "var(--c-overlay)" }}>/</span>
             </span>
           ))}
           <span style={{ color: "var(--c-text)", fontWeight: 500 }}>{leaf}</span>
@@ -583,6 +583,7 @@ export function DiffPanel() {
         >
           copiar caminho
         </Button>
+        <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
         <Button
           variant="link"
           onClick={toggleRenderMode}

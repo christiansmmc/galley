@@ -133,14 +133,22 @@ export function PrListRail({ onExpand }: Props) {
         style={{
           padding: "8px 0 10px",
           display: "flex",
-          justifyContent: "center",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
           fontFamily: "var(--font-mono)",
-          fontSize: 10.5,
-          color: "var(--c-overlay)",
         }}
         title={`${total} PR${total === 1 ? "" : "s"} na fila`}
       >
-        {total}
+        <span style={{ fontSize: 11, color: "var(--c-text)" }}>{total}</span>
+        <span style={{
+          fontSize: 8,
+          letterSpacing: "0.10em",
+          textTransform: "uppercase",
+          color: "var(--c-overlay)",
+        }}>
+          prs
+        </span>
       </div>
     </div>
   );

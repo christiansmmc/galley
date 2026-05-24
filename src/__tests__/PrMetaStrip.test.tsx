@@ -27,7 +27,7 @@ describe("PrMetaStrip", () => {
   it("renders author, files, +/-, CI label, reviewer count", () => {
     render(<PrMetaStrip pr={makePr()} />);
     expect(screen.getByText("alice")).toBeInTheDocument();
-    expect(screen.getByText("5 files")).toBeInTheDocument();
+    expect(screen.getByText("5 arq")).toBeInTheDocument();
     expect(screen.getByText("+100")).toBeInTheDocument();
     expect(screen.getByText("−20")).toBeInTheDocument();
     expect(screen.getAllByText(/CI passou/).length).toBeGreaterThan(0);
@@ -41,16 +41,16 @@ describe("PrMetaStrip", () => {
 
   it("does not show description toggle when body is empty", () => {
     render(<PrMetaStrip pr={makePr({ body: null })} />);
-    expect(screen.queryByText(/Mostrar descrição/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mostrar descrição/)).not.toBeInTheDocument();
   });
 
   it("toggles body open and closed", () => {
     render(<PrMetaStrip pr={makePr({ body: "Some PR description here." })} />);
-    const btn = screen.getByRole("button", { name: /Mostrar descrição/ });
+    const btn = screen.getByRole("button", { name: /mostrar descrição/ });
     expect(screen.queryByText("Some PR description here.")).not.toBeInTheDocument();
     fireEvent.click(btn);
     expect(screen.getByText("Some PR description here.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Esconder descrição/ }));
+    fireEvent.click(screen.getByRole("button", { name: /esconder descrição/ }));
     expect(screen.queryByText("Some PR description here.")).not.toBeInTheDocument();
   });
 
