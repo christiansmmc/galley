@@ -31,15 +31,15 @@ macOS / Windows are not tested. Tauri can target them; PRs welcome.
 
 ## What's inside
 
-**Multi-repo PR list** — grouped by repo, fuzzy-searchable. **Author names hidden by default** — you already know who you are.
+**Multi-repo PR list.** Grouped by repo, fuzzy-searchable. **Author names hidden by default** — you already know who you are.
 
-**Side-by-side or inline diff** (Monaco-based). **No AI-suggested fixes in the margin.** Per-file viewed state via a single dot — click to toggle.
+**Side-by-side or inline diff** (Monaco-based). Per-file viewed state via a single dot — click to toggle. **No AI-suggested fixes in the margin.**
 
-**Inline comments on the modified side.** Threads have three states — *open*, *draft*, *resolved* — communicated entirely by the left-edge rule. No chips, no badges, no colored fills.
+**Inline comments on the modified side.** Three thread states — *open*, *draft*, *resolved* — communicated entirely by the left-edge rule. No chips, no badges, no colored fills. Range comments via line selection.
 
 **Local-first drafts.** Persisted in SQLite. Never round-trip to a server until you submit the whole review.
 
-**Command palette** (`Ctrl+K`). Fuzzy across PRs, files, repos, commands. The footer reads *"sem sugestões. apenas o que você buscar."* — visible until you type.
+**Command palette** (`Ctrl+K`). Fuzzy across PRs, files, repos, commands. The footer reads *"no suggestions. only what you search for."* — visible until you type.
 
 ![Command palette — fuzzy search across PRs, files, repos, commands](screenshots/03-palette.png)
 
@@ -56,9 +56,11 @@ macOS / Windows are not tested. Tauri can target them; PRs welcome.
   </tr>
 </table>
 
+**English + Portuguese (BR).** Toggle in Settings → Appearance. The status line carries an italic-serif voice line in your locale; pick from a small set, or set your own.
+
 **Settings is a single modal.** Seven sections, italic-serif titles, hairline-bordered segmented controls. Nothing that looks like a SaaS dashboard.
 
-![Settings → Aparência](screenshots/04-settings.png)
+![Settings → Appearance](screenshots/04-settings.png)
 
 ## Install
 
@@ -86,13 +88,9 @@ Galley needs a GitHub personal access token with the `repo` scope.
 
 1. Create one at [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta) (fine-grained) or [github.com/settings/tokens](https://github.com/settings/tokens) (classic).
 2. Paste it on the first-run screen.
-3. Add one or more repositories under **Configurações → Repositórios**.
+3. Add one or more repositories under **Settings → Repositories**.
 
 The token is stored in your OS keyring (libsecret / secret-service on Linux). It is **never written to a file inside the project tree or to disk in plaintext** — keyring is the only persistence path.
-
-## A note on the UI
-
-Galley ships in Portuguese (BR). Navigation paths in this README use the Portuguese labels you'll see in the app. An English locale is on the roadmap; for now, the design memo and the source comments are in English.
 
 ## Building from source
 
@@ -117,6 +115,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev \
 ```bash
 pnpm install
 pnpm tauri dev                                   # dev mode with hot reload
+pnpm exec vite build                             # frontend production build
 NO_STRIP=true pnpm tauri build --bundles rpm     # Fedora rpm
 NO_STRIP=true pnpm tauri build --bundles deb     # Ubuntu deb
 ```
@@ -162,12 +161,10 @@ docs/superpowers/         Workshop progress notes, plans, specs
 
 ## Design
 
-The visual language is documented in [`design/etapa3-workshop/README.md`](design/etapa3-workshop/README.md). Read it if you're contributing — Galley has opinions, and they're load-bearing. **No AI features. No chips for state. No avatars. No spinners.** If you're about to open a PR that adds any of these, read the design memo first.
+The visual language is documented in [`design/etapa3-workshop/README.md`](design/etapa3-workshop/README.md). Read it if you're contributing — Galley has opinions, and they're load-bearing.
+
+**No AI features. No chips for state. No avatars. No spinners. No tours. No insights dashboards.** If you're about to open a PR that adds any of these, read the design memo first.
 
 ## License
 
 [MIT](LICENSE).
-
----
-
-> Quer screenshots em alta resolução? `App Mock Galley.html` está incluído neste pacote — abra no navegador, escolha a cena pelo toggle no canto inferior, e capture na resolução que quiser. Os PNGs em `screenshots/` foram capturados no ambiente sandbox a 924×540 e podem ficar pequenos no GitHub. Para o README definitivo, recapture o mock direto na sua máquina a 1520×960 (resolução de design).
