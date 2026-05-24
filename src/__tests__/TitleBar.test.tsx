@@ -36,7 +36,7 @@ describe("TitleBar", () => {
     expect(screen.queryByRole("button", { name: "Voltar para a lista" })).not.toBeInTheDocument();
   });
 
-  it("shows breadcrumb + Revisar + palette button when PR open", () => {
+  it("shows breadcrumb + revisar + palette button when PR open", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
 
     render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
@@ -48,7 +48,7 @@ describe("TitleBar", () => {
     expect(screen.getByLabelText("esparta/scorehub-api")).toBeInTheDocument();
     expect(screen.getByText("#42")).toBeInTheDocument();
     expect(screen.getByText("Fix login bug")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Revisar/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /revisar/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Paleta de comandos" })).toBeInTheDocument();
   });
 
@@ -62,12 +62,12 @@ describe("TitleBar", () => {
     expect(useUiStore.getState().prListCollapsed).toBe(false);
   });
 
-  it("draft count appears in Revisar label", () => {
+  it("draft count appears in revisar label", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
     useDraftsStore.setState({ drafts: [{ id: 1 }, { id: 2 }, { id: 3 }] } as never);
 
     render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /Revisar \(3\)/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /revisar \(3\)/ })).toBeInTheDocument();
   });
 
   it("window controls render and dispatch", async () => {

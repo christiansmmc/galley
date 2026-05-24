@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Minimize2, Minus, Send, Settings, Square, X } from "lucide-react";
+import { ArrowLeft, Minimize2, Minus, Settings, Square, X } from "lucide-react";
 import { Button } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
@@ -149,7 +149,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         </span>
       )}
 
-      <span {...noDrag} style={{ display: "inline-flex", gap: "var(--space-2)", alignItems: "center" }}>
+      <span {...noDrag} style={{ display: "inline-flex", gap: "var(--space-4)", alignItems: "center" }}>
         <Button
           variant="icon"
           size="sm"
@@ -174,8 +174,7 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             onClick={onOpenSubmit}
             title="Enviar review"
           >
-            <Send size={14} style={{ marginRight: "var(--space-2)" }} />
-            Revisar{draftCount > 0 ? ` (${draftCount})` : ""}
+            revisar{draftCount > 0 ? ` (${draftCount})` : ""}
           </Button>
         )}
 
