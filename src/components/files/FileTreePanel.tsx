@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { PanelLeftClose, List as ListIcon, FolderTree, Search, File, FolderOpen, FileSearch } from "lucide-react";
+import { PanelLeftClose, List as ListIcon, FolderTree, Search, File } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { FileDiff, PathFilter } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
@@ -7,7 +7,7 @@ import { useUiStore } from "../../state/uiStore";
 import { useSettingsStore } from "../../state/settingsStore";
 import { FileTreeNode } from "./FileTreeNode";
 import { buildTree, buildFlat, FlatRow } from "./treeBuild";
-import { Button, EmptyState, Input, Spinner } from "../ui";
+import { Button, EmptyState, Input, SkeletonBars, Sweep } from "../ui";
 
 function matchesGlob(pattern: string, path: string): boolean {
   const re = "^" + pattern
@@ -65,19 +65,18 @@ export function FileTreePanel() {
       return (
         <div
           role="status"
-          aria-label="Carregando PR"
-          style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-subtext)", gap: "var(--space-3)" }}
+          aria-label="Carregando arquivos"
+          style={{ height: "100%", position: "relative" }}
         >
-          <Spinner size={16} /><span>Carregando arquivos…</span>
+          <Sweep />
+          <SkeletonBars rows={6} />
         </div>
       );
     }
     return (
       <EmptyState
-        icon={<FolderOpen size={20} />}
-        title="Nenhum PR selecionado"
-        description="Abra um PR pra ver os arquivos modificados."
-        compact
+        title="Nenhum PR aberto."
+        description="abra um para ver os arquivos."
       />
     );
   }
@@ -181,10 +180,8 @@ function FlatView({ rows, selectedFile, onSelect }: {
   if (rows.length === 0) {
     return (
       <EmptyState
-        icon={<FileSearch size={20} />}
-        title="Nenhum arquivo"
-        description="Nada bate com esse filtro."
-        compact
+        title="Nenhum arquivo."
+        description="nada bate com esse filtro."
       />
     );
   }

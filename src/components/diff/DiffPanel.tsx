@@ -1,6 +1,5 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FileText } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -12,7 +11,7 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
-import { EmptyState, Spinner, Button } from "../ui";
+import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
 import { splitPath } from "../../util/path";
 
 interface ParsedDiff {
@@ -489,16 +488,24 @@ export function DiffPanel() {
       <div
         role="status"
         aria-label="Carregando PR"
-        style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--c-subtext)", gap: "var(--space-3)" }}
+        style={{ height: "100%", position: "relative" }}
       >
-        <Spinner size={20} /><span>Carregando PR…</span>
+        <Sweep />
+        <SkeletonBars rows={10} />
       </div>
     );
+    if (currentPr) {
+      return (
+        <EmptyState
+          title="Selecione um arquivo."
+          description="escolha um item na árvore."
+        />
+      );
+    }
     return (
       <EmptyState
-        icon={<FileText size={20} />}
-        title="Selecione um arquivo"
-        description="Escolha um item na árvore pra começar a revisar."
+        title="Escolha um PR à esquerda."
+        description="nada está selecionado."
       />
     );
   }

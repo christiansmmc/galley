@@ -66,6 +66,6 @@ describe("PrListPanel", () => {
     render(<PrListPanel />);
     const input = screen.getByLabelText("Buscar PRs") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "zzz_no_match" } });
-    expect(screen.getByText("Nada encontrado")).toBeInTheDocument();
+    expect(screen.getByText("Nada encontrado.")).toBeInTheDocument();
   });
 });

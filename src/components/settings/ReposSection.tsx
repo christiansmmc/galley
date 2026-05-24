@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, Search, FolderGit2 } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
 import { api } from "../../ipc/client";
 import type { RepoConfig } from "../../ipc/types";
 import { Button, EmptyState, Input } from "../ui";
@@ -39,10 +39,8 @@ export function ReposSection() {
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", marginBottom: "var(--space-6)" }}>
         {repos.length === 0 && (
           <EmptyState
-            icon={<FolderGit2 size={20} />}
-            title="Nenhum repositório"
-            description="Cole uma URL abaixo ou abra a busca para escolher entre os seus."
-            compact
+            title="Nenhum repositório."
+            description="cole uma URL abaixo ou abra a busca."
           />
         )}
         {repos.map(r => (
