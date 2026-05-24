@@ -149,23 +149,28 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
         </span>
       )}
 
-      <span {...noDrag} style={{ display: "inline-flex", gap: "var(--space-4)", alignItems: "center" }}>
-        <Button
-          variant="icon"
-          size="sm"
+      <span {...noDrag} style={{ display: "inline-flex", gap: "var(--space-3)", alignItems: "center" }}>
+        <button
           onClick={onOpenPalette}
           title="Abrir paleta de comandos (Ctrl+K)"
           aria-label="Paleta de comandos"
-        >
-          <kbd style={{
-            fontSize: 10,
-            padding: "2px 6px",
-            borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--c-line)",
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
             color: "var(--c-subtext)",
-            fontFamily: "inherit",
-          }}>⌘K</kbd>
-        </Button>
+            padding: "4px 10px",
+            border: "1px solid var(--c-line)",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--c-base)",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ color: "var(--c-overlay)" }}>⌘</span>
+          <span>K</span>
+        </button>
 
         {currentPr && (
           <Button

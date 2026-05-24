@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CiStatus, PrDetail } from "../../ipc/types";
 import { formatAge } from "../../util/time";
+import { api } from "../../ipc/client";
 
 const CI_LABEL: Record<CiStatus, string> = {
   passing: "CI passou",
@@ -24,7 +25,7 @@ export function PrMetaStrip({ pr }: Props) {
   const hasBody = !!(pr.body && pr.body.trim().length > 0);
 
   const openGithub = () => {
-    if (s.html_url) window.open(s.html_url, "_blank", "noopener,noreferrer");
+    if (s.html_url) void api.openExternalUrl(s.html_url);
   };
 
   return (
