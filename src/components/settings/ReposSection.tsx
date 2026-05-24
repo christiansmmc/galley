@@ -8,7 +8,7 @@ import { useT } from "../../i18n";
 
 type TFn = ReturnType<typeof useT>;
 
-export function ReposSection() {
+export function ReposSection({ onReposChanged }: { onReposChanged?: () => void } = {}) {
   const t = useT();
   const [repos, setRepos] = useState<RepoConfig[]>([]);
   const [paste, setPaste] = useState("");
@@ -27,6 +27,7 @@ export function ReposSection() {
       if (!repos.some(x => x.owner === r.owner && x.name === r.name)) {
         await api.addRepo(r.owner, r.name);
         await refresh();
+        onReposChanged?.();
       }
       setPaste("");
     } catch (e) {
@@ -62,7 +63,7 @@ export function ReposSection() {
               variant="icon"
               size="sm"
               aria-label={t("settings.repos.remove_aria")}
-              onClick={async () => { await api.removeRepo(r.owner, r.name); refresh(); }}
+              onClick={async () => { await api.removeRepo(r.owner, r.name); await refresh(); onReposChanged?.(); }}
               style={{ color: "var(--c-danger)" }}
             >
               <Trash2 size={14} />
@@ -106,7 +107,7 @@ export function ReposSection() {
         open={browseOpen}
         onClose={() => setBrowseOpen(false)}
         configured={repos}
-        onSaved={async (next) => { await api.setRepos(next); await refresh(); }}
+        onSaved={async (next) => { await api.setRepos(next); await refresh(); onReposChanged?.(); }}
       />
     </section>
   );
