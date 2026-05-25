@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useSettingsStore } from "./settingsStore";
 
 interface Toast { id: number; kind: "info" | "error"; message: string; }
 interface UiState {
@@ -17,6 +18,14 @@ interface UiState {
 
 let nextId = 1;
 
+/** Mirror the collapse state into persisted settings so it survives reloads. */
+function persistFileTreeCollapsed(collapsed: boolean) {
+  const ss = useSettingsStore.getState();
+  const s = ss.settings;
+  if (!s || s.ui.filetree_collapsed === collapsed) return;
+  void ss.save({ ...s, ui: { ...s.ui, filetree_collapsed: collapsed } });
+}
+
 export const useUiStore = create<UiState>((set, get) => ({
   authBanner: false,
   toasts: [],
@@ -31,6 +40,6 @@ export const useUiStore = create<UiState>((set, get) => ({
   dismissToast: (id) => set({ toasts: get().toasts.filter(t => t.id !== id) }),
   setPrListCollapsed: (b) => set({ prListCollapsed: b }),
   togglePrList: () => set({ prListCollapsed: !get().prListCollapsed }),
-  setFileTreeCollapsed: (b) => set({ fileTreeCollapsed: b }),
-  toggleFileTree: () => set({ fileTreeCollapsed: !get().fileTreeCollapsed }),
+  setFileTreeCollapsed: (b) => { set({ fileTreeCollapsed: b }); persistFileTreeCollapsed(b); },
+  toggleFileTree: () => { const n = !get().fileTreeCollapsed; set({ fileTreeCollapsed: n }); persistFileTreeCollapsed(n); },
 }));

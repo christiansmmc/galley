@@ -35,8 +35,12 @@ export default function App() {
 
   const density = useSettingsStore(s => s.settings?.ui.density ?? "comfortable");
   const accent = useSettingsStore(s => s.settings?.ui.accent_color ?? "sage");
+  const ftCollapsed = useSettingsStore(s => s.settings?.ui.filetree_collapsed);
 
   useEffect(() => { checkPat(); load(); }, [checkPat, load]);
+  useEffect(() => {
+    if (ftCollapsed !== undefined) useUiStore.setState({ fileTreeCollapsed: ftCollapsed });
+  }, [ftCollapsed]);
   useEffect(() => {
     if (currentPr) loadDrafts(currentPr.summary.id);
     else clearDrafts();
