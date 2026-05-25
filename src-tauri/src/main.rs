@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use pr_reviewer::commands::{drafts, filters, prs, repos, reviews, secrets, settings, system, viewed};
+use pr_reviewer::commands::{drafts, filters, oauth, prs, repos, reviews, secrets, settings, system, viewed};
 use pr_reviewer::AppState;
 
 fn main() {
@@ -32,6 +32,7 @@ fn main() {
             filters::get_path_filters, filters::set_path_filters,
             settings::get_settings, settings::set_settings,
             secrets::set_pat, secrets::clear_pat, secrets::has_pat, secrets::current_user,
+            oauth::start_device_login, oauth::poll_device_login,
             viewed::list_viewed_files, viewed::mark_viewed,
             system::open_external_url,
         ])
