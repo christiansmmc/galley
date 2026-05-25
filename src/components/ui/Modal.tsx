@@ -81,7 +81,7 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
             }}
           ><X size={14} /></button>
         </div>
-        <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto", padding: "var(--space-7)" }}>{children}</div>
+        <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto", padding: "var(--space-7)", display: "flex", flexDirection: "column" }}>{children}</div>
         {footer && (
           <div style={{
             flex: "0 0 auto",

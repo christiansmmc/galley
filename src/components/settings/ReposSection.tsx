@@ -85,7 +85,7 @@ export function ReposSection({ onReposChanged }: { onReposChanged?: () => void }
   };
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+    <section style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <h3 className="settings-section-title">{t("settings.repos.title")}</h3>
       <p className="settings-section-hint">{t("settings.repos.hint")}</p>
 
