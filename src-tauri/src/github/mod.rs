@@ -31,7 +31,7 @@ pub(crate) fn extract_github_error(e: &octocrab::Error) -> String {
 /// Map an octocrab error's HTTP status into the closest AppError variant.
 ///
 /// Used by repo lookup flows where 404 / 403 should bubble up as
-/// `NotFound` (translated by the UI to "Repo não acessível com seu PAT")
+/// `NotFound` (translated by the UI to "Repo not accessible with your PAT")
 /// rather than a generic `Network` error.
 pub(crate) fn map_status_error(e: octocrab::Error) -> AppError {
     let msg = extract_github_error(&e);

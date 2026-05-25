@@ -170,11 +170,11 @@ function translate(e: unknown, t: TFn): string {
   const details = (e as { details?: string } | null)?.details ?? "";
   if (kind === "NotFound") return t("settings.repos.error_not_accessible");
   if (kind === "Auth") return t("settings.repos.error_no_token");
-  if (kind === "Config" && details.includes("Formato inválido")) {
+  if (kind === "Config" && details === "invalid_repo_format") {
     return t("settings.repos.error_invalid_format");
   }
   const s = `${kind ?? ""} ${details}`.trim() || String(e);
-  if (s.includes("Formato inválido")) return t("settings.repos.error_invalid_format");
+  if (s.includes("invalid_repo_format")) return t("settings.repos.error_invalid_format");
   if (s.toLowerCase().includes("not found") || s.includes("404") || s.includes("403")) {
     return t("settings.repos.error_not_accessible");
   }
