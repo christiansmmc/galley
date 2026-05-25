@@ -93,9 +93,9 @@ export const usePrsStore = create<PrsState>((set, get) => ({
         selectedFile: diff[0]?.path ?? null,
         viewedFiles: new Set(viewedList),
       });
-      const ui = useUiStore.getState();
-      ui.setPrListCollapsed(true);
-      ui.setFileTreeCollapsed(false);
+      // Collapse the PR list on open (existing UX); leave the file tree in
+      // whatever collapse state the user persisted — see uiStore hydration.
+      useUiStore.getState().setPrListCollapsed(true);
     } catch (e) {
       set({ prError: e });
       if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
