@@ -44,9 +44,14 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
           boxShadow: "var(--shadow-lg)",
           position: "relative",
           pointerEvents: "auto",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
       >
         <div style={{
+          flex: "0 0 auto",
           padding: "var(--space-6) var(--space-7)",
           borderBottom: "1px solid var(--c-line)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -76,9 +81,10 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
             }}
           ><X size={14} /></button>
         </div>
-        <div style={{ padding: "var(--space-7)" }}>{children}</div>
+        <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto", padding: "var(--space-7)" }}>{children}</div>
         {footer && (
           <div style={{
+            flex: "0 0 auto",
             padding: "var(--space-5) var(--space-7)",
             borderTop: "1px solid var(--c-line)",
             display: "flex", justifyContent: "flex-end", gap: "var(--space-4)",

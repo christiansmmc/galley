@@ -54,7 +54,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <Modal title={t("settings.title")} open={open} onClose={handleClose} minWidth={760} maxWidth={760}>
-      <div style={{ display: "flex", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
+      <div style={{ display: "flex", height: "100%", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
         <nav
           aria-label={t("settings.sections_aria")}
           style={{

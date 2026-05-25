@@ -28,7 +28,7 @@ fn main() {
             drafts::draft_comment, drafts::list_drafts, drafts::update_draft, drafts::delete_draft,
             reviews::submit_review, reviews::reply_to_thread, reviews::resolve_thread,
             repos::list_repos, repos::add_repo, repos::remove_repo,
-            repos::validate_repo, repos::list_my_repos, repos::set_repos,
+            repos::validate_repo, repos::list_my_repos, repos::set_repos, repos::repo_pr_counts,
             filters::get_path_filters, filters::set_path_filters,
             settings::get_settings, settings::set_settings,
             secrets::set_pat, secrets::clear_pat, secrets::has_pat, secrets::current_user,

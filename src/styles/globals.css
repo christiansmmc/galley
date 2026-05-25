@@ -208,6 +208,59 @@ select.prr-input option {
   color: var(--c-text);
 }
 
+/* Etapa 3: hairline description under a settings section title. */
+.settings-section-hint {
+  margin: -16px 0 14px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--c-subtext);
+}
+
+/* Etapa 3: shared list pattern for Settings sections (ported from the
+   etapa3 workshop mockup). Hairline rows, no card background. */
+.cfg-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--c-line-soft);
+}
+.cfg-list .cfg-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-line-soft);
+  font-size: 13px;
+}
+.cfg-list .cfg-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cfg-list .cfg-name b { font-weight: 500; color: var(--c-text); }
+.cfg-list .cfg-name em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--c-subtext);
+}
+/* mono text links replacing icon buttons (remove / browse) */
+.cfg-act {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-subtext);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.cfg-act:hover { color: var(--c-text); text-decoration: underline; text-decoration-color: var(--c-line); }
+.cfg-act:disabled { opacity: 0.5; cursor: default; }
+.cfg-act.danger:hover { color: var(--c-danger); }
+
 /* Hover affordance for selectable rows in the PR list / file tree.
    Class owns background so the inline-style trap (inline > class) does
    not silently break hover. */
