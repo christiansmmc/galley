@@ -1,6 +1,6 @@
 [package]
 name = "pr-reviewer"
-version = "0.6.0"
+version = "0.6.1"
 description = "Linux desktop GitHub PR reviewer"
 authors = ["csequeira153@gmail.com"]
 edition = "2021"
