@@ -54,7 +54,9 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <Modal title={t("settings.title")} open={open} onClose={handleClose} minWidth={760} maxWidth={760}>
-      <div style={{ display: "flex", flex: "1 1 auto", minHeight: 480, margin: "calc(-1 * var(--space-7))" }}>
+      {/* Fixed height = tallest non-repos tab (Aparência) so the modal does
+          not resize when switching tabs. Repos scrolls within it. */}
+      <div style={{ display: "flex", height: 520, margin: "calc(-1 * var(--space-7))" }}>
         <nav
           aria-label={t("settings.sections_aria")}
           style={{
