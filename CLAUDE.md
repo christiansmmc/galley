@@ -1,6 +1,6 @@
 # pr-reviewer — agent guide
 
-Tauri 2 (Rust backend) + React/TS (Vite) GitHub PR reviewer. Linux desktop. Master is the long-lived branch; sub-phases land via `--no-ff` merge commits, not GitHub PRs (see `docs/superpowers/etapa-2-progress.md` for the pattern).
+Tauri 2 (Rust backend) + React/TS (Vite) GitHub PR reviewer. Linux desktop. Master is the long-lived branch; ship every change via a GitHub PR — never merge or push directly to master. (Earlier etapa-2 work used local `--no-ff` merges; that pattern is retired — see `docs/superpowers/etapa-2-progress.md` for historical context only.)
 
 ## Release after every shipped change
 
@@ -18,16 +18,16 @@ When a feature lands or a fix is merged to `master`, ALWAYS:
    `NO_STRIP=true` is required — linuxdeploy's bundled `strip` can't read `SHT_RELR` in modern host libs.
 4. **Reply to the user with the install command verbatim** so they can paste it:
    ```bash
-   sudo dnf install "src-tauri/target/release/bundle/rpm/PR Reviewer-X.Y.Z-1.x86_64.rpm"
+   sudo dnf install "src-tauri/target/release/bundle/rpm/Galley-X.Y.Z-1.x86_64.rpm"
    ```
-   (note: rpm filename uses `PR Reviewer-…` with a space, not `pr-reviewer-…`)
+   (note: rpm filename derives from `productName` in `tauri.conf.json`, currently `Galley-…`, not `pr-reviewer-…`)
 
 Do **not** ask the user whether to bump — bump every time. Do **not** run `sudo dnf install` yourself; surface the command for the user to run interactively.
 
 ## Workflow rules carried over from etapa 2
 
 - Tests must all pass before claiming done: `pnpm tsc --noEmit`, `pnpm test`, `cargo test`, `pnpm exec vite build`.
-- For sub-phases of an "etapa": branch `feat/etapa-N-M-<slug>` from `master`, commit granular changes, merge with `--no-ff` (use `/usr/bin/git` directly — the `rtk` wrapper silently strips `--no-ff`).
+- Ship via PR: branch `feat/<slug>` from `master`, commit granular changes, `git push -u origin <branch>`, then `gh pr create`. Let the PR merge on GitHub — do NOT merge into local master.
 - Tauri v2 `core:default` does NOT include sensitive window/event ops. Anything new (drag, resize, focus, listen) needs an explicit `core:window:allow-*` / `core:event:allow-*` line in `src-tauri/capabilities/default.json`.
 - Webkit + Wayland on Fedora/Nobara crashes on launch without `WEBKIT_DISABLE_DMABUF_RENDERER=1`. `main.rs` already sets this before webkit init; don't remove it.
 - AppImage build (rare; rpm is preferred): same `NO_STRIP=true` flag, `--bundles appimage`. Docs: `docs/appimage-bundle.md`.
