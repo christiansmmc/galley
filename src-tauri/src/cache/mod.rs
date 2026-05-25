@@ -1,4 +1,3 @@
-pub mod models;
 pub mod ttl;
 
 use crate::error::{AppError, AppResult};

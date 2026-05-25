@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Lock, GitFork, Archive } from "lucide-react";
 import { api } from "../../ipc/client";
+import { userMessage } from "../../ipc/errors";
 import type { RemoteRepo, RepoBrowseFilters, RepoConfig } from "../../ipc/types";
 import { Button, EmptyState, Input, Modal, Spinner } from "../ui";
 import { useT } from "../../i18n";
@@ -62,7 +63,7 @@ export function BrowseReposModal({ open, onClose, configured, onSaved }: Props) 
         setRemote(prev => page === 1 ? rows : dedupe([...prev, ...rows]));
         if (rows.length < 100) setExhausted(true);
       })
-      .catch(e => { if (!cancelled) setError(String(e)); })
+      .catch(e => { if (!cancelled) setError(userMessage(e)); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [open, page, filters]);

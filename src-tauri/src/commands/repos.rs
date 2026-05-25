@@ -49,11 +49,11 @@ pub async fn remove_repo(owner: String, name: String, state: State<'_, AppState>
 #[tauri::command]
 pub async fn validate_repo(input: String, state: State<'_, AppState>) -> AppResult<RepoConfig> {
     let (owner, name) = repo_input::parse(&input)
-        .ok_or_else(|| AppError::Config("Formato inválido".into()))?;
+        .ok_or_else(|| AppError::Config("invalid_repo_format".into()))?;
     let client_guard = state.client.read().await;
     let client = client_guard
         .as_ref()
-        .ok_or_else(|| AppError::Auth("PAT não configurado".into()))?;
+        .ok_or_else(|| AppError::Auth("no_pat_configured".into()))?;
     client.validate_repo(&owner, &name).await?;
     Ok(RepoConfig { owner, name })
 }
@@ -69,7 +69,7 @@ pub async fn list_my_repos(
     let client_guard = state.client.read().await;
     let client = client_guard
         .as_ref()
-        .ok_or_else(|| AppError::Auth("PAT não configurado".into()))?;
+        .ok_or_else(|| AppError::Auth("no_pat_configured".into()))?;
     client.list_my_repos(page, filters).await
 }
 
@@ -85,7 +85,7 @@ pub async fn repo_pr_counts(
         let guard = state.client.read().await;
         guard
             .as_ref()
-            .ok_or_else(|| AppError::Auth("PAT não configurado".into()))?
+            .ok_or_else(|| AppError::Auth("no_pat_configured".into()))?
             .clone()
     };
     let mut set = tokio::task::JoinSet::new();
