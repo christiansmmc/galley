@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   CommentDraft, FileDiff, PathFilter, PrDetail, PrSummary, RemoteRepo,
-  RepoBrowseFilters, RepoConfig, ReviewEvent, ReviewResult, ReviewThread, Settings,
+  RepoBrowseFilters, RepoConfig, RepoPrCount, ReviewEvent, ReviewResult, ReviewThread, Settings,
 } from "./types";
 
 export const api = {
@@ -60,6 +60,8 @@ export const api = {
   validateRepo: (input: string) => invoke<RepoConfig>("validate_repo", { input }),
   listMyRepos: (page: number, filters: RepoBrowseFilters) =>
     invoke<RemoteRepo[]>("list_my_repos", { page, filters }),
+  repoPrCounts: (repos: RepoConfig[]) =>
+    invoke<RepoPrCount[]>("repo_pr_counts", { repos }),
 
   getPathFilters: (repo: string) => invoke<PathFilter[]>("get_path_filters", { repo }),
   setPathFilters: (repo: string, filters: PathFilter[]) => invoke<void>("set_path_filters", { repo, filters }),

@@ -57,6 +57,8 @@ export interface RepoBrowseFilters {
 
 export interface RepoConfig { owner: string; name: string; }
 
+export interface RepoPrCount { owner: string; name: string; count: number; }
+
 export interface PathFilter {
   repo: string;
   pattern: string;

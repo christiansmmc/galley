@@ -46,6 +46,26 @@ impl GitHubClient {
         Ok(parse_repo(&v))
     }
 
+    /// Count PRs opened in this repo over the last 365 days via the Search API.
+    ///
+    /// Uses `created:>=<date>` and reads `total_count` only — `per_page=1`
+    /// keeps the payload minimal since we never look at the items. Search has
+    /// its own (lower) rate limit, so callers should fan these out sparingly.
+    pub async fn pr_count_last_year(&self, owner: &str, name: &str) -> AppResult<i64> {
+        let since = (chrono::Utc::now() - chrono::Duration::days(365))
+            .format("%Y-%m-%d")
+            .to_string();
+        let q = format!("repo:{owner}/{name} is:pr created:>={since}");
+        let page = self.inner
+            .search()
+            .issues_and_pull_requests(&q)
+            .per_page(1)
+            .send()
+            .await
+            .map_err(map_status_error)?;
+        Ok(page.total_count.unwrap_or(0) as i64)
+    }
+
     /// Lazy-paginated `/user/repos` fetch. Caller passes `page` (1-based);
     /// we always request `per_page=100` and sort by `updated`.
     ///

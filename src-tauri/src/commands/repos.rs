@@ -4,7 +4,16 @@ use crate::error::{AppError, AppResult};
 use crate::github::repos::{RemoteRepo, RepoBrowseFilters};
 use crate::repo_input;
 use crate::AppState;
+use serde::Serialize;
 use tauri::State;
+
+/// PRs opened per repo over the last 365 days, surfaced in the Settings list.
+#[derive(Debug, Clone, Serialize)]
+pub struct RepoPrCount {
+    pub owner: String,
+    pub name: String,
+    pub count: i64,
+}
 
 #[tauri::command]
 pub async fn list_repos(state: State<'_, AppState>) -> AppResult<Vec<RepoConfig>> {
@@ -62,6 +71,41 @@ pub async fn list_my_repos(
         .as_ref()
         .ok_or_else(|| AppError::Auth("PAT não configurado".into()))?;
     client.list_my_repos(page, filters).await
+}
+
+/// Yearly PR counts for `repos`, fetched in parallel. A repo whose Search
+/// request fails is simply omitted — the UI treats a missing entry as "no
+/// number yet" rather than surfacing an error for a non-essential stat.
+#[tauri::command]
+pub async fn repo_pr_counts(
+    repos: Vec<RepoConfig>,
+    state: State<'_, AppState>,
+) -> AppResult<Vec<RepoPrCount>> {
+    let client = {
+        let guard = state.client.read().await;
+        guard
+            .as_ref()
+            .ok_or_else(|| AppError::Auth("PAT não configurado".into()))?
+            .clone()
+    };
+    let mut set = tokio::task::JoinSet::new();
+    for r in repos {
+        let client = client.clone();
+        set.spawn(async move {
+            client
+                .pr_count_last_year(&r.owner, &r.name)
+                .await
+                .ok()
+                .map(|count| RepoPrCount { owner: r.owner, name: r.name, count })
+        });
+    }
+    let mut out = Vec::new();
+    while let Some(res) = set.join_next().await {
+        if let Ok(Some(c)) = res {
+            out.push(c);
+        }
+    }
+    Ok(out)
 }
 
 /// Replace the configured repo list with `repos`. Used by the Browse modal's

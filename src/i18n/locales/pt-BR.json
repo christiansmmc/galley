@@ -164,8 +164,10 @@
     },
     "repos": {
       "title": "Repositórios",
+      "hint": "os repositórios cujos PRs aparecem na sua lista. esta ferramenta só fala com os que estão aqui.",
       "empty_title": "Nenhum repositório.",
       "empty_desc": "cole uma URL abaixo ou abra a busca.",
+      "prs_per_year": "{{count}} PRs/ano",
       "add_label": "Adicionar por URL ou owner/repo",
       "add_placeholder": "https://github.com/owner/repo  •  owner/repo",
       "add_aria": "Adicionar repositório",
@@ -175,6 +177,7 @@
       "error_not_accessible": "Repo não acessível com seu PAT.",
       "error_no_token": "Token não configurado.",
       "error_invalid_format": "Formato inválido. Use https://github.com/owner/repo ou owner/repo.",
+      "remove": "remover",
       "remove_aria": "Remover"
     },
     "browse": {
