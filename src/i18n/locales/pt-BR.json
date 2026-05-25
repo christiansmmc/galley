@@ -295,7 +295,16 @@
     "save_token": "salvar token",
     "saving": "salvando…",
     "create_token": "criar token no github ↗",
-    "error_prefix": "error:"
+    "error_prefix": "error:",
+    "login_with_github": "Entrar com o GitHub",
+    "starting_login": "iniciando…",
+    "or_paste_token": "ou cole um token manualmente",
+    "device_code_label": "seu código",
+    "device_code_instructions": "Abrimos o GitHub no seu navegador. Digite este código lá para autorizar o Galley. Se o navegador não abriu, acesse <1>{{url}}</1>.",
+    "copy_code": "copiar código",
+    "code_copied": "copiado",
+    "waiting_authorization": "aguardando autorização no seu navegador…",
+    "cancel_login": "cancelar"
   },
   "auth": {
     "reauth": "reautenticar",

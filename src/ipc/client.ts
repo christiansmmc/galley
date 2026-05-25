@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-  CommentDraft, FileDiff, PathFilter, PrDetail, PrSummary, RemoteRepo,
+  CommentDraft, DeviceLoginStart, FileDiff, PathFilter, PrDetail, PrSummary, RemoteRepo,
   RepoBrowseFilters, RepoConfig, RepoPrCount, ReviewEvent, ReviewResult, ReviewThread, Settings,
 } from "./types";
 
@@ -73,6 +73,9 @@ export const api = {
   clearPat: () => invoke<void>("clear_pat"),
   hasPat: () => invoke<boolean>("has_pat"),
   currentUser: () => invoke<string | null>("current_user"),
+
+  startDeviceLogin: () => invoke<DeviceLoginStart>("start_device_login"),
+  pollDeviceLogin: () => invoke<void>("poll_device_login"),
 
   openExternalUrl: (url: string) => invoke<void>("open_external_url", { url }),
 };
