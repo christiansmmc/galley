@@ -89,7 +89,7 @@ export function ReposSection({ onReposChanged }: { onReposChanged?: () => void }
       <h3 className="settings-section-title">{t("settings.repos.title")}</h3>
       <p className="settings-section-hint">{t("settings.repos.hint")}</p>
 
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto", marginBottom: "var(--space-5)" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingRight: "var(--space-3)", marginBottom: "var(--space-5)" }}>
         {repos.length === 0 ? (
           <EmptyState
             title={t("settings.repos.empty_title")}
