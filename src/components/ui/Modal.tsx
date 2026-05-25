@@ -44,7 +44,7 @@ export function Modal({ title, open, onClose, children, footer, minWidth, maxWid
           boxShadow: "var(--shadow-lg)",
           position: "relative",
           pointerEvents: "auto",
-          maxHeight: "80vh",
+          maxHeight: "70vh",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
