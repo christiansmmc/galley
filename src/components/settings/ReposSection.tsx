@@ -13,6 +13,7 @@ export function ReposSection({ onReposChanged }: { onReposChanged?: () => void }
   const t = useT();
   const [repos, setRepos] = useState<RepoConfig[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [countsLoading, setCountsLoading] = useState(false);
   const [paste, setPaste] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -21,12 +22,14 @@ export function ReposSection({ onReposChanged }: { onReposChanged?: () => void }
   const refresh = async () => {
     const list = await api.listRepos();
     setRepos(list);
-    // PR counts are a non-essential stat fetched lazily; leave the line blank
-    // until they resolve rather than showing a placeholder.
+    // PR counts are a non-essential stat fetched lazily; show a skeleton bar
+    // on each row until they resolve, then swap in the number.
     if (list.length > 0) {
+      setCountsLoading(true);
       api.repoPrCounts(list)
         .then(rows => setCounts(Object.fromEntries(rows.map(c => [key(c), c.count]))))
-        .catch(() => { /* counts stay blank on failure */ });
+        .catch(() => { /* counts stay blank on failure */ })
+        .finally(() => setCountsLoading(false));
     }
   };
   useEffect(() => { void refresh(); }, []);
@@ -74,7 +77,11 @@ export function ReposSection({ onReposChanged }: { onReposChanged?: () => void }
                 <div key={key(r)} className="cfg-row">
                   <div className="cfg-name">
                     <b>{r.owner}/{r.name}</b>
-                    {count !== undefined && <em>{t("settings.repos.prs_per_year", { count })}</em>}
+                    {count !== undefined
+                      ? <em>{t("settings.repos.prs_per_year", { count })}</em>
+                      : countsLoading
+                        ? <span className="cfg-skel" aria-hidden="true" />
+                        : null}
                   </div>
                   <button
                     type="button"

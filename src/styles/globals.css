@@ -245,6 +245,15 @@ select.prr-input option {
   font-size: 10.5px;
   color: var(--c-subtext);
 }
+/* loading placeholder for the per-repo PR count (matches SkeletonBars). */
+.cfg-skel {
+  display: inline-block;
+  width: 64px;
+  height: 9px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: var(--c-mantle);
+}
 /* mono text links replacing icon buttons (remove / browse) */
 .cfg-act {
   font-family: var(--font-mono);
