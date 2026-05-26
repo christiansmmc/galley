@@ -26,7 +26,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             prs::list_prs, prs::get_pr, prs::get_pr_diff, prs::get_pr_threads, prs::refresh_pr, prs::get_file_content,
             drafts::draft_comment, drafts::list_drafts, drafts::update_draft, drafts::delete_draft,
-            reviews::submit_review, reviews::reply_to_thread, reviews::resolve_thread,
+            reviews::submit_review, reviews::reply_to_thread, reviews::resolve_thread, reviews::merge_pr,
             repos::list_repos, repos::add_repo, repos::remove_repo,
             repos::validate_repo, repos::list_my_repos, repos::set_repos, repos::repo_pr_counts,
             filters::get_path_filters, filters::set_path_filters,
