@@ -15,6 +15,8 @@ function makePr(overrides: Partial<PrDetail> = {}): PrDetail {
     body: null,
     head_sha: "abc",
     base_sha: "def",
+    head_ref: "feature",
+    base_ref: "main",
     draft: false,
     mergeable: null,
     mergeable_state: null,

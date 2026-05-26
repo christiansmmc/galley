@@ -64,6 +64,15 @@ export function MergePanel({ open, onClose }: Props) {
       }
     >
       <div style={{
+        display: "flex", alignItems: "center", gap: "var(--space-2)", flexWrap: "wrap",
+        marginBottom: "var(--space-3)", fontFamily: "var(--font-mono)", fontSize: 11,
+      }}>
+        <span style={{ color: "var(--c-text)" }}>{currentPr.head_ref}</span>
+        <span aria-hidden style={{ color: "var(--c-overlay)" }}>→</span>
+        <span style={{ color: "var(--c-text)" }}>{currentPr.base_ref}</span>
+      </div>
+
+      <div style={{
         display: "flex", alignItems: "center", gap: "var(--space-3)",
         marginBottom: "var(--space-6)", fontFamily: "var(--font-mono)", fontSize: 11,
       }}>
