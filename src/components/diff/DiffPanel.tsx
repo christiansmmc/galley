@@ -13,6 +13,7 @@ import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
 import { parseDiff } from "./parseDiff";
 import { buildFullFileModel } from "./buildFullFileModel";
+import { diffModelPath } from "./diffModelPath";
 import { api } from "../../ipc/client";
 import { useUiStore } from "../../state/uiStore";
 import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
@@ -585,8 +586,8 @@ export function DiffPanel() {
           original={original}
           modified={modified}
           language={languageFor(file.path)}
-          originalModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/orig/${file.path}`}
-          modifiedModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/mod/${file.path}`}
+          originalModelPath={diffModelPath(currentPr?.summary.id ?? "_", "orig", file.path, wholeFile ? "full" : "patch")}
+          modifiedModelPath={diffModelPath(currentPr?.summary.id ?? "_", "mod", file.path, wholeFile ? "full" : "patch")}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
           theme={resolved === "linen" ? "workshop-linen" : "workshop-paper"}

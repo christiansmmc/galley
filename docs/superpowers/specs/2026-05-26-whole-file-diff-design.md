@@ -40,10 +40,13 @@ anchoring — duplicates view-zone/gutter logic. YAGNI.
 ## Backend (`src-tauri`)
 
 - **`GitHubClient::get_file_content(owner, repo, path, git_ref) -> AppResult<Option<String>>`**
-  (in `src/github/diffs.rs`). Calls the contents API
-  `/repos/{owner}/{repo}/contents/{path}?ref={sha}` with header
-  `Accept: application/vnd.github.raw`. Returns `None` for binary or missing
-  files; `Some(text)` otherwise.
+  (in `src/github/diffs.rs`). Uses octocrab's `repos().get_content()` (JSON
+  contents API, base64-encoded response). Decodes via `Content::decoded_content()`.
+  Returns `None` for 404 (missing file at ref) or when `content` is absent (files
+  >1 MB: GitHub sets `encoding: "none"` and omits the content field, so
+  `decoded_content()` returns `None` → `Ok(None)` → frontend falls back with a
+  toast). Other HTTP errors propagate through `map_status_error`. The 1 MB cap is
+  inherent to the JSON contents endpoint; no separate guard is needed.
 - **Blob cache** in `src/cache/ttl.rs`: `get_blob`/`put_blob` keyed by
   `"{sha}:{path}"`. Permanent (no TTL check) — immutable per SHA.
 - **Tauri command** `get_file_content(owner, repo, path, git_ref, state)` in
