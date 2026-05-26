@@ -46,6 +46,10 @@ pub struct PrDetail {
     pub body: Option<String>,
     pub head_sha: String,
     pub base_sha: String,
+    #[serde(default)]
+    pub head_ref: String,
+    #[serde(default)]
+    pub base_ref: String,
     pub draft: bool,
     pub mergeable: Option<bool>,
     #[serde(default)]
@@ -116,6 +120,8 @@ impl GitHubClient {
         let author = pr.get("user").and_then(|u| u.get("login")).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let head_sha = pr.get("head").and_then(|h| h.get("sha")).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let base_sha = pr.get("base").and_then(|b| b.get("sha")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let head_ref = pr.get("head").and_then(|h| h.get("ref")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let base_ref = pr.get("base").and_then(|b| b.get("ref")).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let body = pr.get("body").and_then(|v| v.as_str()).map(|s| s.to_string());
         let state = pr.get("state").and_then(|v| v.as_str()).unwrap_or("open").to_string();
         let draft = pr.get("draft").and_then(|v| v.as_bool()).unwrap_or(false);
@@ -141,7 +147,7 @@ impl GitHubClient {
                 is_mine: false, review_requested: false,
                 changed_files, ci_status,
             },
-            body, head_sha, base_sha, draft, mergeable, mergeable_state,
+            body, head_sha, base_sha, head_ref, base_ref, draft, mergeable, mergeable_state,
             additions, deletions, reviewers_count,
         })
     }

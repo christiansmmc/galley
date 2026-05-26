@@ -95,6 +95,8 @@ export interface PrDetail {
   body: string | null;
   head_sha: string;
   base_sha: string;
+  head_ref: string;
+  base_ref: string;
   draft: boolean;
   mergeable: boolean | null;
   mergeable_state: string | null;

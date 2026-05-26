@@ -17,7 +17,7 @@ function setPr(overrides: Record<string, unknown> = {}) {
   usePrsStore.setState({
     currentPr: {
       summary: { id: 1, owner: "x", repo: "y", number: 42, title: "t", author: "a", state: "open", updated_at: "", html_url: "https://github.com/x/y/pull/42", is_mine: true, review_requested: false, changed_files: 1, ci_status: "passing" },
-      body: null, head_sha: "HEADSHA", base_sha: "", draft: false, mergeable: true, mergeable_state: "clean",
+      body: null, head_sha: "HEADSHA", base_sha: "", head_ref: "feat/x", base_ref: "main", draft: false, mergeable: true, mergeable_state: "clean",
       additions: 0, deletions: 0, reviewers_count: 0,
       ...overrides,
     },
@@ -53,5 +53,11 @@ describe("MergePanel", () => {
     render(<MergePanel open onClose={vi.fn()} />);
     expect(screen.getByText(/burla isso como admin/i)).toBeTruthy();
     expect(screen.getByText("Merge mesmo assim")).toBeTruthy();
+  });
+
+  it("shows the source and target branch", () => {
+    render(<MergePanel open onClose={vi.fn()} />);
+    expect(screen.getByText("feat/x")).toBeTruthy();
+    expect(screen.getByText("main")).toBeTruthy();
   });
 });
