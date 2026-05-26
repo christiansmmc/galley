@@ -1,7 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { vi, describe, it, expect } from "vitest";
 import { PrMetaStrip } from "../components/prs/PrMetaStrip";
 import type { PrDetail } from "../ipc/types";
+import { usePrsStore } from "../state/prsStore";
 
 function makePr(overrides: Partial<PrDetail> = {}): PrDetail {
   return {
@@ -57,5 +58,19 @@ describe("PrMetaStrip", () => {
   it("renders Draft badge when draft=true", () => {
     render(<PrMetaStrip pr={makePr({ draft: true })} />);
     expect(screen.getByText("Draft")).toBeInTheDocument();
+  });
+
+  it("calls refreshCurrentPr when the refresh button is clicked", () => {
+    const spy = vi.fn();
+    usePrsStore.setState({ refreshingPr: false, refreshCurrentPr: spy } as never);
+    render(<PrMetaStrip pr={makePr()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Atualizar PR/ }));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables the refresh button while refreshing", () => {
+    usePrsStore.setState({ refreshingPr: true, refreshCurrentPr: vi.fn() } as never);
+    render(<PrMetaStrip pr={makePr()} />);
+    expect(screen.getByRole("button", { name: /Atualizar PR/ })).toBeDisabled();
   });
 });
