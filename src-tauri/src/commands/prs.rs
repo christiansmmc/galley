@@ -124,3 +124,24 @@ pub async fn refresh_pr(owner: String, repo: String, number: u64, state: State<'
     Ok(fresh)
 }
 
+#[tauri::command]
+pub async fn get_file_content(
+    owner: String,
+    repo: String,
+    path: String,
+    git_ref: String,
+    state: State<'_, AppState>,
+) -> AppResult<Option<String>> {
+    if let Some(cached) = ttl::get_blob(&state.cache, &git_ref, &path)? {
+        tracing::debug!(target: "pr_reviewer::cache", %owner, %repo, path = %path, git_ref = %git_ref, "cache hit (get_file_content)");
+        return Ok(Some(cached));
+    }
+    tracing::debug!(target: "pr_reviewer::cache", %owner, %repo, path = %path, git_ref = %git_ref, "cache miss (get_file_content)");
+    let c = client(&state).await?;
+    let content = c.get_file_content(&owner, &repo, &path, &git_ref).await?;
+    if let Some(text) = &content {
+        let _ = ttl::put_blob(&state.cache, &git_ref, &path, text);
+    }
+    Ok(content)
+}
+
