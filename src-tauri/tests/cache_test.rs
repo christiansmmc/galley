@@ -1,6 +1,6 @@
 use pr_reviewer::cache::ttl::{
-    get_fresh_diff, get_fresh_list, get_fresh_pr, get_fresh_threads, invalidate_pr,
-    invalidate_pr_by_handle, put_diff, put_list, put_pr, put_threads, DETAIL_TTL_SECS,
+    get_blob, get_fresh_diff, get_fresh_list, get_fresh_pr, get_fresh_threads, invalidate_pr,
+    invalidate_pr_by_handle, put_blob, put_diff, put_list, put_pr, put_threads, DETAIL_TTL_SECS,
     LIST_TTL_SECS,
 };
 use pr_reviewer::cache::Cache;
@@ -81,4 +81,17 @@ fn invalidate_pr_by_handle_clears_lists_too() {
 
     assert!(get_fresh_pr(&cache, "o", "r", 3, DETAIL_TTL_SECS).unwrap().is_none());
     assert!(get_fresh_list(&cache, "mine", LIST_TTL_SECS).unwrap().is_none());
+}
+
+#[test]
+fn blob_round_trips_and_is_keyed_by_sha() {
+    let cache = Cache::open_in_memory().unwrap();
+    assert_eq!(get_blob(&cache, "abc", "src/x.rs").unwrap(), None);
+    put_blob(&cache, "abc", "src/x.rs", "hello\nworld").unwrap();
+    assert_eq!(
+        get_blob(&cache, "abc", "src/x.rs").unwrap(),
+        Some("hello\nworld".to_string())
+    );
+    // Different sha for the same path is a miss (blobs are per-SHA).
+    assert_eq!(get_blob(&cache, "def", "src/x.rs").unwrap(), None);
 }

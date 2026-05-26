@@ -128,6 +128,32 @@ pub fn put_diff(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> 
     })
 }
 
+/// Read a cached file blob. Blobs are immutable per (sha, path), so there is
+/// no TTL — any hit is valid forever.
+pub fn get_blob(cache: &Cache, sha: &str, path: &str) -> AppResult<Option<String>> {
+    cache.with_conn(|c| {
+        let row: rusqlite::Result<String> = c.query_row(
+            "SELECT content FROM blobs WHERE sha = ?1 AND path = ?2",
+            params![sha, path],
+            |r| r.get(0),
+        );
+        // Any error (incl. no-rows) folds to a cache miss — the caller refetches
+        // upstream, same as the get_fresh_* helpers. Keep the upsert in put_blob.
+        Ok(row.ok())
+    })
+}
+
+pub fn put_blob(cache: &Cache, sha: &str, path: &str, content: &str) -> AppResult<()> {
+    cache.with_conn(|c| {
+        c.execute(
+            "INSERT INTO blobs (sha, path, content) VALUES (?1, ?2, ?3) \
+             ON CONFLICT(sha, path) DO UPDATE SET content = excluded.content",
+            params![sha, path, content],
+        )?;
+        Ok(())
+    })
+}
+
 /// Threads stored under a single synthetic row in `threads` table — same
 /// rationale as the diff bundle.
 pub fn get_fresh_threads(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult<Option<String>> {

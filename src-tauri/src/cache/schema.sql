@@ -59,6 +59,13 @@ CREATE TABLE IF NOT EXISTS viewed_files (
     PRIMARY KEY (pr_id, path)
 );
 
+CREATE TABLE IF NOT EXISTS blobs (
+    sha     TEXT NOT NULL,
+    path    TEXT NOT NULL,
+    content TEXT NOT NULL,
+    PRIMARY KEY (sha, path)
+);
+
 CREATE INDEX IF NOT EXISTS idx_prs_state    ON prs(state, is_mine, review_requested);
 CREATE INDEX IF NOT EXISTS idx_threads_pr   ON threads(pr_id);
 CREATE INDEX IF NOT EXISTS idx_drafts_pr    ON drafts(pr_id);
