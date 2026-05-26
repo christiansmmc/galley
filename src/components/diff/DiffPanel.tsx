@@ -11,97 +11,15 @@ import { InlineThreadWidget } from "./InlineThreadWidget";
 import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
+import { parseDiff } from "./parseDiff";
+import { buildFullFileModel } from "./buildFullFileModel";
+import { diffModelPath } from "./diffModelPath";
+import { api } from "../../ipc/client";
+import { useUiStore } from "../../state/uiStore";
 import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
 import { splitPath } from "../../util/path";
 import { PrMetaStrip } from "../prs/PrMetaStrip";
 import { useT } from "../../i18n";
-
-interface ParsedDiff {
-  original: string;
-  modified: string;
-  /** Editor line (1-based) on modified side → file line in modified file, or null for hunk separators. */
-  modifiedLineMap: Map<number, number | null>;
-  originalLineMap: Map<number, number | null>;
-  /** Reverse: file line in modified file → editor line on the modified side. */
-  modifiedFileToEditor: Map<number, number>;
-  /** Reverse: file line in original file → editor line on the original side. */
-  originalFileToEditor: Map<number, number>;
-  /** Modified-side editor lines that GitHub will accept as comment targets. */
-  commentableModified: Set<number>;
-  commentableOriginal: Set<number>;
-}
-
-function parseDiff(patch: string | null): ParsedDiff {
-  const empty: ParsedDiff = {
-    original: "", modified: "",
-    modifiedLineMap: new Map(), originalLineMap: new Map(),
-    modifiedFileToEditor: new Map(), originalFileToEditor: new Map(),
-    commentableModified: new Set(), commentableOriginal: new Set(),
-  };
-  if (!patch) return empty;
-
-  const orig: string[] = [];
-  const mod: string[] = [];
-  const origMap = new Map<number, number | null>();
-  const modMap = new Map<number, number | null>();
-  const modFileToEditor = new Map<number, number>();
-  const origFileToEditor = new Map<number, number>();
-  const commentableMod = new Set<number>();
-  const commentableOrig = new Set<number>();
-
-  let origLine = 0;
-  let modLine = 0;
-  const hunkRe = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
-
-  for (const raw of patch.split("\n")) {
-    const m = hunkRe.exec(raw);
-    if (m) {
-      origLine = parseInt(m[1], 10);
-      modLine = parseInt(m[2], 10);
-      orig.push(""); origMap.set(orig.length, null);
-      mod.push(""); modMap.set(mod.length, null);
-      continue;
-    }
-    if (raw.startsWith("+")) {
-      mod.push(raw.slice(1));
-      modMap.set(mod.length, modLine);
-      modFileToEditor.set(modLine, mod.length);
-      commentableMod.add(mod.length);
-      modLine++;
-    } else if (raw.startsWith("-")) {
-      orig.push(raw.slice(1));
-      origMap.set(orig.length, origLine);
-      origFileToEditor.set(origLine, orig.length);
-      commentableOrig.add(orig.length);
-      origLine++;
-    } else if (raw.startsWith(" ") || raw.length === 0) {
-      // Context lines: shown in both panes for context, but NOT commentable —
-      // GitHub accepts comments on context lines in theory, but the user
-      // model is "only lines I modified can be commented".
-      const content = raw.startsWith(" ") ? raw.slice(1) : raw;
-      orig.push(content);
-      origMap.set(orig.length, origLine);
-      origFileToEditor.set(origLine, orig.length);
-      mod.push(content);
-      modMap.set(mod.length, modLine);
-      modFileToEditor.set(modLine, mod.length);
-      origLine++;
-      modLine++;
-    }
-    // Lines starting with '\' (e.g. "\ No newline at end of file") are skipped.
-  }
-
-  return {
-    original: orig.join("\n"),
-    modified: mod.join("\n"),
-    modifiedLineMap: modMap,
-    originalLineMap: origMap,
-    modifiedFileToEditor: modFileToEditor,
-    originalFileToEditor: origFileToEditor,
-    commentableModified: commentableMod,
-    commentableOriginal: commentableOrig,
-  };
-}
 
 function languageFor(path: string): string {
   const ext = path.split(".").pop()?.toLowerCase();
@@ -190,7 +108,61 @@ export function DiffPanel() {
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
   const file = diff.find(f => f.path === selectedFile);
-  const parsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+  const pushToast = useUiStore(s => s.pushToast);
+  const [wholeFile, setWholeFile] = useState(false);
+  const [blobs, setBlobs] = useState<{ base: string; head: string } | null>(null);
+  const [loadingBlobs, setLoadingBlobs] = useState(false);
+
+  const patchParsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+
+  // Whole-file is opt-in per file and resets when the open file changes.
+  useEffect(() => {
+    setWholeFile(false);
+    setBlobs(null);
+  }, [selectedFile]);
+
+  // Fetch base + head blobs when whole-file mode turns on. Added/removed files
+  // only have one side; the missing side is an empty document. On any failure
+  // we toast and fall back to the patch view.
+  useEffect(() => {
+    if (!wholeFile || !file || !currentPr) return;
+    let cancelled = false;
+    setLoadingBlobs(true);
+    const owner = currentPr.summary.owner;
+    const repo = currentPr.summary.repo;
+    const basePath = file.previous_path ?? file.path;
+    Promise.all([
+      file.status === "added"
+        ? Promise.resolve<string | null>("")
+        : api.getFileContent(owner, repo, basePath, currentPr.base_sha),
+      file.status === "removed"
+        ? Promise.resolve<string | null>("")
+        : api.getFileContent(owner, repo, file.path, currentPr.head_sha),
+    ])
+      .then(([base, head]) => {
+        if (cancelled) return;
+        if (base == null || head == null) {
+          pushToast("error", t("diff.whole_file_failed"));
+          setWholeFile(false);
+          return;
+        }
+        setBlobs({ base, head });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        pushToast("error", t("diff.whole_file_failed"));
+        setWholeFile(false);
+      })
+      .finally(() => { if (!cancelled) setLoadingBlobs(false); });
+    return () => { cancelled = true; };
+  }, [wholeFile, file, currentPr, pushToast, t]);
+
+  const parsed = useMemo(
+    () => (wholeFile && blobs
+      ? buildFullFileModel(blobs.base, blobs.head, file?.patch ?? null)
+      : patchParsed),
+    [wholeFile, blobs, patchParsed, file?.path, file?.patch],
+  );
 
   // `v` toggles viewed for the open file. Ignore when an editable field has
   // focus (textarea / input / contentEditable) so typing "v" in a reply box
@@ -235,7 +207,7 @@ export function DiffPanel() {
   useEffect(() => {
     setPending(null);
     setRangeSel(null);
-  }, [selectedFile]);
+  }, [selectedFile, wholeFile]);
 
   // Threads + drafts scoped to the open file.
   //
@@ -594,15 +566,28 @@ export function DiffPanel() {
         >
           {renderSideBySide ? t("diff.inline") : t("diff.side_by_side")}
         </Button>
+        <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
+        <Button
+          variant="link"
+          onClick={() => setWholeFile(v => !v)}
+          title={t("diff.whole_file_tooltip")}
+          disabled={file.patch == null || loadingBlobs}
+        >
+          {loadingBlobs
+            ? t("diff.whole_file_loading")
+            : wholeFile
+              ? t("diff.whole_file_active")
+              : t("diff.whole_file")}
+        </Button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
-          key={`${currentPr?.summary.id ?? "_"}-${file.path}`}
+          key={`${currentPr?.summary.id ?? "_"}-${file.path}-${wholeFile ? "full" : "patch"}`}
           original={original}
           modified={modified}
           language={languageFor(file.path)}
-          originalModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/orig/${file.path}`}
-          modifiedModelPath={`inmemory://pr/${currentPr?.summary.id ?? "_"}/mod/${file.path}`}
+          originalModelPath={diffModelPath(currentPr?.summary.id ?? "_", "orig", file.path, wholeFile ? "full" : "patch")}
+          modifiedModelPath={diffModelPath(currentPr?.summary.id ?? "_", "mod", file.path, wholeFile ? "full" : "patch")}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
           theme={resolved === "linen" ? "workshop-linen" : "workshop-paper"}

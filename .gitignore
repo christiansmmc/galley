@@ -26,6 +26,9 @@ dist-ssr
 # Claude Code session state
 .claude/
 
+# Superpowers workflow docs (specs/plans/progress) — kept local, not versioned
+docs/superpowers/
+
 # Bundle outputs (rpm/deb/appimage are uploaded as GitHub release
 # assets, not committed). Cargo target + Tauri gen are ignored
 # already by src-tauri/.gitignore but listed here for safety.
