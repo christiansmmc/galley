@@ -189,7 +189,6 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
               padding: "4px 14px",
               borderRadius: "var(--radius-sm)",
               cursor: "pointer",
-              lineHeight: 1,
             }}
           >
             {t("titlebar.review")}{draftCount > 0 ? ` (${draftCount})` : ""}
@@ -222,7 +221,6 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
               borderRadius: "var(--radius-sm)",
               cursor: mergeDisabled ? "not-allowed" : "pointer",
               opacity: mergeDisabled ? 0.5 : 1,
-              lineHeight: 1,
             }}
           >
             {t("titlebar.merge")}
