@@ -11,6 +11,14 @@ use crate::error::{AppError, AppResult};
 /// style escapes via a hijacked frontend.
 #[tauri::command]
 pub fn open_external_url(url: String) -> AppResult<()> {
+    open_url(&url)
+}
+
+/// Open an http(s) URL in the default browser, validating the scheme first.
+///
+/// Shared by the `open_external_url` command and the OAuth device-flow login,
+/// which needs to send the user to GitHub's verification page.
+pub fn open_url(url: &str) -> AppResult<()> {
     if !(url.starts_with("https://") || url.starts_with("http://")) {
         return Err(AppError::Internal(format!("refused non-http(s) url: {url}")));
     }
@@ -18,21 +26,21 @@ pub fn open_external_url(url: String) -> AppResult<()> {
     #[cfg(target_os = "linux")]
     {
         std::process::Command::new("xdg-open")
-            .arg(&url)
+            .arg(url)
             .spawn()
             .map_err(|e| AppError::Internal(format!("xdg-open failed: {e}")))?;
     }
     #[cfg(target_os = "macos")]
     {
         std::process::Command::new("open")
-            .arg(&url)
+            .arg(url)
             .spawn()
             .map_err(|e| AppError::Internal(format!("open failed: {e}")))?;
     }
     #[cfg(target_os = "windows")]
     {
         std::process::Command::new("cmd")
-            .args(["/C", "start", "", &url])
+            .args(["/C", "start", "", url])
             .spawn()
             .map_err(|e| AppError::Internal(format!("start failed: {e}")))?;
     }

@@ -1,5 +1,6 @@
 pub mod drafts;
 pub mod filters;
+pub mod oauth;
 pub mod prs;
 pub mod repos;
 pub mod reviews;

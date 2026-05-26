@@ -146,6 +146,11 @@ export interface CommentDraft {
   start_side: string | null;
 }
 
+export interface DeviceLoginStart {
+  user_code: string;
+  verification_uri: string;
+}
+
 export type ReviewEvent = "APPROVE" | "COMMENT" | "REQUEST_CHANGES";
 
 export interface ReviewResult {

@@ -300,7 +300,16 @@
     "save_token": "save token",
     "saving": "saving…",
     "create_token": "create token on github ↗",
-    "error_prefix": "error:"
+    "error_prefix": "error:",
+    "login_with_github": "Log in with GitHub",
+    "starting_login": "starting…",
+    "or_paste_token": "or paste a token manually",
+    "device_code_label": "your code",
+    "device_code_instructions": "We opened GitHub in your browser. Enter this code there to authorize Galley. If the browser didn't open, go to <1>{{url}}</1>.",
+    "copy_code": "copy code",
+    "code_copied": "copied",
+    "waiting_authorization": "waiting for authorization in your browser…",
+    "cancel_login": "cancel"
   },
   "auth": {
     "reauth": "reauthenticate",
