@@ -84,6 +84,11 @@
     "inline": "inline",
     "switch_to_inline": "switch to inline",
     "switch_to_side_by_side": "switch to side by side",
+    "whole_file": "whole file",
+    "whole_file_active": "showing whole file",
+    "whole_file_loading": "loading file…",
+    "whole_file_tooltip": "show the whole file with changes",
+    "whole_file_failed": "couldn't load the full file",
     "comment_on_line": "Comment on this line",
     "comment_n_lines_one": "Comment {{count}} line",
     "comment_n_lines_other": "Comment {{count}} lines"

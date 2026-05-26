@@ -84,6 +84,11 @@
     "inline": "inline",
     "switch_to_inline": "alternar para inline",
     "switch_to_side_by_side": "alternar para lado a lado",
+    "whole_file": "arquivo inteiro",
+    "whole_file_active": "mostrando arquivo inteiro",
+    "whole_file_loading": "carregando arquivo…",
+    "whole_file_tooltip": "mostrar o arquivo inteiro com as alterações",
+    "whole_file_failed": "não foi possível carregar o arquivo inteiro",
     "comment_on_line": "Comentar nesta linha",
     "comment_n_lines_one": "Comentar {{count}} linha",
     "comment_n_lines_other": "Comentar {{count}} linhas"

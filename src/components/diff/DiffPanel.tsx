@@ -12,6 +12,9 @@ import { InlineDraftWidget } from "./InlineDraftWidget";
 import { useDiffViewZones, type ViewZoneSpec } from "./useDiffViewZones";
 import { useDiffRenderMode } from "./useDiffRenderMode";
 import { parseDiff } from "./parseDiff";
+import { buildFullFileModel } from "./buildFullFileModel";
+import { api } from "../../ipc/client";
+import { useUiStore } from "../../state/uiStore";
 import { EmptyState, SkeletonBars, Sweep, Button } from "../ui";
 import { splitPath } from "../../util/path";
 import { PrMetaStrip } from "../prs/PrMetaStrip";
@@ -104,7 +107,61 @@ export function DiffPanel() {
   const [rangeSel, setRangeSel] = useState<RangeSelection | null>(null);
 
   const file = diff.find(f => f.path === selectedFile);
-  const parsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+  const pushToast = useUiStore(s => s.pushToast);
+  const [wholeFile, setWholeFile] = useState(false);
+  const [blobs, setBlobs] = useState<{ base: string; head: string } | null>(null);
+  const [loadingBlobs, setLoadingBlobs] = useState(false);
+
+  const patchParsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+
+  // Whole-file is opt-in per file and resets when the open file changes.
+  useEffect(() => {
+    setWholeFile(false);
+    setBlobs(null);
+  }, [selectedFile]);
+
+  // Fetch base + head blobs when whole-file mode turns on. Added/removed files
+  // only have one side; the missing side is an empty document. On any failure
+  // we toast and fall back to the patch view.
+  useEffect(() => {
+    if (!wholeFile || !file || !currentPr) return;
+    let cancelled = false;
+    setLoadingBlobs(true);
+    const owner = currentPr.summary.owner;
+    const repo = currentPr.summary.repo;
+    const basePath = file.previous_path ?? file.path;
+    Promise.all([
+      file.status === "added"
+        ? Promise.resolve<string | null>("")
+        : api.getFileContent(owner, repo, basePath, currentPr.base_sha),
+      file.status === "removed"
+        ? Promise.resolve<string | null>("")
+        : api.getFileContent(owner, repo, file.path, currentPr.head_sha),
+    ])
+      .then(([base, head]) => {
+        if (cancelled) return;
+        if (base == null || head == null) {
+          pushToast("error", t("diff.whole_file_failed"));
+          setWholeFile(false);
+          return;
+        }
+        setBlobs({ base, head });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        pushToast("error", t("diff.whole_file_failed"));
+        setWholeFile(false);
+      })
+      .finally(() => { if (!cancelled) setLoadingBlobs(false); });
+    return () => { cancelled = true; };
+  }, [wholeFile, file, currentPr, pushToast, t]);
+
+  const parsed = useMemo(
+    () => (wholeFile && blobs
+      ? buildFullFileModel(blobs.base, blobs.head, file?.patch ?? null)
+      : patchParsed),
+    [wholeFile, blobs, patchParsed, file?.path, file?.patch],
+  );
 
   // `v` toggles viewed for the open file. Ignore when an editable field has
   // focus (textarea / input / contentEditable) so typing "v" in a reply box
@@ -149,7 +206,7 @@ export function DiffPanel() {
   useEffect(() => {
     setPending(null);
     setRangeSel(null);
-  }, [selectedFile]);
+  }, [selectedFile, wholeFile]);
 
   // Threads + drafts scoped to the open file.
   //
@@ -508,10 +565,23 @@ export function DiffPanel() {
         >
           {renderSideBySide ? t("diff.inline") : t("diff.side_by_side")}
         </Button>
+        <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
+        <Button
+          variant="link"
+          onClick={() => setWholeFile(v => !v)}
+          title={t("diff.whole_file_tooltip")}
+          disabled={file.patch == null || loadingBlobs}
+        >
+          {loadingBlobs
+            ? t("diff.whole_file_loading")
+            : wholeFile
+              ? t("diff.whole_file_active")
+              : t("diff.whole_file")}
+        </Button>
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
-          key={`${currentPr?.summary.id ?? "_"}-${file.path}`}
+          key={`${currentPr?.summary.id ?? "_"}-${file.path}-${wholeFile ? "full" : "patch"}`}
           original={original}
           modified={modified}
           language={languageFor(file.path)}
