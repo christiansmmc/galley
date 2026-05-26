@@ -51,11 +51,13 @@ describe("refreshCurrentPr", () => {
     usePrsStore.setState({ currentPr: pr(), selectedFile: "b.ts" } as never);
     mockApi.refreshPr.mockResolvedValue(pr());
     mockApi.getPrDiff.mockResolvedValue([file("a.ts"), file("b.ts")]);
-    mockApi.getPrThreads.mockResolvedValue([]);
+    mockApi.getPrThreads.mockResolvedValue([{ id: "T1" }] as never);
     mockApi.listViewedFiles.mockResolvedValue([]);
     await usePrsStore.getState().refreshCurrentPr();
     expect(usePrsStore.getState().selectedFile).toBe("b.ts");
     expect(usePrsStore.getState().refreshingPr).toBe(false);
+    expect(usePrsStore.getState().diff).toHaveLength(2);
+    expect(usePrsStore.getState().threads).toHaveLength(1);
   });
 
   it("falls back to first file when selected path is gone", async () => {
@@ -66,6 +68,8 @@ describe("refreshCurrentPr", () => {
     mockApi.listViewedFiles.mockResolvedValue([]);
     await usePrsStore.getState().refreshCurrentPr();
     expect(usePrsStore.getState().selectedFile).toBe("a.ts");
+    expect(usePrsStore.getState().currentPr).not.toBeNull();
+    expect(usePrsStore.getState().diff).toHaveLength(1);
   });
 
   it("keeps existing content on fetch error", async () => {
@@ -78,5 +82,6 @@ describe("refreshCurrentPr", () => {
     expect(usePrsStore.getState().diff).toHaveLength(1);
     expect(usePrsStore.getState().refreshingPr).toBe(false);
     expect(usePrsStore.getState().prError).toBeTruthy();
+    expect(usePrsStore.getState().selectedFile).toBe("a.ts");
   });
 });
