@@ -15,6 +15,9 @@ interface PrsState {
   threads: ReviewThread[];
   selectedFile: string | null;
   loadingPr: boolean;
+  /** True while refreshCurrentPr is in flight. Separate from loadingPr so an
+   *  in-place refresh does NOT trigger the full-view skeleton. */
+  refreshingPr: boolean;
   /** PR currently being fetched (used to render per-row spinners). Null when idle. */
   pendingPr: { owner: string; repo: string; number: number } | null;
   prError: unknown | null;
@@ -23,6 +26,7 @@ interface PrsState {
 
   refreshLists: () => Promise<void>;
   openPr: (owner: string, repo: string, number: number) => Promise<void>;
+  refreshCurrentPr: () => Promise<void>;
   closePr: () => void;
   selectFile: (path: string) => void;
   refreshThreads: () => Promise<void>;
@@ -43,6 +47,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   threads: [],
   selectedFile: null,
   loadingPr: false,
+  refreshingPr: false,
   pendingPr: null,
   prError: null,
   viewedFiles: new Set(),
@@ -102,6 +107,35 @@ export const usePrsStore = create<PrsState>((set, get) => ({
       else useUiStore.getState().pushToast("error", userMessage(e));
     } finally {
       set({ loadingPr: false, pendingPr: null });
+    }
+  },
+
+  refreshCurrentPr: async () => {
+    const cur = get().currentPr;
+    if (!cur) return;
+    const { owner, repo, number } = cur.summary;
+    // In-place refresh: do NOT null currentPr/diff or reset selectedFile, so
+    // the user stays on the file they were reviewing. refreshingPr (not
+    // loadingPr) drives a button spinner, not the full-view skeleton.
+    set({ refreshingPr: true, prError: null });
+    try {
+      const fresh = await api.refreshPr(owner, repo, number);
+      const [diff, threads, viewedList] = await Promise.all([
+        api.getPrDiff(owner, repo, number),
+        api.getPrThreads(owner, repo, number),
+        api.listViewedFiles(fresh.summary.id),
+      ]);
+      const prev = get().selectedFile;
+      const selectedFile = prev && diff.some(f => f.path === prev)
+        ? prev
+        : (diff[0]?.path ?? null);
+      set({ currentPr: fresh, diff, threads, selectedFile, viewedFiles: new Set(viewedList) });
+    } catch (e) {
+      set({ prError: e });
+      if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
+      else useUiStore.getState().pushToast("error", userMessage(e));
+    } finally {
+      set({ refreshingPr: false });
     }
   },
 

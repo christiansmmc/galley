@@ -3,6 +3,9 @@ import type { CiStatus, PrDetail } from "../../ipc/types";
 import { formatAge } from "../../util/time";
 import { api } from "../../ipc/client";
 import { useT } from "../../i18n";
+import { RefreshCw } from "lucide-react";
+import { Button, Spinner } from "../ui";
+import { usePrsStore } from "../../state/prsStore";
 
 const CI_LABEL_KEY: Record<CiStatus, string> = {
   passing: "pr_meta.ci_passing",
@@ -21,6 +24,8 @@ interface Props { pr: PrDetail; }
 
 export function PrMetaStrip({ pr }: Props) {
   const t = useT();
+  const refreshCurrentPr = usePrsStore(s => s.refreshCurrentPr);
+  const refreshingPr = usePrsStore(s => s.refreshingPr);
   const [bodyOpen, setBodyOpen] = useState(false);
   const s = pr.summary;
   const age = formatAge(s.updated_at);
@@ -145,6 +150,17 @@ export function PrMetaStrip({ pr }: Props) {
           >
             {t("pr_meta.open_in_github")}
           </span>
+          <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
+          <Button
+            variant="icon"
+            size="md"
+            onClick={() => refreshCurrentPr()}
+            disabled={refreshingPr}
+            title={t("pr_meta.refresh")}
+            aria-label={t("pr_meta.refresh")}
+          >
+            {refreshingPr ? <Spinner size={14} /> : <RefreshCw size={14} />}
+          </Button>
         </div>
       </div>
 

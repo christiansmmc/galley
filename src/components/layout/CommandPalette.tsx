@@ -40,6 +40,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
   const openPr = usePrsStore(s => s.openPr);
   const selectFile = usePrsStore(s => s.selectFile);
   const refreshLists = usePrsStore(s => s.refreshLists);
+  const refreshCurrentPr = usePrsStore(s => s.refreshCurrentPr);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
   const sources = useSettingsStore(s => s.settings?.ui.palette_sources) ?? { prs: true, files: true, repos: true, commands: true };
   const theme = useTheme();
@@ -184,6 +185,18 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
       });
       if (currentPr) {
         out.push({
+          id: "cmd:refresh_pr",
+          kind: "command",
+          group: t("command_palette.group_commands"),
+          label: t("command_palette.cmd_refresh_pr"),
+          hint: t("command_palette.cmd_refresh_pr_hint"),
+          icon: <RefreshCw size={14} />,
+          match: "atualizar pr atual refresh current update",
+          run: () => { refreshCurrentPr(); onClose(); },
+        });
+      }
+      if (currentPr) {
+        out.push({
           id: "cmd:submit",
           kind: "command",
           group: t("command_palette.group_commands"),
@@ -197,7 +210,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
     }
 
     return out;
-  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, sources, openPr, selectFile, refreshLists, onClose, onOpenSettings, onOpenSubmit, t]);
+  }, [commandOnly, reviewRequested, mine, currentPr, diff, theme, repos, scope, sources, openPr, selectFile, refreshLists, refreshCurrentPr, onClose, onOpenSettings, onOpenSubmit, t]);
 
   const filtered = useMemo(() => {
     if (!effectiveQuery) return items;
