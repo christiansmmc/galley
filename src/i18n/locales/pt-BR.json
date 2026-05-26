@@ -16,6 +16,7 @@
     "back_to_list": "Voltar para a lista",
     "submit_review": "Enviar review",
     "review": "revisar",
+    "merge": "merge",
     "settings": "Configurações",
     "minimize": "Minimizar",
     "maximize": "Maximizar",
@@ -294,6 +295,22 @@
     "body_placeholder": "Resumo (opcional)",
     "drafts_count_one": "{{count}} rascunho inline.",
     "drafts_count_other": "{{count}} rascunhos inline."
+  },
+  "merge": {
+    "title": "Fazer merge do pull request",
+    "ci_label": "Último CI:",
+    "method_merge": "Merge commit",
+    "method_squash": "Squash e merge",
+    "method_rebase": "Rebase e merge",
+    "cancel": "Cancelar",
+    "confirm": "Merge",
+    "confirm_bypass": "Merge mesmo assim",
+    "merging": "Fazendo merge…",
+    "success": "Pull request mergeado.",
+    "bypass_warning": "Proteção do branch não satisfeita (CI falhando ou review obrigatório faltando). O merge agora burla isso como admin.",
+    "disabled_computing": "GitHub ainda calculando mergeabilidade",
+    "disabled_conflicts": "Tem conflitos — resolva no GitHub",
+    "disabled_draft": "PR em rascunho — marque como pronto primeiro"
   },
   "pat": {
     "first_time": "primeira vez",

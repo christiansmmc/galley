@@ -16,6 +16,7 @@
     "back_to_list": "Back to list",
     "submit_review": "Submit review",
     "review": "review",
+    "merge": "merge",
     "settings": "Settings",
     "minimize": "Minimize",
     "maximize": "Maximize",
@@ -294,6 +295,22 @@
     "body_placeholder": "Summary (optional)",
     "drafts_count_one": "{{count}} inline draft.",
     "drafts_count_other": "{{count}} inline drafts."
+  },
+  "merge": {
+    "title": "Merge pull request",
+    "ci_label": "Last CI:",
+    "method_merge": "Merge commit",
+    "method_squash": "Squash and merge",
+    "method_rebase": "Rebase and merge",
+    "cancel": "Cancel",
+    "confirm": "Merge",
+    "confirm_bypass": "Merge anyway",
+    "merging": "Merging…",
+    "success": "Pull request merged.",
+    "bypass_warning": "Branch protection not satisfied (CI failing or required review missing). Merging now bypasses it as an admin.",
+    "disabled_computing": "GitHub is still computing mergeability",
+    "disabled_conflicts": "Has conflicts — resolve on GitHub",
+    "disabled_draft": "Draft PR — mark ready first"
   },
   "pat": {
     "first_time": "first time",
