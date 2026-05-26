@@ -196,10 +196,12 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
           </button>
         )}
 
-        {currentPr && (
+        {currentPr && (() => {
+          const mergeDisabled = currentPr.mergeable !== true || currentPr.summary.state !== "open" || currentPr.draft;
+          return (
           <button
             onClick={onOpenMerge}
-            disabled={currentPr.mergeable !== true || currentPr.summary.state !== "open" || currentPr.draft}
+            disabled={mergeDisabled}
             title={
               currentPr.draft
                 ? t("merge.disabled_draft")
@@ -218,14 +220,15 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
               border: "1px solid var(--c-line)",
               padding: "4px 14px",
               borderRadius: "var(--radius-sm)",
-              cursor: (currentPr.mergeable !== true || currentPr.summary.state !== "open" || currentPr.draft) ? "not-allowed" : "pointer",
-              opacity: (currentPr.mergeable !== true || currentPr.summary.state !== "open" || currentPr.draft) ? 0.5 : 1,
+              cursor: mergeDisabled ? "not-allowed" : "pointer",
+              opacity: mergeDisabled ? 0.5 : 1,
               lineHeight: 1,
             }}
           >
             {t("titlebar.merge")}
           </button>
-        )}
+          );
+        })()}
 
         <Button
           variant="icon"
