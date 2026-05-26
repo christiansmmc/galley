@@ -154,7 +154,10 @@ export function DiffPanel() {
         setWholeFile(false);
       })
       .finally(() => { if (!cancelled) setLoadingBlobs(false); });
-    return () => { cancelled = true; };
+    // Clear the loading flag on teardown too. A file switch cancels the
+    // in-flight fetch (cancelled=true), which makes the `.finally` skip its
+    // reset — without this the button stays stuck on "loading file…" forever.
+    return () => { cancelled = true; setLoadingBlobs(false); };
   }, [wholeFile, file, currentPr, pushToast, t]);
 
   const parsed = useMemo(
