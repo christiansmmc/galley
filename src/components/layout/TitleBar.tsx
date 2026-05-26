@@ -187,7 +187,6 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
               background: "var(--c-accent-soft)",
               border: "1px solid var(--c-accent)",
               padding: "4px 14px",
-              borderRadius: "var(--radius-sm)",
               cursor: "pointer",
             }}
           >
@@ -218,7 +217,6 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMe
               background: "var(--c-surface0)",
               border: "1px solid var(--c-line)",
               padding: "4px 14px",
-              borderRadius: "var(--radius-sm)",
               cursor: mergeDisabled ? "not-allowed" : "pointer",
               opacity: mergeDisabled ? 0.5 : 1,
             }}
