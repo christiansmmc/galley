@@ -126,16 +126,6 @@ export function PrMetaStrip({ pr }: Props) {
           color: "var(--c-subtext)",
           flexShrink: 0,
         }}>
-          <Button
-            variant="icon"
-            size="md"
-            onClick={() => refreshCurrentPr()}
-            disabled={refreshingPr}
-            title={t("pr_meta.refresh")}
-            aria-label={t("pr_meta.refresh")}
-          >
-            {refreshingPr ? <Spinner size={14} /> : <RefreshCw size={14} />}
-          </Button>
           {hasBody && (
             <>
               <span
@@ -160,6 +150,17 @@ export function PrMetaStrip({ pr }: Props) {
           >
             {t("pr_meta.open_in_github")}
           </span>
+          <span aria-hidden style={{ color: "var(--c-overlay)" }}>·</span>
+          <Button
+            variant="icon"
+            size="md"
+            onClick={() => refreshCurrentPr()}
+            disabled={refreshingPr}
+            title={t("pr_meta.refresh")}
+            aria-label={t("pr_meta.refresh")}
+          >
+            {refreshingPr ? <Spinner size={14} /> : <RefreshCw size={14} />}
+          </Button>
         </div>
       </div>
 
