@@ -169,6 +169,25 @@ describe("CommandPalette", () => {
     fireEvent.click(dialog);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("shows 'refresh current PR' command only when a PR is open", () => {
+    const spy = vi.fn();
+    usePrsStore.setState({ currentPr: null, refreshCurrentPr: spy } as never);
+    const { rerender } = render(
+      <CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />,
+    );
+    expect(screen.queryByText("Atualizar PR atual")).not.toBeInTheDocument();
+
+    usePrsStore.setState({
+      currentPr: { summary: mkPr({ id: 9, number: 9 }) } as never,
+      refreshCurrentPr: spy,
+    } as never);
+    rerender(
+      <CommandPalette open={true} onClose={vi.fn()} onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} />,
+    );
+    fireEvent.click(screen.getByText("Atualizar PR atual"));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("CommandPalette repo scope", () => {
