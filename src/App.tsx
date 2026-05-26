@@ -11,6 +11,7 @@ import { PrListPanel } from "./components/prs/PrListPanel";
 import { FileTreePanel } from "./components/files/FileTreePanel";
 import { DiffPanel } from "./components/diff/DiffPanel";
 import { ReviewSubmitPanel } from "./components/review/ReviewSubmitPanel";
+import { MergePanel } from "./components/review/MergePanel";
 import { ErrorBlock } from "./components/ui";
 import { ToastStack } from "./components/common/Toast";
 import { useSettingsStore } from "./state/settingsStore";
@@ -28,6 +29,7 @@ export default function App() {
   const clearDrafts = useDraftsStore(s => s.clear);
   const { authBanner, setAuthBanner } = useUiStore();
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -75,6 +77,7 @@ export default function App() {
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenSubmit={() => setSubmitOpen(true)}
         onOpenPalette={() => setPaletteOpen(true)}
+        onOpenMerge={() => setMergeOpen(true)}
       />
       <div style={{ flex: 1, minHeight: 0 }}>
         <Layout
@@ -84,6 +87,7 @@ export default function App() {
         />
       </div>
       <ReviewSubmitPanel open={submitOpen} onClose={() => setSubmitOpen(false)} />
+      <MergePanel open={mergeOpen} onClose={() => setMergeOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <CommandPalette
         open={paletteOpen}

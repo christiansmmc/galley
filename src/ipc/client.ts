@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-  CommentDraft, FileDiff, PathFilter, PrDetail, PrSummary, RemoteRepo,
+  CommentDraft, FileDiff, MergeMethod, MergeResult, PathFilter, PrDetail, PrSummary, RemoteRepo,
   RepoBrowseFilters, RepoConfig, RepoPrCount, ReviewEvent, ReviewResult, ReviewThread, Settings,
 } from "./types";
 
@@ -49,6 +49,8 @@ export const api = {
     invoke<void>("reply_to_thread", { owner, repo, number, inReplyTo, body }),
   resolveThread: (owner: string, repo: string, number: number, threadNodeId: string) =>
     invoke<void>("resolve_thread", { owner, repo, number, threadNodeId }),
+  mergePr: (owner: string, repo: string, number: number, method: MergeMethod, headSha: string) =>
+    invoke<MergeResult>("merge_pr", { owner, repo, number, method, headSha }),
 
   listViewedFiles: (prId: number) =>
     invoke<string[]>("list_viewed_files", { prId }),

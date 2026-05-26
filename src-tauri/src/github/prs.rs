@@ -49,6 +49,8 @@ pub struct PrDetail {
     pub draft: bool,
     pub mergeable: Option<bool>,
     #[serde(default)]
+    pub mergeable_state: Option<String>,
+    #[serde(default)]
     pub additions: i64,
     #[serde(default)]
     pub deletions: i64,
@@ -118,6 +120,7 @@ impl GitHubClient {
         let state = pr.get("state").and_then(|v| v.as_str()).unwrap_or("open").to_string();
         let draft = pr.get("draft").and_then(|v| v.as_bool()).unwrap_or(false);
         let mergeable = pr.get("mergeable").and_then(|v| v.as_bool());
+        let mergeable_state = pr.get("mergeable_state").and_then(|v| v.as_str()).map(|s| s.to_string());
         let html_url = pr.get("html_url").and_then(|v| v.as_str()).unwrap_or("").to_string();
         let changed_files = pr.get("changed_files").and_then(|v| v.as_i64()).unwrap_or(0);
         let additions = pr.get("additions").and_then(|v| v.as_i64()).unwrap_or(0);
@@ -138,7 +141,7 @@ impl GitHubClient {
                 is_mine: false, review_requested: false,
                 changed_files, ci_status,
             },
-            body, head_sha, base_sha, draft, mergeable,
+            body, head_sha, base_sha, draft, mergeable, mergeable_state,
             additions, deletions, reviewers_count,
         })
     }

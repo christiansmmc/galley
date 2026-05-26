@@ -1,6 +1,7 @@
 pub mod diffs;
 pub mod prs;
 pub mod repos;
+pub mod merge;
 pub mod reviews;
 pub mod threads;
 

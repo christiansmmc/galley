@@ -1,24 +1,12 @@
 import { useState } from "react";
-import type { CiStatus, PrDetail } from "../../ipc/types";
+import type { PrDetail } from "../../ipc/types";
 import { formatAge } from "../../util/time";
 import { api } from "../../ipc/client";
 import { useT } from "../../i18n";
 import { RefreshCw } from "lucide-react";
 import { Button, Spinner } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
-
-const CI_LABEL_KEY: Record<CiStatus, string> = {
-  passing: "pr_meta.ci_passing",
-  pending: "pr_meta.ci_pending",
-  failing: "pr_meta.ci_failing",
-  none: "pr_meta.ci_none",
-};
-const CI_COLOR: Record<CiStatus, string> = {
-  passing: "var(--c-success)",
-  pending: "var(--c-warn)",
-  failing: "var(--c-danger)",
-  none: "var(--c-overlay)",
-};
+import { CiBadge } from "./CiBadge";
 
 interface Props { pr: PrDetail; }
 
@@ -70,18 +58,8 @@ export function PrMetaStrip({ pr }: Props) {
               <span style={{ color: "var(--c-danger)" }}>−{pr.deletions}</span>
             </MetaItem>
             <Sep />
-            <MetaItem title={t(CI_LABEL_KEY[s.ci_status])}>
-              <span style={{
-                display: "inline-block",
-                width: 6, height: 6,
-                borderRadius: "var(--radius-pill)",
-                background: CI_COLOR[s.ci_status],
-                marginRight: "var(--space-2)",
-                verticalAlign: "middle",
-              }} />
-              <span style={{ color: s.ci_status === "passing" ? "var(--c-success)" : "var(--c-subtext)" }}>
-                {t(CI_LABEL_KEY[s.ci_status])}
-              </span>
+            <MetaItem>
+              <CiBadge status={s.ci_status} />
             </MetaItem>
             <Sep />
             <MetaItem>

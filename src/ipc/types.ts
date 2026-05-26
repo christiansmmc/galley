@@ -97,6 +97,7 @@ export interface PrDetail {
   base_sha: string;
   draft: boolean;
   mergeable: boolean | null;
+  mergeable_state: string | null;
   additions: number;
   deletions: number;
   reviewers_count: number;
@@ -152,6 +153,14 @@ export interface ReviewResult {
   review_id: number;
   state: string;
   html_url: string;
+}
+
+export type MergeMethod = "merge" | "squash" | "rebase";
+
+export interface MergeResult {
+  merged: boolean;
+  sha: string;
+  message: string;
 }
 
 export type AppError =

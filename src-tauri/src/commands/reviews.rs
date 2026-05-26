@@ -75,3 +75,24 @@ pub async fn resolve_thread(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn merge_pr(
+    owner: String,
+    repo: String,
+    number: u64,
+    method: crate::github::merge::MergeMethod,
+    head_sha: String,
+    state: State<'_, AppState>,
+) -> AppResult<crate::github::merge::MergeResult> {
+    let client = state.client.read().await
+        .clone()
+        .ok_or_else(|| AppError::Auth("no GitHub client".into()))?;
+    let result = client.merge_pr(&owner, &repo, number, method, &head_sha).await?;
+
+    // The PR is now merged/closed; drop its cached detail + diff + threads so a
+    // refresh shows the new state instead of waiting out the TTL.
+    let _ = ttl::invalidate_pr_by_handle(&state.cache, &owner, &repo, number);
+
+    Ok(result)
+}

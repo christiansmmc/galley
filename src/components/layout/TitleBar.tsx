@@ -11,6 +11,7 @@ interface Props {
   onOpenSettings: () => void;
   onOpenSubmit: () => void;
   onOpenPalette: () => void;
+  onOpenMerge: () => void;
 }
 
 /**
@@ -20,7 +21,7 @@ interface Props {
  * window. Interactive children carry `data-tauri-drag-region="false"` so they
  * still receive clicks.
  */
-export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props) {
+export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette, onOpenMerge }: Props) {
   const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
   const closePr = usePrsStore(s => s.closePr);
@@ -194,6 +195,40 @@ export function TitleBar({ onOpenSettings, onOpenSubmit, onOpenPalette }: Props)
             {t("titlebar.review")}{draftCount > 0 ? ` (${draftCount})` : ""}
           </button>
         )}
+
+        {currentPr && (() => {
+          const mergeDisabled = currentPr.mergeable !== true || currentPr.summary.state !== "open" || currentPr.draft;
+          return (
+          <button
+            onClick={onOpenMerge}
+            disabled={mergeDisabled}
+            title={
+              currentPr.draft
+                ? t("merge.disabled_draft")
+                : currentPr.mergeable === null
+                  ? t("merge.disabled_computing")
+                  : currentPr.mergeable === false
+                    ? t("merge.disabled_conflicts")
+                    : t("titlebar.merge")
+            }
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.04em",
+              color: "var(--c-text)",
+              background: "var(--c-surface0)",
+              border: "1px solid var(--c-line)",
+              padding: "4px 14px",
+              borderRadius: "var(--radius-sm)",
+              cursor: mergeDisabled ? "not-allowed" : "pointer",
+              opacity: mergeDisabled ? 0.5 : 1,
+              lineHeight: 1,
+            }}
+          >
+            {t("titlebar.merge")}
+          </button>
+          );
+        })()}
 
         <Button
           variant="icon"

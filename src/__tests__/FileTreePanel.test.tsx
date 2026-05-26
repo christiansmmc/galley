@@ -32,7 +32,7 @@ beforeEach(() => {
   usePrsStore.setState({
     currentPr: {
       summary: { id: 1, owner: "x", repo: "y", number: 1, title: "t", author: "a", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true, changed_files: 0, ci_status: "none" },
-      body: null, head_sha: "", base_sha: "", draft: false, mergeable: null,
+      body: null, head_sha: "", base_sha: "", draft: false, mergeable: null, mergeable_state: null,
       additions: 0, deletions: 0, reviewers_count: 0,
     },
     diff: [

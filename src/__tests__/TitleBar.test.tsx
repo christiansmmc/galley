@@ -31,7 +31,7 @@ beforeEach(() => {
 
 describe("TitleBar", () => {
   it("shows 'Pull Requests' when no PR is open", () => {
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} onOpenMerge={vi.fn()} />);
     expect(screen.getByText("Pull Requests")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Voltar para a lista" })).not.toBeInTheDocument();
   });
@@ -39,7 +39,7 @@ describe("TitleBar", () => {
   it("shows breadcrumb + revisar + palette button when PR open", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
 
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} onOpenMerge={vi.fn()} />);
     // Etapa 3 S3: breadcrumb is split into <span>org</span>/<span>repo</span>
     // with a literal "/" glyph between. Assert on the parts and on the
     // aria-label that re-composes the full path.
@@ -56,7 +56,7 @@ describe("TitleBar", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
     useUiStore.setState({ prListCollapsed: true });
 
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} onOpenMerge={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Voltar para a lista" }));
     expect(usePrsStore.getState().currentPr).toBeNull();
     expect(useUiStore.getState().prListCollapsed).toBe(false);
@@ -66,13 +66,13 @@ describe("TitleBar", () => {
     usePrsStore.setState({ currentPr: stubPr } as never);
     useDraftsStore.setState({ drafts: [{ id: 1 }, { id: 2 }, { id: 3 }] } as never);
 
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} onOpenMerge={vi.fn()} />);
     expect(screen.getByRole("button", { name: /revisar \(3\)/ })).toBeInTheDocument();
   });
 
   it("window controls render and dispatch", async () => {
     const winMod = await import("../util/window");
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={vi.fn()} onOpenMerge={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Minimizar" }));
     expect(winMod.minimizeWindow).toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe("TitleBar", () => {
 
   it("palette button invokes onOpenPalette", () => {
     const onOpenPalette = vi.fn();
-    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={onOpenPalette} />);
+    render(<TitleBar onOpenSettings={vi.fn()} onOpenSubmit={vi.fn()} onOpenPalette={onOpenPalette} onOpenMerge={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Paleta de comandos" }));
     expect(onOpenPalette).toHaveBeenCalled();
   });
