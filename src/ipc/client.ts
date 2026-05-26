@@ -13,6 +13,8 @@ export const api = {
     invoke<FileDiff[]>("get_pr_diff", { owner, repo, number }),
   getPrThreads: (owner: string, repo: string, number: number) =>
     invoke<ReviewThread[]>("get_pr_threads", { owner, repo, number }),
+  getFileContent: (owner: string, repo: string, path: string, ref: string) =>
+    invoke<string | null>("get_file_content", { owner, repo, path, gitRef: ref }),
   refreshPr: (owner: string, repo: string, number: number) =>
     invoke<PrDetail>("refresh_pr", { owner, repo, number }),
 
