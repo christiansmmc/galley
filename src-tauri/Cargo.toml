@@ -1,6 +1,6 @@
 [package]
 name = "pr-reviewer"
-version = "0.9.0"
+version = "0.9.1"
 description = "Linux desktop GitHub PR reviewer"
 authors = ["csequeira153@gmail.com"]
 edition = "2021"
@@ -24,7 +24,6 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 octocrab = "0.42"
 rusqlite = { version = "0.32", features = ["bundled"] }
-keyring = { version = "3", features = ["sync-secret-service"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
@@ -35,3 +34,17 @@ tokio = { version = "1", features = ["full"] }
 directories = "5"
 chrono = { version = "0.4", features = ["serde"] }
 async-trait = "0.1"
+
+# keyring backend is platform-specific: enabling the wrong native feature
+# pulls in deps that won't build on the other OS, so gate per target.
+# Without a platform feature, keyring silently falls back to an in-memory
+# MockCredential that never persists — which on Windows left the PAT screen
+# looping forever (set_pat "succeeds" but has_pat always reads back nothing).
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", features = ["sync-secret-service"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
