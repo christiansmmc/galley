@@ -140,7 +140,7 @@ export function PrListPanel() {
           <Button
             variant="icon"
             size="md"
-            onClick={refreshLists}
+            onClick={() => refreshLists(true)}
             disabled={loadingLists}
             title={t("pr_list.refresh")}
             aria-label={t("pr_list.refresh")}

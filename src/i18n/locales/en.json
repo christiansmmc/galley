@@ -107,6 +107,8 @@
     "ci_pending": "CI running",
     "ci_failing": "CI failing",
     "ci_none": "No checks",
+    "ci_auto": "auto {{seconds}}s",
+    "ci_updating": "updating…",
     "draft": "Draft"
   },
   "comment": {
@@ -294,7 +296,8 @@
     "event_request_changes": "Request changes",
     "body_placeholder": "Summary (optional)",
     "drafts_count_one": "{{count}} inline draft.",
-    "drafts_count_other": "{{count}} inline drafts."
+    "drafts_count_other": "{{count}} inline drafts.",
+    "success": "Review submitted."
   },
   "merge": {
     "title": "Merge pull request",

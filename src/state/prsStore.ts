@@ -9,6 +9,11 @@ interface PrsState {
   reviewRequested: PrSummary[];
   loadingLists: boolean;
   listError: unknown | null;
+  /** Ids of PRs merged this session. GitHub's eventually-consistent search
+   *  (and the backend list cache) can keep returning a just-merged PR as open
+   *  for a few seconds, so we hide these from the lists until it stops
+   *  returning them. Self-prunes in refreshLists. */
+  recentlyMerged: Set<number>;
 
   currentPr: PrDetail | null;
   diff: FileDiff[];
@@ -24,7 +29,12 @@ interface PrsState {
   /** Paths viewed for the current PR. Populated by openPr; mutated by setViewed. */
   viewedFiles: Set<string>;
 
-  refreshLists: () => Promise<void>;
+  /** Reload both PR lists. Pass `force` (manual refresh) to bypass the backend
+   *  list cache so the user always gets fresh data. */
+  refreshLists: (force?: boolean) => Promise<void>;
+  /** Mark a PR merged: drop it from the lists now and keep it hidden until
+   *  GitHub stops returning it as open. */
+  markMerged: (id: number) => void;
   openPr: (owner: string, repo: string, number: number) => Promise<void>;
   refreshCurrentPr: () => Promise<void>;
   closePr: () => void;
@@ -41,6 +51,7 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   // while the first refreshLists() roundtrip resolves.
   loadingLists: true,
   listError: null,
+  recentlyMerged: new Set(),
 
   currentPr: null,
   diff: [],
@@ -52,14 +63,24 @@ export const usePrsStore = create<PrsState>((set, get) => ({
   prError: null,
   viewedFiles: new Set(),
 
-  refreshLists: async () => {
+  refreshLists: async (force = false) => {
     set({ loadingLists: true, listError: null });
     try {
-      const [mine, rr] = await Promise.all([
-        api.listPrs("mine"),
-        api.listPrs("review_requested"),
+      const [mineRaw, rrRaw] = await Promise.all([
+        api.listPrs("mine", force),
+        api.listPrs("review_requested", force),
       ]);
-      set({ mine, reviewRequested: rr });
+      // Filter out PRs merged this session that the search/list cache may still
+      // return as open. Prune ids GitHub no longer returns (it caught up).
+      const merged = get().recentlyMerged;
+      let mine = mineRaw, reviewRequested = rrRaw, pruned = merged;
+      if (merged.size > 0) {
+        const present = new Set<number>([...mineRaw, ...rrRaw].map(p => p.id));
+        pruned = new Set([...merged].filter(id => present.has(id)));
+        mine = mineRaw.filter(p => !pruned.has(p.id));
+        reviewRequested = rrRaw.filter(p => !pruned.has(p.id));
+      }
+      set({ mine, reviewRequested, recentlyMerged: pruned });
     } catch (e) {
       set({ listError: e });
       if (isAppError(e) && e.kind === "Auth") useUiStore.getState().setAuthBanner(true);
@@ -68,6 +89,12 @@ export const usePrsStore = create<PrsState>((set, get) => ({
       set({ loadingLists: false });
     }
   },
+
+  markMerged: (id) => set(s => ({
+    recentlyMerged: new Set(s.recentlyMerged).add(id),
+    mine: s.mine.filter(p => p.id !== id),
+    reviewRequested: s.reviewRequested.filter(p => p.id !== id),
+  })),
 
   openPr: async (owner, repo, number) => {
     set({

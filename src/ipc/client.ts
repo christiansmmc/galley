@@ -5,8 +5,8 @@ import type {
 } from "./types";
 
 export const api = {
-  listPrs: (filter: "mine" | "review_requested") =>
-    invoke<PrSummary[]>("list_prs", { filter }),
+  listPrs: (filter: "mine" | "review_requested", force = false) =>
+    invoke<PrSummary[]>("list_prs", { filter, force }),
   getPr: (owner: string, repo: string, number: number) =>
     invoke<PrDetail>("get_pr", { owner, repo, number }),
   getPrDiff: (owner: string, repo: string, number: number) =>

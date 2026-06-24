@@ -20,8 +20,12 @@ const METHOD_KEY: Record<MergeMethod, string> = {
 export function MergePanel({ open, onClose }: Props) {
   const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
-  const refreshCurrentPr = usePrsStore(s => s.refreshCurrentPr);
+  const closePr = usePrsStore(s => s.closePr);
+  const refreshLists = usePrsStore(s => s.refreshLists);
+  const markMerged = usePrsStore(s => s.markMerged);
+  const refreshingPr = usePrsStore(s => s.refreshingPr);
   const pushToast = useUiStore(s => s.pushToast);
+  const ciCountdown = useUiStore(s => s.ciCountdown);
   const [method, setMethod] = useState<MergeMethod>("squash");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -39,9 +43,14 @@ export function MergePanel({ open, onClose }: Props) {
     setBusy(true); setErr(null);
     try {
       await api.mergePr(s.owner, s.repo, s.number, method, currentPr.head_sha);
-      pushToast("info", t("merge.success"));
-      await refreshCurrentPr();
+      pushToast("success", t("merge.success"));
       onClose();
+      // Merge done: drop the PR from the lists now (GitHub's search can still
+      // report it as open for a few seconds), return to the home view, and
+      // refresh to reconcile.
+      markMerged(currentPr.summary.id);
+      closePr();
+      void refreshLists(true);
     } catch (e) {
       setErr(userMessage(e));
     } finally {
@@ -77,7 +86,7 @@ export function MergePanel({ open, onClose }: Props) {
         marginBottom: "var(--space-6)", fontFamily: "var(--font-mono)", fontSize: 11,
       }}>
         <span style={{ color: "var(--c-subtext)" }}>{t("merge.ci_label")}</span>
-        <CiBadge status={s.ci_status} onClick={openChecks} />
+        <CiBadge status={s.ci_status} onClick={openChecks} autoRefresh refreshing={refreshingPr} secondsLeft={ciCountdown} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>

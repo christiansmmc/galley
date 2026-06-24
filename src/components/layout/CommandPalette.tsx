@@ -157,7 +157,7 @@ export function CommandPalette({ open, onClose, onOpenSettings, onOpenSubmit }: 
         hint: t("command_palette.cmd_refresh_hint"),
         icon: <RefreshCw size={14} />,
         match: "atualizar lista prs refresh update",
-        run: () => { refreshLists(); onClose(); },
+        run: () => { refreshLists(true); onClose(); },
       });
       out.push({
         id: "cmd:settings",

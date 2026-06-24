@@ -4,6 +4,7 @@ import { api } from "../../ipc/client";
 import { userMessage } from "../../ipc/errors";
 import { useDraftsStore } from "../../state/draftsStore";
 import { usePrsStore } from "../../state/prsStore";
+import { useUiStore } from "../../state/uiStore";
 import type { ReviewEvent } from "../../ipc/types";
 import { useT } from "../../i18n";
 
@@ -13,6 +14,7 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
   const t = useT();
   const { drafts, clear } = useDraftsStore();
   const { currentPr, refreshThreads } = usePrsStore();
+  const pushToast = useUiStore(s => s.pushToast);
   const [event, setEvent] = useState<ReviewEvent>("COMMENT");
   const [body, setBody] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export function ReviewSubmitPanel({ open, onClose }: Props) {
         event, body || null, currentPr.summary.id, drafts.map(d => d.id),
       );
       clear();
+      pushToast("success", t("review_submit.success"));
       await refreshThreads();
       onClose();
     } catch (e) {

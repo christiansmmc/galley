@@ -107,6 +107,8 @@
     "ci_pending": "CI rodando",
     "ci_failing": "CI falhou",
     "ci_none": "Sem checks",
+    "ci_auto": "auto {{seconds}}s",
+    "ci_updating": "atualizando…",
     "draft": "Draft"
   },
   "comment": {
@@ -294,7 +296,8 @@
     "event_request_changes": "Pedir mudanças",
     "body_placeholder": "Resumo (opcional)",
     "drafts_count_one": "{{count}} rascunho inline.",
-    "drafts_count_other": "{{count}} rascunhos inline."
+    "drafts_count_other": "{{count}} rascunhos inline.",
+    "success": "Review enviado."
   },
   "merge": {
     "title": "Fazer merge do pull request",
