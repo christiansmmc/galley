@@ -294,7 +294,8 @@
     "event_request_changes": "Pedir mudanças",
     "body_placeholder": "Resumo (opcional)",
     "drafts_count_one": "{{count}} rascunho inline.",
-    "drafts_count_other": "{{count}} rascunhos inline."
+    "drafts_count_other": "{{count}} rascunhos inline.",
+    "success": "Review enviado."
   },
   "merge": {
     "title": "Fazer merge do pull request",

@@ -20,7 +20,8 @@ const METHOD_KEY: Record<MergeMethod, string> = {
 export function MergePanel({ open, onClose }: Props) {
   const t = useT();
   const currentPr = usePrsStore(s => s.currentPr);
-  const refreshCurrentPr = usePrsStore(s => s.refreshCurrentPr);
+  const closePr = usePrsStore(s => s.closePr);
+  const refreshLists = usePrsStore(s => s.refreshLists);
   const pushToast = useUiStore(s => s.pushToast);
   const [method, setMethod] = useState<MergeMethod>("squash");
   const [err, setErr] = useState<string | null>(null);
@@ -39,9 +40,12 @@ export function MergePanel({ open, onClose }: Props) {
     setBusy(true); setErr(null);
     try {
       await api.mergePr(s.owner, s.repo, s.number, method, currentPr.head_sha);
-      pushToast("info", t("merge.success"));
-      await refreshCurrentPr();
+      pushToast("success", t("merge.success"));
       onClose();
+      // Merge done: return to the home view (PR list) and refresh it so the
+      // merged PR drops off the list.
+      closePr();
+      void refreshLists();
     } catch (e) {
       setErr(userMessage(e));
     } finally {

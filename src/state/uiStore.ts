@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { useSettingsStore } from "./settingsStore";
 
-interface Toast { id: number; kind: "info" | "error"; message: string; }
+interface Toast { id: number; kind: "info" | "error" | "success"; message: string; }
 interface UiState {
   authBanner: boolean;
   toasts: Toast[];

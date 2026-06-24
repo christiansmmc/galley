@@ -308,3 +308,9 @@ select.prr-input option {
   100% { transform: translateX(400%); }
 }
 
+/* Toast entry: slide up + fade in. Used by ToastStack. */
+@keyframes prr-toast-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+

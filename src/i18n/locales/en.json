@@ -294,7 +294,8 @@
     "event_request_changes": "Request changes",
     "body_placeholder": "Summary (optional)",
     "drafts_count_one": "{{count}} inline draft.",
-    "drafts_count_other": "{{count}} inline drafts."
+    "drafts_count_other": "{{count}} inline drafts.",
+    "success": "Review submitted."
   },
   "merge": {
     "title": "Merge pull request",
