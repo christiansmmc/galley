@@ -22,6 +22,7 @@ export function MergePanel({ open, onClose }: Props) {
   const currentPr = usePrsStore(s => s.currentPr);
   const closePr = usePrsStore(s => s.closePr);
   const refreshLists = usePrsStore(s => s.refreshLists);
+  const markMerged = usePrsStore(s => s.markMerged);
   const refreshingPr = usePrsStore(s => s.refreshingPr);
   const pushToast = useUiStore(s => s.pushToast);
   const ciCountdown = useUiStore(s => s.ciCountdown);
@@ -44,10 +45,12 @@ export function MergePanel({ open, onClose }: Props) {
       await api.mergePr(s.owner, s.repo, s.number, method, currentPr.head_sha);
       pushToast("success", t("merge.success"));
       onClose();
-      // Merge done: return to the home view (PR list) and refresh it so the
-      // merged PR drops off the list.
+      // Merge done: drop the PR from the lists now (GitHub's search can still
+      // report it as open for a few seconds), return to the home view, and
+      // refresh to reconcile.
+      markMerged(currentPr.summary.id);
       closePr();
-      void refreshLists();
+      void refreshLists(true);
     } catch (e) {
       setErr(userMessage(e));
     } finally {

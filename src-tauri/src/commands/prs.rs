@@ -19,7 +19,11 @@ fn list_cache_key(filter: &str, repos: &[(String, String)]) -> String {
 }
 
 #[tauri::command]
-pub async fn list_prs(filter: String, state: State<'_, AppState>) -> AppResult<Vec<PrSummary>> {
+pub async fn list_prs(
+    filter: String,
+    force: bool,
+    state: State<'_, AppState>,
+) -> AppResult<Vec<PrSummary>> {
     let f = match filter.as_str() {
         "mine" => PrFilter::Mine,
         "review_requested" => PrFilter::ReviewRequested,
@@ -31,13 +35,17 @@ pub async fn list_prs(filter: String, state: State<'_, AppState>) -> AppResult<V
     };
     let key = list_cache_key(&filter, &repos);
 
-    if let Some(payload) = ttl::get_fresh_list(&state.cache, &key, ttl::LIST_TTL_SECS)? {
-        if let Ok(cached) = serde_json::from_str::<Vec<PrSummary>>(&payload) {
-            tracing::debug!(target: "pr_reviewer::cache", key = %key, "cache hit (list_prs)");
-            return Ok(cached);
+    // `force` (manual refresh) bypasses the cache read so the user always gets
+    // fresh data; the fresh result is still written back below.
+    if !force {
+        if let Some(payload) = ttl::get_fresh_list(&state.cache, &key, ttl::LIST_TTL_SECS)? {
+            if let Ok(cached) = serde_json::from_str::<Vec<PrSummary>>(&payload) {
+                tracing::debug!(target: "pr_reviewer::cache", key = %key, "cache hit (list_prs)");
+                return Ok(cached);
+            }
         }
     }
-    tracing::debug!(target: "pr_reviewer::cache", key = %key, "cache miss (list_prs)");
+    tracing::debug!(target: "pr_reviewer::cache", key = %key, force, "cache miss (list_prs)");
 
     let c = client(&state).await?;
     let fresh = c.list_prs(f, &repos).await?;
