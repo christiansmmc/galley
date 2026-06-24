@@ -59,7 +59,7 @@ export function PrMetaStrip({ pr }: Props) {
             </MetaItem>
             <Sep />
             <MetaItem>
-              <CiBadge status={s.ci_status} />
+              <CiBadge status={s.ci_status} autoRefresh refreshing={refreshingPr} />
             </MetaItem>
             <Sep />
             <MetaItem>

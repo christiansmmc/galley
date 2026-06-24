@@ -107,6 +107,8 @@
     "ci_pending": "CI running",
     "ci_failing": "CI failing",
     "ci_none": "No checks",
+    "ci_auto": "auto 15s",
+    "ci_updating": "updating…",
     "draft": "Draft"
   },
   "comment": {

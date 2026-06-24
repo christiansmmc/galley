@@ -19,9 +19,13 @@ interface Props {
   status: CiStatus;
   /** When provided, the badge renders as a button (e.g. open CI in browser). */
   onClick?: () => void;
+  /** Show the auto-refresh hint next to the label while CI is pending. */
+  autoRefresh?: boolean;
+  /** When true, the hint reads "updating…" (a refresh is in flight). */
+  refreshing?: boolean;
 }
 
-export function CiBadge({ status, onClick }: Props) {
+export function CiBadge({ status, onClick, autoRefresh, refreshing }: Props) {
   const t = useT();
   const dot = (
     <span style={{
@@ -39,24 +43,40 @@ export function CiBadge({ status, onClick }: Props) {
     </span>
   );
 
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        title={t(CI_LABEL_KEY[status])}
-        style={{
-          display: "inline-flex", alignItems: "center",
-          background: "none", border: 0, padding: 0,
-          cursor: "pointer",
-          fontFamily: "var(--font-mono)", fontSize: 11,
-          textDecoration: "underline", textUnderlineOffset: 2,
-        }}
-      >
-        {dot}{label}
-      </button>
-    );
-  }
+  const badge = onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      title={t(CI_LABEL_KEY[status])}
+      style={{
+        display: "inline-flex", alignItems: "center",
+        background: "none", border: 0, padding: 0,
+        cursor: "pointer",
+        fontFamily: "var(--font-mono)", fontSize: 11,
+        textDecoration: "underline", textUnderlineOffset: 2,
+      }}
+    >
+      {dot}{label}
+    </button>
+  ) : (
+    <span title={t(CI_LABEL_KEY[status])}>{dot}{label}</span>
+  );
 
-  return <span title={t(CI_LABEL_KEY[status])}>{dot}{label}</span>;
+  // Auto-refresh hint: only while CI is still pending and polling is enabled.
+  const showHint = autoRefresh && status === "pending";
+  if (!showHint) return badge;
+
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center" }}>
+      {badge}
+      <span style={{
+        marginLeft: "var(--space-2)",
+        fontFamily: "var(--font-mono)",
+        fontSize: 10,
+        color: refreshing ? "var(--c-subtext)" : "var(--c-overlay)",
+      }}>
+        {refreshing ? t("pr_meta.ci_updating") : t("pr_meta.ci_auto")}
+      </span>
+    </span>
+  );
 }

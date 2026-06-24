@@ -19,6 +19,7 @@ import { usePrsStore } from "./state/prsStore";
 import { useDraftsStore } from "./state/draftsStore";
 import { useUiStore } from "./state/uiStore";
 import { UiGallery } from "./components/ui/UiGallery";
+import { useCiAutoRefresh } from "./hooks/useCiAutoRefresh";
 import { useT } from "./i18n";
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useGlobalShortcuts({ onOpenPalette: () => setPaletteOpen(true) });
+  useCiAutoRefresh();
 
   const density = useSettingsStore(s => s.settings?.ui.density ?? "comfortable");
   const accent = useSettingsStore(s => s.settings?.ui.accent_color ?? "sage");

@@ -107,6 +107,8 @@
     "ci_pending": "CI rodando",
     "ci_failing": "CI falhou",
     "ci_none": "Sem checks",
+    "ci_auto": "auto 15s",
+    "ci_updating": "atualizando…",
     "draft": "Draft"
   },
   "comment": {
