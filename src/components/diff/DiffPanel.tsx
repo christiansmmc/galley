@@ -493,6 +493,10 @@ export function DiffPanel() {
 
   const isViewed = viewedFiles.has(file.path);
   const { head, leaf } = splitPath(file.path);
+  // Revision token for the Monaco model URIs. Changing it when the PR head/base
+  // moves (a new commit was pushed) forces fresh models so the diff reflects the
+  // update instead of reusing the stale cached model. See diffModelPath.
+  const diffRev = `${currentPr?.base_sha ?? "_"}.${currentPr?.head_sha ?? "_"}`;
 
   const copyPath = () => {
     if (!navigator.clipboard) return;
@@ -585,12 +589,12 @@ export function DiffPanel() {
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
-          key={`${currentPr?.summary.id ?? "_"}-${file.path}-${wholeFile ? "full" : "patch"}`}
+          key={`${currentPr?.summary.id ?? "_"}-${file.path}-${wholeFile ? "full" : "patch"}-${diffRev}`}
           original={original}
           modified={modified}
           language={languageFor(file.path)}
-          originalModelPath={diffModelPath(currentPr?.summary.id ?? "_", "orig", file.path, wholeFile ? "full" : "patch")}
-          modifiedModelPath={diffModelPath(currentPr?.summary.id ?? "_", "mod", file.path, wholeFile ? "full" : "patch")}
+          originalModelPath={diffModelPath(currentPr?.summary.id ?? "_", "orig", file.path, wholeFile ? "full" : "patch", diffRev)}
+          modifiedModelPath={diffModelPath(currentPr?.summary.id ?? "_", "mod", file.path, wholeFile ? "full" : "patch", diffRev)}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
           theme={resolved === "linen" ? "workshop-linen" : "workshop-paper"}
