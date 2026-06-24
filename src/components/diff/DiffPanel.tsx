@@ -113,7 +113,30 @@ export function DiffPanel() {
   const [blobs, setBlobs] = useState<{ base: string; head: string } | null>(null);
   const [loadingBlobs, setLoadingBlobs] = useState(false);
 
+  // Revision token for the Monaco model URIs. Changing it when the PR head/base
+  // moves (a new commit was pushed) forces fresh models so the diff reflects the
+  // update instead of reusing the stale cached model. See diffModelPath.
+  const diffRev = `${currentPr?.base_sha ?? "_"}.${currentPr?.head_sha ?? "_"}`;
+
   const patchParsed = useMemo(() => parseDiff(file?.patch ?? null), [file?.patch]);
+
+  // keepCurrentModel keeps Monaco models alive across remounts, so a new commit
+  // (new diffRev) would otherwise leak one model per pushed commit. When the
+  // revision changes, dispose this PR's models from older revisions; current-rev
+  // models (all files at this commit, both patch/full modes) are kept so their
+  // view state survives.
+  useEffect(() => {
+    const monaco = (window as unknown as { monaco?: typeof import("monaco-editor") }).monaco;
+    if (!monaco || !currentPr) return;
+    const prefix = `inmemory://pr/${currentPr.summary.id}/`;
+    const revSuffix = `/${diffRev}`;
+    for (const model of monaco.editor.getModels()) {
+      const uri = model.uri.toString();
+      if (uri.startsWith(prefix) && !uri.endsWith(revSuffix)) {
+        model.dispose();
+      }
+    }
+  }, [currentPr, diffRev]);
 
   // Whole-file is opt-in per file and resets when the open file changes.
   useEffect(() => {
@@ -493,10 +516,6 @@ export function DiffPanel() {
 
   const isViewed = viewedFiles.has(file.path);
   const { head, leaf } = splitPath(file.path);
-  // Revision token for the Monaco model URIs. Changing it when the PR head/base
-  // moves (a new commit was pushed) forces fresh models so the diff reflects the
-  // update instead of reusing the stale cached model. See diffModelPath.
-  const diffRev = `${currentPr?.base_sha ?? "_"}.${currentPr?.head_sha ?? "_"}`;
 
   const copyPath = () => {
     if (!navigator.clipboard) return;
