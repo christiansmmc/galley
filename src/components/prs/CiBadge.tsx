@@ -1,5 +1,6 @@
 import type { CiStatus } from "../../ipc/types";
 import { useT } from "../../i18n";
+import { CI_POLL_SECONDS } from "../../hooks/useCiAutoRefresh";
 
 export const CI_LABEL_KEY: Record<CiStatus, string> = {
   passing: "pr_meta.ci_passing",
@@ -23,9 +24,11 @@ interface Props {
   autoRefresh?: boolean;
   /** When true, the hint reads "updating…" (a refresh is in flight). */
   refreshing?: boolean;
+  /** Seconds until the next auto-refresh, shown as a live countdown. */
+  secondsLeft?: number | null;
 }
 
-export function CiBadge({ status, onClick, autoRefresh, refreshing }: Props) {
+export function CiBadge({ status, onClick, autoRefresh, refreshing, secondsLeft }: Props) {
   const t = useT();
   const dot = (
     <span style={{
@@ -75,7 +78,9 @@ export function CiBadge({ status, onClick, autoRefresh, refreshing }: Props) {
         fontSize: 10,
         color: refreshing ? "var(--c-subtext)" : "var(--c-overlay)",
       }}>
-        {refreshing ? t("pr_meta.ci_updating") : t("pr_meta.ci_auto")}
+        {refreshing
+          ? t("pr_meta.ci_updating")
+          : t("pr_meta.ci_auto", { seconds: secondsLeft ?? CI_POLL_SECONDS })}
       </span>
     </span>
   );

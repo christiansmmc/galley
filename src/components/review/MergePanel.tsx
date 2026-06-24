@@ -24,6 +24,7 @@ export function MergePanel({ open, onClose }: Props) {
   const refreshLists = usePrsStore(s => s.refreshLists);
   const refreshingPr = usePrsStore(s => s.refreshingPr);
   const pushToast = useUiStore(s => s.pushToast);
+  const ciCountdown = useUiStore(s => s.ciCountdown);
   const [method, setMethod] = useState<MergeMethod>("squash");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -82,7 +83,7 @@ export function MergePanel({ open, onClose }: Props) {
         marginBottom: "var(--space-6)", fontFamily: "var(--font-mono)", fontSize: 11,
       }}>
         <span style={{ color: "var(--c-subtext)" }}>{t("merge.ci_label")}</span>
-        <CiBadge status={s.ci_status} onClick={openChecks} autoRefresh refreshing={refreshingPr} />
+        <CiBadge status={s.ci_status} onClick={openChecks} autoRefresh refreshing={refreshingPr} secondsLeft={ciCountdown} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>

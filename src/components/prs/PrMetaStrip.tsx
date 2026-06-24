@@ -6,6 +6,7 @@ import { useT } from "../../i18n";
 import { RefreshCw } from "lucide-react";
 import { Button, Spinner } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
+import { useUiStore } from "../../state/uiStore";
 import { CiBadge } from "./CiBadge";
 
 interface Props { pr: PrDetail; }
@@ -14,6 +15,7 @@ export function PrMetaStrip({ pr }: Props) {
   const t = useT();
   const refreshCurrentPr = usePrsStore(s => s.refreshCurrentPr);
   const refreshingPr = usePrsStore(s => s.refreshingPr);
+  const ciCountdown = useUiStore(s => s.ciCountdown);
   const [bodyOpen, setBodyOpen] = useState(false);
   const s = pr.summary;
   const age = formatAge(s.updated_at);
@@ -59,7 +61,7 @@ export function PrMetaStrip({ pr }: Props) {
             </MetaItem>
             <Sep />
             <MetaItem>
-              <CiBadge status={s.ci_status} autoRefresh refreshing={refreshingPr} />
+              <CiBadge status={s.ci_status} autoRefresh refreshing={refreshingPr} secondsLeft={ciCountdown} />
             </MetaItem>
             <Sep />
             <MetaItem>
