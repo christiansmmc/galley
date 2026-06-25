@@ -5,7 +5,7 @@
 <h1 align="center">Galley</h1>
 
 <p align="center">
-  A Linux desktop GitHub PR reviewer.
+  A desktop GitHub PR reviewer.
 </p>
 
 ---
