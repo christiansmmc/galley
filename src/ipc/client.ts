@@ -1,18 +1,26 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-  CommentDraft, FileDiff, MergeMethod, MergeResult, PathFilter, PrDetail, PrSummary, RemoteRepo,
-  RepoBrowseFilters, RepoConfig, RepoPrCount, ReviewEvent, ReviewResult, ReviewThread, Settings,
+  CiStatus, CommentDraft, FileDiff, MergeMethod, MergeResult, PathFilter, PrDetail, PrSummary,
+  RemoteRepo, RepoBrowseFilters, RepoConfig, RepoPrCount, ReviewEvent, ReviewResult, ReviewThread,
+  Settings,
 } from "./types";
 
 export const api = {
   listPrs: (filter: "mine" | "review_requested", force = false) =>
     invoke<PrSummary[]>("list_prs", { filter, force }),
-  getPr: (owner: string, repo: string, number: number) =>
-    invoke<PrDetail>("get_pr", { owner, repo, number }),
-  getPrDiff: (owner: string, repo: string, number: number) =>
-    invoke<FileDiff[]>("get_pr_diff", { owner, repo, number }),
-  getPrThreads: (owner: string, repo: string, number: number) =>
-    invoke<ReviewThread[]>("get_pr_threads", { owner, repo, number }),
+  // `force` on the three PR reads below mirrors list_prs: skip the cache read,
+  // still write the fresh result back. Prefer it over refreshPr when several
+  // of these run concurrently — refresh_pr *deletes* cache rows first, which
+  // races with a concurrent read writing its fresh row.
+  getPr: (owner: string, repo: string, number: number, force = false) =>
+    invoke<PrDetail>("get_pr", { owner, repo, number, force }),
+  getPrDiff: (owner: string, repo: string, number: number, force = false) =>
+    invoke<FileDiff[]>("get_pr_diff", { owner, repo, number, force }),
+  getPrThreads: (owner: string, repo: string, number: number, force = false) =>
+    invoke<ReviewThread[]>("get_pr_threads", { owner, repo, number, force }),
+  /** Cheap CI-only read for the auto-refresh poll — no diff/threads round-trip. */
+  getCiStatus: (owner: string, repo: string, sha: string) =>
+    invoke<CiStatus>("get_ci_status", { owner, repo, sha }),
   getFileContent: (owner: string, repo: string, path: string, ref: string) =>
     invoke<string | null>("get_file_content", { owner, repo, path, gitRef: ref }),
   refreshPr: (owner: string, repo: string, number: number) =>

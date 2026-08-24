@@ -14,6 +14,42 @@ const RAIL_WIDTH = 28;
 const LIST_WIDTH = 300;
 const TREE_WIDTH = 280;
 
+/**
+ * One collapsible side column. Both the expanded panel and the narrow rail
+ * stay mounted; only their visibility flips.
+ *
+ * Rendering `collapsed ? rail : panel` instead would unmount the panel on
+ * every collapse — and these panels do work on mount (PrListPanel kicks off a
+ * list load, FileTreePanel re-reads its path filters), so a collapse/expand
+ * round trip paid for it every time. `display: contents` on the visible
+ * wrapper means it generates no box at all, so the child is laid out exactly
+ * as if it were a direct child of the column — the width transition and the
+ * rail/panel look are unchanged.
+ */
+function SideColumn({ width, collapsed, rail, panel }: {
+  width: number;
+  collapsed: boolean;
+  rail: React.ReactNode;
+  panel: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        width,
+        flexShrink: 0,
+        height: "100%",
+        background: "var(--c-base)",
+        borderRight: "1px solid var(--c-line)",
+        overflow: "hidden",
+        transition: "width 220ms ease",
+      }}
+    >
+      <div style={{ display: collapsed ? "contents" : "none" }}>{rail}</div>
+      <div style={{ display: collapsed ? "none" : "contents" }}>{panel}</div>
+    </div>
+  );
+}
+
 export function Layout({ prList, fileTree, diff }: Props) {
   const prListCollapsed = useUiStore(s => s.prListCollapsed);
   const fileTreeCollapsed = useUiStore(s => s.fileTreeCollapsed);
@@ -35,45 +71,20 @@ export function Layout({ prList, fileTree, diff }: Props) {
     );
   }
 
-  const listWidth = prListCollapsed ? RAIL_WIDTH : LIST_WIDTH;
-  const treeWidth = fileTreeCollapsed ? RAIL_WIDTH : TREE_WIDTH;
-
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <div
-        style={{
-          width: listWidth,
-          flexShrink: 0,
-          height: "100%",
-          background: "var(--c-base)",
-          borderRight: "1px solid var(--c-line)",
-          overflow: "hidden",
-          transition: "width 220ms ease",
-        }}
-      >
-        {prListCollapsed ? (
-          <PrListRail onExpand={() => setPrListCollapsed(false)} />
-        ) : (
-          prList
-        )}
-      </div>
-      <div
-        style={{
-          width: treeWidth,
-          flexShrink: 0,
-          height: "100%",
-          background: "var(--c-base)",
-          borderRight: "1px solid var(--c-line)",
-          overflow: "hidden",
-          transition: "width 220ms ease",
-        }}
-      >
-        {fileTreeCollapsed ? (
-          <FileTreeRail onExpand={() => setFileTreeCollapsed(false)} />
-        ) : (
-          fileTree
-        )}
-      </div>
+      <SideColumn
+        width={prListCollapsed ? RAIL_WIDTH : LIST_WIDTH}
+        collapsed={prListCollapsed}
+        rail={<PrListRail onExpand={() => setPrListCollapsed(false)} />}
+        panel={prList}
+      />
+      <SideColumn
+        width={fileTreeCollapsed ? RAIL_WIDTH : TREE_WIDTH}
+        collapsed={fileTreeCollapsed}
+        rail={<FileTreeRail onExpand={() => setFileTreeCollapsed(false)} />}
+        panel={fileTree}
+      />
       <div style={{ flex: 1, minWidth: 0, height: "100%", background: "var(--c-base)" }}>{diff}</div>
     </div>
   );
