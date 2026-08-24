@@ -1,5 +1,27 @@
 @import "./tokens.css";
 
+/* Self-hosted webfonts. Nothing here may reference a remote host: this is a
+   desktop app, so a font fetch is a startup stall online and a missing glyph
+   set offline.
+
+   Inter and JetBrains Mono are the latin-subset *variable* files Google Fonts
+   serves (one file covers the whole weight axis, so 400/500/600 all come from
+   a single request instead of three). Source Serif is still two static italic
+   cuts because only those two are used. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-variable-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("../assets/fonts/jetbrains-mono-variable-latin.woff2") format("woff2");
+}
 @font-face {
   font-family: "Source Serif 4";
   font-style: italic;
