@@ -1,5 +1,5 @@
 import { DiffEditor } from "@monaco-editor/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { editor } from "monaco-editor";
 import { usePrsStore } from "../../state/prsStore";
 import { useDraftsStore } from "../../state/draftsStore";
@@ -32,6 +32,23 @@ function languageFor(path: string): string {
   };
   return map[ext ?? ""] ?? "plaintext";
 }
+
+/**
+ * Placeholder model URIs the DiffEditor is constructed with before the real
+ * pair is attached (see "Model ownership" in DiffPanel). Two things matter
+ * here:
+ *   - they are constant, so @monaco-editor/react's model-path effects never
+ *     fire and never contend with us for the models;
+ *   - they sit *outside* the `inmemory://pr/<id>/…` namespace that the
+ *     revision-cleanup effect sweeps. A sweep that disposed a model while it
+ *     was still attached would trip monaco's "TextModel got disposed before
+ *     DiffEditorWidget model got reset" path, which resets the widget to a null
+ *     model and would strand the panel.
+ * The cost is two empty models for the lifetime of the process, shared by
+ * every editor instance.
+ */
+const BOOT_ORIGINAL_PATH = "inmemory://galley/boot/original";
+const BOOT_MODIFIED_PATH = "inmemory://galley/boot/modified";
 
 /**
  * A pending (uncommitted) inline draft. Two coordinate systems are kept
@@ -215,6 +232,88 @@ export function DiffPanel() {
     commentableModified,
   } = parsed;
 
+  // ── Model ownership ───────────────────────────────────────────────────────
+  // The DiffEditor below is keyed by PR id alone, so a single Monaco instance
+  // now serves every file in the PR (see the `key` comment down there). That
+  // makes putting the right models in front of it *our* job — and deliberately
+  // so. We do not hand @monaco-editor/react the `original`/`modified`/
+  // `*ModelPath` props it would normally drive itself, because its update path
+  // is wrong for a *diff* editor. Two independent reasons, both read out of
+  // monaco 0.55 + @monaco-editor/react 4.7:
+  //
+  //   1. Its model-path effects call `setModel()` on the two *inner* code
+  //      editors. But DiffEditorWidget keeps its own DiffEditorViewModel, bound
+  //      to the pair it was handed via `DiffEditorWidget.setModel()`, and
+  //      nothing in the widget listens for inner-editor model changes. The diff
+  //      would go on being computed from the previous file's pair while the
+  //      panes displayed the new one.
+  //   2. Its `original` effect writes the incoming text into
+  //      `diffEditor.getModel().original` — i.e. into the *previous* file's
+  //      model, the one `keepCurrentOriginalModel` keeps cached. Every file
+  //      switch would quietly scramble the cache.
+  //
+  // So the wrapper gets frozen placeholder props and this effect owns the real
+  // models: create-or-reuse by URI, refresh content in place, attach the pair
+  // through the diff editor's own `setModel()`. It is a layout effect so the
+  // swap lands before paint, and so it is guaranteed to run ahead of every
+  // passive effect below that reads the attached model (gutter line numbers,
+  // view zones) — React always flushes layout effects first.
+  useLayoutEffect(() => {
+    if (!diffEd || !file) return;
+    const monaco = (window as unknown as { monaco?: typeof import("monaco-editor") }).monaco;
+    if (!monaco) return;
+
+    // Liveness probe. A keyed remount (PR switch, or the panel dropping back to
+    // its empty state and returning) disposes the editor, but `diffEd` keeps
+    // pointing at the dead instance until the replacement's `onMount` lands —
+    // and monaco's standalone diff editor never fires `onDidDispose`, so there
+    // is no event to clear it on. A disposed CodeEditorWidget detaches its
+    // model, and a live one here always has one attached (the boot pair from
+    // mount, or a real pair from this effect), so "no model" means "disposed".
+    // Reading it is safe on a dead widget; calling setModel() on one is not —
+    // it builds a view model through an already-disposed instantiation service.
+    if (!diffEd.getModifiedEditor().getModel()) return;
+
+    const prId = currentPr?.summary.id ?? "_";
+    const mode = wholeFile ? "full" : "patch";
+    const language = languageFor(file.path);
+
+    const modelFor = (side: "orig" | "mod", value: string) => {
+      const uri = monaco.Uri.parse(diffModelPath(prId, side, file.path, mode, diffRev));
+      const cached = monaco.editor.getModel(uri);
+      if (!cached) return monaco.editor.createModel(value, language, uri);
+      // Same URI, different text: whole-file mode flips `mode` to "full"
+      // immediately, but the base/head blobs only land a fetch later — so the
+      // first pass under that URI still carries the patch text.
+      if (cached.getValue() !== value) cached.setValue(value);
+      return cached;
+    };
+
+    const originalModel = modelFor("orig", original);
+    const modifiedModel = modelFor("mod", modified);
+
+    // Re-attach only when the pair actually changes. A pure content refresh
+    // (above) must NOT go through setModel: monaco throws the editor's view
+    // away on every setModel, and every view zone with it.
+    const attached = diffEd.getModel();
+    if (attached?.original === originalModel && attached?.modified === modifiedModel) return;
+    diffEd.setModel({ original: originalModel, modified: modifiedModel });
+  }, [diffEd, currentPr, file, wholeFile, diffRev, original, modified]);
+
+  // Namespace for view-zone keys. Rotates in lockstep with the model pair
+  // above — it is derived from exactly the same inputs as the model URIs — and
+  // only with it.
+  //
+  // useDiffViewZones tears its whole zone set down when the *editor instance*
+  // changes, which used to happen on every file click. It no longer does, and
+  // `setModel` silently destroys the modified editor's view together with every
+  // zone mounted in it. Rotating the namespace is how the hook finds out: after
+  // a swap no incoming key matches a mounted one, so it treats all previous
+  // zones as removed (its `removeZone` calls land harmlessly on the discarded
+  // view, and the React roots are unmounted as usual) and re-adds the current
+  // file's zones to the fresh view.
+  const zoneNs = `${currentPr?.summary.id ?? "_"}|${file?.path ?? "_"}|${wholeFile ? "full" : "patch"}|${diffRev}`;
+
   // Replace Monaco's gutter numbers (1, 2, 3... editor lines) with real file
   // lines from the patch hunks. Empty for hunk-separator rows. Two side maps
   // → two updateOptions calls.
@@ -290,7 +389,7 @@ export function DiffPanel() {
       const replyLines = t.resolved ? 0 : 4;
       const heightInLines = Math.max(5, 1 + commentLines + replyLines + 2);
       specs.push({
-        key: `thread:${t.id}`,
+        key: `${zoneNs}|thread:${t.id}`,
         side: "RIGHT",
         afterLineNumber: editorLine,
         heightInLines,
@@ -309,7 +408,7 @@ export function DiffPanel() {
       const lineCount = Math.max(1, Math.min(d.body.split("\n").length, 6));
       const heightInLines = Math.max(5, 1 + lineCount + 1 + 2);
       specs.push({
-        key: `draft:${d.id}`,
+        key: `${zoneNs}|draft:${d.id}`,
         side: "RIGHT",
         afterLineNumber: editorLine,
         heightInLines,
@@ -322,8 +421,10 @@ export function DiffPanel() {
         // Constant key — see fix #4. Even if the user retargets the pending
         // draft (e.g. by re-clicking a different line), the shape-diff in
         // useDiffViewZones will remove+re-add only when afterLineNumber/side/
-        // heightInLines change, never on a body keystroke.
-        key: "pending:current",
+        // heightInLines change, never on a body keystroke. (The zoneNs prefix
+        // does not change on a keystroke either — it only tracks the attached
+        // model pair.)
+        key: `${zoneNs}|pending:current`,
         side: pending.anchor.side,
         afterLineNumber: pending.anchor.editorLine,
         heightInLines: 7,
@@ -353,9 +454,30 @@ export function DiffPanel() {
     }
 
     return specs;
-  }, [fileThreads, fileDrafts, pending, currentPr, addDraft, file?.path, modifiedFileToEditor]);
+  }, [fileThreads, fileDrafts, pending, currentPr, addDraft, file?.path, modifiedFileToEditor, zoneNs]);
 
   useDiffViewZones(diffEd, zoneSpecs);
+
+  // Monaco options object, memoised on the values that actually appear in it.
+  //
+  // @monaco-editor/react fires `updateOptions` on every change of the
+  // `options` prop *by identity*. Built inline in JSX it was a fresh object on
+  // every render — so every keystroke in an inline comment box (each one
+  // re-renders DiffPanel through the drafts store) pushed a full option
+  // re-validation into Monaco. Nothing here depends on the open file, so the
+  // identity only needs to move when the render mode or the font changes.
+  const editorOptions = useMemo(() => ({
+    renderSideBySide,
+    readOnly: true,
+    originalEditable: false,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fontFamily: diffFont?.family
+      ? `${diffFont.family}, "JetBrains Mono", "Fira Code", monospace`
+      : "JetBrains Mono, Fira Code, monospace",
+    fontSize: diffFont?.size ?? 13,
+    glyphMargin: true,
+  }), [renderSideBySide, diffFont?.family, diffFont?.size]);
 
   // Monaco theme refresh on theme change.
   useEffect(() => {
@@ -608,12 +730,25 @@ export function DiffPanel() {
       </div>
       <div ref={containerRef} style={{ flex: 1, position: "relative", minHeight: 0 }}>
         <DiffEditor
-          key={`${currentPr?.summary.id ?? "_"}-${file.path}-${wholeFile ? "full" : "patch"}-${diffRev}`}
-          original={original}
-          modified={modified}
-          language={languageFor(file.path)}
-          originalModelPath={diffModelPath(currentPr?.summary.id ?? "_", "orig", file.path, wholeFile ? "full" : "patch", diffRev)}
-          modifiedModelPath={diffModelPath(currentPr?.summary.id ?? "_", "mod", file.path, wholeFile ? "full" : "patch", diffRev)}
+          // Keyed by PR only. The Monaco instance — with its listeners, gutter
+          // decorations and view zones — now survives a file click; the layout
+          // effect above swaps models instead of rebuilding the editor.
+          // `file.path`, `wholeFile` and `diffRev` all used to sit in this key,
+          // but every one of them only ever decided *which model is attached*,
+          // which is exactly what that effect does. Keeping them here paid
+          // Monaco's full construction cost on every single file click.
+          key={currentPr?.summary.id ?? "_"}
+          // Frozen placeholder props — see the model-ownership comment above.
+          // These must not change for the life of the instance:
+          // @monaco-editor/react's update effects fire on precisely these
+          // props, and letting them fire would fight us for the models. They
+          // create the two empty boot models the layout effect replaces before
+          // first paint.
+          original=""
+          modified=""
+          language="plaintext"
+          originalModelPath={BOOT_ORIGINAL_PATH}
+          modifiedModelPath={BOOT_MODIFIED_PATH}
           keepCurrentOriginalModel
           keepCurrentModifiedModel
           theme={resolved === "linen" ? "workshop-linen" : "workshop-paper"}
@@ -621,18 +756,7 @@ export function DiffPanel() {
             monaco.editor.defineTheme("workshop-paper", monacoPaper);
             monaco.editor.defineTheme("workshop-linen", monacoLinen);
           }}
-          options={{
-            renderSideBySide,
-            readOnly: true,
-            originalEditable: false,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            fontFamily: diffFont?.family
-              ? `${diffFont.family}, "JetBrains Mono", "Fira Code", monospace`
-              : "JetBrains Mono, Fira Code, monospace",
-            fontSize: diffFont?.size ?? 13,
-            glyphMargin: true,
-          }}
+          options={editorOptions}
           onMount={(ed) => { setDiffEd(ed); }}
         />
         {rangeSel && !pending && (
