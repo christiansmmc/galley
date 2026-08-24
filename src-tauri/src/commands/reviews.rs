@@ -31,7 +31,7 @@ pub async fn submit_review(
     // expires (5 min). Invalidate just the threads row — diff / PR detail
     // are unchanged.
     let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
-    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id).await;
 
     Ok(result)
 }
@@ -52,7 +52,7 @@ pub async fn reply_to_thread(
 
     // Same reason as submit_review: the new reply isn't in the cache yet.
     let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
-    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id).await;
 
     Ok(())
 }
@@ -71,7 +71,7 @@ pub async fn resolve_thread(
     client.resolve_thread(&thread_node_id).await?;
 
     let synth_id = ttl::synthetic_pr_id(&owner, &repo, number);
-    let _ = ttl::invalidate_threads(&state.cache, synth_id);
+    let _ = ttl::invalidate_threads(&state.cache, synth_id).await;
 
     Ok(())
 }
@@ -92,7 +92,11 @@ pub async fn merge_pr(
 
     // The PR is now merged/closed; drop its cached detail + diff + threads so a
     // refresh shows the new state instead of waiting out the TTL.
-    let _ = ttl::invalidate_pr_by_handle(&state.cache, &owner, &repo, number);
+    let _ = ttl::invalidate_pr_by_handle(&state.cache, &owner, &repo, number).await;
+    // A merged PR is no longer open, so it must drop out of both lists rather
+    // than linger for the rest of the 60 s list TTL. This is the *only* place
+    // that wipes the list cache — see `ttl::invalidate_lists`.
+    let _ = ttl::invalidate_lists(&state.cache).await;
 
     Ok(result)
 }

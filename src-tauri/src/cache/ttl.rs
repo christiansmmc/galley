@@ -9,6 +9,14 @@
 //!
 //! Helpers return `Option<T>` — `None` means "miss, you must fetch upstream."
 //! Writers must invalidate before writing fresh rows (see `invalidate_pr`).
+//!
+//! Every helper here is `async` and goes through [`Cache::with_conn_async`],
+//! i.e. the actual SQLite call runs on the blocking pool. They are all called
+//! from `async` Tauri command handlers, and doing the file I/O inline there
+//! parked a Tokio worker for the duration of the query — including the
+//! whole-file `blobs` writes, which are the largest payloads we store. That's
+//! also why the closures take owned `String`s: `spawn_blocking` needs
+//! `'static`, so borrowed `&str` parameters are copied in at the boundary.
 
 use crate::cache::Cache;
 use crate::error::AppResult;
@@ -34,8 +42,9 @@ fn is_fresh(fetched_at: &str, max_age_secs: i64) -> bool {
 fn now_iso() -> String { Utc::now().to_rfc3339() }
 
 /// Read a payload from the `pr_lists` table if it's still fresh.
-pub fn get_fresh_list(cache: &Cache, key: &str, max_age_secs: i64) -> AppResult<Option<String>> {
-    cache.with_conn(|c| {
+pub async fn get_fresh_list(cache: &Cache, key: &str, max_age_secs: i64) -> AppResult<Option<String>> {
+    let key = key.to_string();
+    cache.with_conn_async(move |c| {
         let row: rusqlite::Result<(String, String)> = c.query_row(
             "SELECT payload_json, fetched_at FROM pr_lists WHERE key = ?1",
             params![key],
@@ -45,24 +54,28 @@ pub fn get_fresh_list(cache: &Cache, key: &str, max_age_secs: i64) -> AppResult<
             Ok((payload, fetched_at)) if is_fresh(&fetched_at, max_age_secs) => Ok(Some(payload)),
             _ => Ok(None),
         }
-    })
+    }).await
 }
 
-pub fn put_list(cache: &Cache, key: &str, payload_json: &str) -> AppResult<()> {
+pub async fn put_list(cache: &Cache, key: &str, payload_json: &str) -> AppResult<()> {
     let now = now_iso();
-    cache.with_conn(|c| {
+    let key = key.to_string();
+    let payload_json = payload_json.to_string();
+    cache.with_conn_async(move |c| {
         c.execute(
             "INSERT INTO pr_lists (key, payload_json, fetched_at) VALUES (?1, ?2, ?3) \
              ON CONFLICT(key) DO UPDATE SET payload_json = excluded.payload_json, fetched_at = excluded.fetched_at",
             params![key, payload_json, now],
         )?;
         Ok(())
-    })
+    }).await
 }
 
 /// Read PR detail row if fresh; returns the cached `payload_json`.
-pub fn get_fresh_pr(cache: &Cache, owner: &str, repo: &str, number: u64, max_age_secs: i64) -> AppResult<Option<String>> {
-    cache.with_conn(|c| {
+pub async fn get_fresh_pr(cache: &Cache, owner: &str, repo: &str, number: u64, max_age_secs: i64) -> AppResult<Option<String>> {
+    let owner = owner.to_string();
+    let repo = repo.to_string();
+    cache.with_conn_async(move |c| {
         let row: rusqlite::Result<(String, String)> = c.query_row(
             "SELECT payload_json, fetched_at FROM prs WHERE owner = ?1 AND repo = ?2 AND number = ?3",
             params![owner, repo, number as i64],
@@ -72,10 +85,10 @@ pub fn get_fresh_pr(cache: &Cache, owner: &str, repo: &str, number: u64, max_age
             Ok((payload, fetched_at)) if !payload.is_empty() && is_fresh(&fetched_at, max_age_secs) => Ok(Some(payload)),
             _ => Ok(None),
         }
-    })
+    }).await
 }
 
-pub fn put_pr(
+pub async fn put_pr(
     cache: &Cache,
     pr_id: i64,
     owner: &str,
@@ -84,7 +97,10 @@ pub fn put_pr(
     payload_json: &str,
 ) -> AppResult<()> {
     let now = now_iso();
-    cache.with_conn(|c| {
+    let owner = owner.to_string();
+    let repo = repo.to_string();
+    let payload_json = payload_json.to_string();
+    cache.with_conn_async(move |c| {
         c.execute(
             "INSERT INTO prs (id, owner, repo, number, payload_json, fetched_at) \
              VALUES (?1, ?2, ?3, ?4, ?5, ?6) \
@@ -93,14 +109,14 @@ pub fn put_pr(
             params![pr_id, owner, repo, number as i64, payload_json, now],
         )?;
         Ok(())
-    })
+    }).await
 }
 
 /// Diff stored as a single JSON blob in the `files` table under a synthetic
 /// path `__bundle__`. We picked this over per-file rows because the diff is
 /// fetched & rendered as a unit anyway, and we don't need partial reads.
-pub fn get_fresh_diff(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult<Option<String>> {
-    cache.with_conn(|c| {
+pub async fn get_fresh_diff(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult<Option<String>> {
+    cache.with_conn_async(move |c| {
         let row: rusqlite::Result<(String, String)> = c.query_row(
             "SELECT patch, status FROM files WHERE pr_id = ?1 AND path = '__bundle__'",
             params![pr_id],
@@ -110,12 +126,13 @@ pub fn get_fresh_diff(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult
             Ok((payload, fetched_at)) if !payload.is_empty() && is_fresh(&fetched_at, max_age_secs) => Ok(Some(payload)),
             _ => Ok(None),
         }
-    })
+    }).await
 }
 
-pub fn put_diff(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> {
+pub async fn put_diff(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> {
     let now = now_iso();
-    cache.with_conn(|c| {
+    let payload_json = payload_json.to_string();
+    cache.with_conn_async(move |c| {
         // We stash `fetched_at` in the `status` column for the synthetic bundle
         // row; saves us a schema migration.
         c.execute(
@@ -125,13 +142,15 @@ pub fn put_diff(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> 
             params![pr_id, now, payload_json],
         )?;
         Ok(())
-    })
+    }).await
 }
 
 /// Read a cached file blob. Blobs are immutable per (sha, path), so there is
 /// no TTL — any hit is valid forever.
-pub fn get_blob(cache: &Cache, sha: &str, path: &str) -> AppResult<Option<String>> {
-    cache.with_conn(|c| {
+pub async fn get_blob(cache: &Cache, sha: &str, path: &str) -> AppResult<Option<String>> {
+    let sha = sha.to_string();
+    let path = path.to_string();
+    cache.with_conn_async(move |c| {
         let row: rusqlite::Result<String> = c.query_row(
             "SELECT content FROM blobs WHERE sha = ?1 AND path = ?2",
             params![sha, path],
@@ -140,24 +159,27 @@ pub fn get_blob(cache: &Cache, sha: &str, path: &str) -> AppResult<Option<String
         // Any error (incl. no-rows) folds to a cache miss — the caller refetches
         // upstream, same as the get_fresh_* helpers. Keep the upsert in put_blob.
         Ok(row.ok())
-    })
+    }).await
 }
 
-pub fn put_blob(cache: &Cache, sha: &str, path: &str, content: &str) -> AppResult<()> {
-    cache.with_conn(|c| {
+pub async fn put_blob(cache: &Cache, sha: &str, path: &str, content: &str) -> AppResult<()> {
+    let sha = sha.to_string();
+    let path = path.to_string();
+    let content = content.to_string();
+    cache.with_conn_async(move |c| {
         c.execute(
             "INSERT INTO blobs (sha, path, content) VALUES (?1, ?2, ?3) \
              ON CONFLICT(sha, path) DO UPDATE SET content = excluded.content",
             params![sha, path, content],
         )?;
         Ok(())
-    })
+    }).await
 }
 
 /// Threads stored under a single synthetic row in `threads` table — same
 /// rationale as the diff bundle.
-pub fn get_fresh_threads(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult<Option<String>> {
-    cache.with_conn(|c| {
+pub async fn get_fresh_threads(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppResult<Option<String>> {
+    cache.with_conn_async(move |c| {
         let row: rusqlite::Result<(String, String)> = c.query_row(
             "SELECT payload_json, side FROM threads WHERE pr_id = ?1 AND id < 0",
             params![pr_id],
@@ -167,12 +189,13 @@ pub fn get_fresh_threads(cache: &Cache, pr_id: i64, max_age_secs: i64) -> AppRes
             Ok((payload, fetched_at)) if !payload.is_empty() && is_fresh(&fetched_at, max_age_secs) => Ok(Some(payload)),
             _ => Ok(None),
         }
-    })
+    }).await
 }
 
-pub fn put_threads(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> {
+pub async fn put_threads(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<()> {
     let now = now_iso();
-    cache.with_conn(|c| {
+    let payload_json = payload_json.to_string();
+    cache.with_conn_async(move |c| {
         // synthetic id = -pr_id keeps the bundle row unique per PR without
         // colliding with real comment ids (always positive from GitHub).
         let synthetic_id = -(pr_id.abs());
@@ -183,27 +206,45 @@ pub fn put_threads(cache: &Cache, pr_id: i64, payload_json: &str) -> AppResult<(
             params![synthetic_id, pr_id, now, payload_json],
         )?;
         Ok(())
-    })
+    }).await
 }
 
 /// Invalidate every cached row tied to a PR — used by `refresh_pr`.
-pub fn invalidate_pr(cache: &Cache, pr_id: i64) -> AppResult<()> {
-    cache.with_conn(|c| {
+pub async fn invalidate_pr(cache: &Cache, pr_id: i64) -> AppResult<()> {
+    cache.with_conn_async(move |c| {
         c.execute("DELETE FROM prs WHERE id = ?1", params![pr_id])?;
         c.execute("DELETE FROM files WHERE pr_id = ?1", params![pr_id])?;
         c.execute("DELETE FROM threads WHERE pr_id = ?1", params![pr_id])?;
         Ok(())
-    })
+    }).await
 }
 
 /// Invalidate only the threads bundle row for a PR — used after the user
 /// submits a review or replies to a thread, so the next read fetches the
 /// fresh server-side state instead of waiting out the 5-min TTL.
-pub fn invalidate_threads(cache: &Cache, pr_id: i64) -> AppResult<()> {
-    cache.with_conn(|c| {
+pub async fn invalidate_threads(cache: &Cache, pr_id: i64) -> AppResult<()> {
+    cache.with_conn_async(move |c| {
         c.execute("DELETE FROM threads WHERE pr_id = ?1", params![pr_id])?;
         Ok(())
-    })
+    }).await
+}
+
+/// Drop every cached PR list.
+///
+/// Deliberately *not* folded into `invalidate_pr_by_handle`: the list fetch is
+/// by far the most expensive call in the app (one GraphQL search per filter,
+/// two filters loaded in parallel on every home render), so wiping it must be
+/// a decision the caller makes on purpose.
+///
+/// The only caller today is `merge_pr` — a merged PR is no longer open, so it
+/// must disappear from the lists rather than linger for the rest of the 60 s
+/// TTL. Plain "user opened a PR" and "user refreshed one PR" do *not* qualify;
+/// `list_prs` has its own `force` flag for a genuine manual list refresh.
+pub async fn invalidate_lists(cache: &Cache) -> AppResult<()> {
+    cache.with_conn_async(move |c| {
+        c.execute("DELETE FROM pr_lists", [])?;
+        Ok(())
+    }).await
 }
 
 /// Hash-derived synthetic PR id used by the cache for the (owner, repo,
@@ -224,22 +265,25 @@ pub fn synthetic_pr_id(owner: &str, repo: &str, number: u64) -> i64 {
 
 /// Invalidate by (owner, repo, number) — used when we don't know the PR id yet
 /// (e.g. refresh_pr is called from the UI with the numeric handle).
-pub fn invalidate_pr_by_handle(cache: &Cache, owner: &str, repo: &str, number: u64) -> AppResult<()> {
-    let pr_id: Option<i64> = cache.with_conn(|c| {
+///
+/// Scope is exactly one PR. This used to end with `DELETE FROM pr_lists`,
+/// which meant the frontend's "open a PR" flow (which calls `refresh_pr`)
+/// destroyed the whole list cache on *every* PR the user clicked — so the
+/// expensive list fetch could never once be served warm. See
+/// [`invalidate_lists`] for the explicit opt-in.
+pub async fn invalidate_pr_by_handle(cache: &Cache, owner: &str, repo: &str, number: u64) -> AppResult<()> {
+    let owner_owned = owner.to_string();
+    let repo_owned = repo.to_string();
+    let pr_id: Option<i64> = cache.with_conn_async(move |c| {
         let r = c.query_row(
             "SELECT id FROM prs WHERE owner = ?1 AND repo = ?2 AND number = ?3",
-            params![owner, repo, number as i64],
+            params![owner_owned, repo_owned, number as i64],
             |row| row.get::<_, i64>(0),
         );
         Ok(r.ok())
-    })?;
+    }).await?;
     if let Some(id) = pr_id {
-        invalidate_pr(cache, id)?;
+        invalidate_pr(cache, id).await?;
     }
-    // Also clear PR lists since a refresh likely means the user wants list freshness too.
-    cache.with_conn(|c| {
-        c.execute("DELETE FROM pr_lists", [])?;
-        Ok(())
-    })?;
     Ok(())
 }
