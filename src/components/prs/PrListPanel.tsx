@@ -33,7 +33,15 @@ function matchesQuery(pr: PrSummary, q: string): boolean {
 
 export function PrListPanel() {
   const t = useT();
-  const { mine, reviewRequested, loadingLists, refreshLists, openPr, currentPr } = usePrsStore();
+  // Individual selectors rather than `usePrsStore()`: subscribing to the whole
+  // store re-rendered the list on every unrelated write (diff, threads,
+  // viewedFiles, …) while a PR was open.
+  const mine = usePrsStore(s => s.mine);
+  const reviewRequested = usePrsStore(s => s.reviewRequested);
+  const loadingLists = usePrsStore(s => s.loadingLists);
+  const refreshLists = usePrsStore(s => s.refreshLists);
+  const openPr = usePrsStore(s => s.openPr);
+  const currentPr = usePrsStore(s => s.currentPr);
   const pendingPr = usePrsStore(s => s.pendingPr);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
@@ -41,7 +49,13 @@ export function PrListPanel() {
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { refreshLists(); }, [refreshLists]);
+  // Initial load. Cheap to re-run: this panel is mounted conditionally (the
+  // rail replaces it when collapsed, and Layout re-parents it when a PR
+  // opens), and refreshLists() without `force` is a no-op while the lists are
+  // still fresh — the freshness window lives in prsStore, not here, so every
+  // caller benefits. The refresh button below passes `force` and always
+  // refetches.
+  useEffect(() => { void refreshLists(); }, [refreshLists]);
 
   // Ctrl+P focuses search (Cmd+P on mac kept for parity with browser DevTools muscle memory).
   useEffect(() => {

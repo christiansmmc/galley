@@ -30,7 +30,34 @@ beforeEach(() => {
   } as never);
 });
 
+/** The store action is stubbed in beforeEach; this reads it back as a spy. */
+const refreshListsSpy = () =>
+  usePrsStore.getState().refreshLists as unknown as ReturnType<typeof vi.fn>;
+
 describe("PrListPanel", () => {
+  it("kicks off exactly one non-forced list load on mount", () => {
+    render(<PrListPanel />);
+    // Non-forced on purpose: prsStore decides whether the lists are still
+    // fresh, so a remount (collapse/expand) costs nothing.
+    expect(refreshListsSpy()).toHaveBeenCalledTimes(1);
+    expect(refreshListsSpy()).toHaveBeenCalledWith();
+  });
+
+  it("re-mounting does not issue a second forced load", () => {
+    const first = render(<PrListPanel />);
+    first.unmount();
+    render(<PrListPanel />);
+    expect(refreshListsSpy()).toHaveBeenCalledTimes(2);
+    // Neither mount bypasses the freshness guard.
+    expect(refreshListsSpy().mock.calls.every((c: unknown[]) => c.length === 0)).toBe(true);
+  });
+
+  it("refresh button always forces a refetch", () => {
+    render(<PrListPanel />);
+    fireEvent.click(screen.getByLabelText("Atualizar"));
+    expect(refreshListsSpy()).toHaveBeenCalledWith(true);
+  });
+
   it("switches between tabs and shows counts", () => {
     render(<PrListPanel />);
     expect(screen.getByText("RR 2")).toBeInTheDocument();

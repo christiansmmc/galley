@@ -1,9 +1,8 @@
 use crate::error::{AppError, AppResult};
 use crate::github::GitHubClient;
+use chrono::{DateTime, Utc};
 use octocrab::Octocrab;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::task::JoinSet;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -62,6 +61,61 @@ pub struct PrDetail {
     pub reviewers_count: i64,
 }
 
+/// GraphQL document backing `list_prs`.
+///
+/// This replaces what used to be a REST fan-out: one Search call, then — per
+/// PR — a `/pulls/{n}` fetch (for `changed_files` + head sha), a
+/// `/commits/{sha}/status` fetch and usually a `/commits/{sha}/check-runs`
+/// fetch too. With ~15 open PRs across the user's repos that was ~45 requests
+/// per filter, and since the UI loads `mine` and `review_requested` in
+/// parallel it was ~90 requests to paint one list — enough to trip GitHub's
+/// secondary rate limiter, which then *deliberately* slows the responses down.
+///
+/// GraphQL exposes every one of those fields inline on the `PullRequest`
+/// node, so the whole list collapses into a single HTTP request per filter:
+///
+/// - `changedFiles` replaces the per-PR `/pulls/{n}` fetch.
+/// - `commits(last: 1) { … statusCheckRollup { state } }` replaces both the
+///   combined-status and the check-runs fetch — the rollup is GitHub's own
+///   union of commit statuses *and* check runs, which is exactly what
+///   `fetch_ci_status` was hand-rolling.
+/// - `repository { name owner { login } }` gives us the owner/repo split
+///   directly instead of slicing it out of the html_url.
+///
+/// `databaseId` on a `PullRequest` is the *pull request* id (what
+/// `/repos/{o}/{r}/pulls/{n}` returns), not the issue id the REST search
+/// endpoint used to hand back. That makes list rows and `get_pr` detail rows
+/// agree on `PrSummary.id`, which they previously did not.
+const LIST_PRS_QUERY: &str = r#"
+    query($q: String!) {
+      search(type: ISSUE, query: $q, first: 100) {
+        nodes {
+          ... on PullRequest {
+            databaseId
+            number
+            title
+            url
+            state
+            updatedAt
+            changedFiles
+            author { login }
+            repository {
+              name
+              owner { login }
+            }
+            commits(last: 1) {
+              nodes {
+                commit {
+                  statusCheckRollup { state }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+"#;
+
 impl GitHubClient {
     pub async fn list_prs(&self, filter: PrFilter, repos: &[(String, String)]) -> AppResult<Vec<PrSummary>> {
         if repos.is_empty() { return Ok(vec![]); }
@@ -73,40 +127,27 @@ impl GitHubClient {
             .map(|(o, n)| format!("repo:{o}/{n}"))
             .collect::<Vec<_>>()
             .join(" ");
+        // Same search syntax as the REST endpoint took — GraphQL's
+        // `search(type: ISSUE, query: …)` speaks the identical qualifier
+        // language, so the result set is unchanged.
         let q = format!("is:pr is:open {qualifier} {repo_q}");
-        let page = self.inner
-            .search()
-            .issues_and_pull_requests(&q)
-            .per_page(100)
-            .send()
+        let body = serde_json::json!({
+            "query": LIST_PRS_QUERY,
+            "variables": { "q": q },
+        });
+        let resp: serde_json::Value = self.inner
+            .post::<_, serde_json::Value>("/graphql", Some(&body))
             .await
             .map_err(|e| AppError::Network(e.to_string()))?;
-        let mut out = Vec::with_capacity(page.items.len());
-        for item in page.items {
-            let url = item.html_url.to_string();
-            let parts: Vec<&str> = url.split('/').collect();
-            let owner = parts.get(3).copied().unwrap_or("").to_string();
-            let repo = parts.get(4).copied().unwrap_or("").to_string();
-            let is_mine = matches!(filter, PrFilter::Mine);
-            let review_requested = matches!(filter, PrFilter::ReviewRequested);
-            out.push(PrSummary {
-                id: item.id.0 as i64,
-                owner,
-                repo,
-                number: item.number,
-                title: item.title,
-                author: item.user.login,
-                state: format!("{:?}", item.state).to_lowercase(),
-                updated_at: item.updated_at.to_rfc3339(),
-                html_url: url,
-                is_mine,
-                review_requested,
-                changed_files: 0,
-                ci_status: CiStatus::None,
-            });
-        }
-        augment_with_ci_and_changes(self.inner.clone(), &mut out).await;
-        Ok(out)
+        map_search_response(&resp, filter)
+    }
+
+    /// CI dot for an arbitrary commit — backs the `get_ci_status` command,
+    /// which the UI polls for the currently-open PR without re-fetching the
+    /// whole detail payload.
+    pub async fn ci_status(&self, owner: &str, repo: &str, sha: &str) -> AppResult<CiStatus> {
+        if sha.is_empty() { return Ok(CiStatus::None); }
+        Ok(fetch_ci_status(self.inner.as_ref(), owner, repo, sha).await)
     }
 
     pub async fn get_pr(&self, owner: &str, repo: &str, number: u64) -> AppResult<PrDetail> {
@@ -153,20 +194,110 @@ impl GitHubClient {
     }
 }
 
-/// Fetch (changed_files, head_sha) from the pulls endpoint for a single PR.
-async fn fetch_pull_meta(oct: &Octocrab, owner: &str, repo: &str, number: u64) -> (i64, String) {
-    let route = format!("/repos/{owner}/{repo}/pulls/{number}");
-    match oct.get::<serde_json::Value, _, _>(route, None::<&()>).await {
-        Ok(v) => {
-            let changed = v.get("changed_files").and_then(|x| x.as_i64()).unwrap_or(0);
-            let sha = v.get("head")
-                .and_then(|h| h.get("sha"))
-                .and_then(|x| x.as_str())
-                .unwrap_or("")
-                .to_string();
-            (changed, sha)
+/// Turn a raw `/graphql` response for [`LIST_PRS_QUERY`] into `PrSummary` rows.
+///
+/// Kept free of `self` / network so it can be unit-tested against a
+/// hand-written fixture — the JSON-shape assumptions are where this rewrite
+/// can realistically go wrong, and they're the only part testable offline.
+///
+/// `filter` is what decides `is_mine` / `review_requested`: the search query
+/// already narrowed the result set to one or the other, so every row in a
+/// given response carries the same pair of flags (same semantics as the REST
+/// implementation this replaced).
+fn map_search_response(resp: &serde_json::Value, filter: PrFilter) -> AppResult<Vec<PrSummary>> {
+    // GraphQL answers 200 OK even when the query failed, putting the reason in
+    // a top-level `errors` array. Surfacing it beats mapping `data: null` into
+    // an empty list, which would look to the user like "no open PRs".
+    if let Some(errors) = resp.get("errors") {
+        let empty = errors.as_array().map(|a| a.is_empty()).unwrap_or(false);
+        if !empty {
+            return Err(AppError::Network(format!("list_prs graphql: {errors}")));
         }
-        Err(_) => (0, String::new()),
+    }
+    let nodes = resp
+        .pointer("/data/search/nodes")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| AppError::Network("list_prs graphql: missing data.search.nodes".into()))?;
+
+    let is_mine = matches!(filter, PrFilter::Mine);
+    let review_requested = matches!(filter, PrFilter::ReviewRequested);
+
+    let mut out = Vec::with_capacity(nodes.len());
+    for node in nodes {
+        // `search(type: ISSUE)` can also yield Issue nodes; the inline
+        // fragment leaves those as `{}`. `is:pr` should prevent it, but skip
+        // anything without a number rather than emitting a bogus row.
+        let number = match node.get("number").and_then(|v| v.as_u64()) {
+            Some(n) => n,
+            None => continue,
+        };
+        let owner = node
+            .pointer("/repository/owner/login")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let repo = node
+            .pointer("/repository/name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        // `author` is null for PRs opened by a since-deleted account.
+        let author = node
+            .pointer("/author/login")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let rollup = node
+            .pointer("/commits/nodes/0/commit/statusCheckRollup/state")
+            .and_then(|v| v.as_str());
+        out.push(PrSummary {
+            id: node.get("databaseId").and_then(|v| v.as_i64()).unwrap_or(0),
+            owner,
+            repo,
+            number,
+            title: node.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            author,
+            // PullRequestState is SCREAMING_CASE (OPEN / CLOSED / MERGED);
+            // the REST path lowercased its own enum, so keep the same casing.
+            state: node.get("state").and_then(|v| v.as_str()).unwrap_or("OPEN").to_lowercase(),
+            updated_at: normalize_timestamp(
+                node.get("updatedAt").and_then(|v| v.as_str()).unwrap_or(""),
+            ),
+            html_url: node.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            is_mine,
+            review_requested,
+            changed_files: node.get("changedFiles").and_then(|v| v.as_i64()).unwrap_or(0),
+            ci_status: rollup_state_to_ci(rollup),
+        });
+    }
+    Ok(out)
+}
+
+/// Re-emit GitHub's `DateTime` (`2026-08-24T12:00:00Z`) in the exact RFC3339
+/// spelling the REST path produced (`…+00:00`), so cached payloads written
+/// before and after this rewrite compare equal and the UI's date formatting
+/// sees one shape. Unparseable input is passed through untouched.
+fn normalize_timestamp(raw: &str) -> String {
+    DateTime::parse_from_rfc3339(raw)
+        .map(|dt| dt.with_timezone(&Utc).to_rfc3339())
+        .unwrap_or_else(|_| raw.to_string())
+}
+
+/// Map GraphQL's `StatusState` onto our `CiStatus` dot.
+///
+/// `statusCheckRollup` is `null` when the head commit has neither commit
+/// statuses nor check runs — the REST path folded that into `CiStatus::None`
+/// (empty `total_count`, then empty `check_runs`), so it stays `None` here.
+///
+/// `EXPECTED` means GitHub was told to expect a status that hasn't been
+/// posted yet; the check-runs aggregation treated the equivalent state
+/// (queued / in_progress) as pending, so it maps to `Pending`.
+fn rollup_state_to_ci(state: Option<&str>) -> CiStatus {
+    match state {
+        Some("SUCCESS") => CiStatus::Passing,
+        Some("PENDING") | Some("EXPECTED") => CiStatus::Pending,
+        Some("FAILURE") | Some("ERROR") => CiStatus::Failing,
+        _ => CiStatus::None,
     }
 }
 
@@ -228,35 +359,169 @@ async fn fetch_check_runs_status(oct: &Octocrab, owner: &str, repo: &str, sha: &
     else { CiStatus::Passing }
 }
 
-/// Concurrently fill `changed_files` + `ci_status` on every PrSummary.
-///
-/// The search API doesn't expose these, so we fan out one pulls fetch
-/// (changed_files + head sha) and one combined-status fetch per PR.
-/// Errors are swallowed — affected rows just keep their defaults.
-async fn augment_with_ci_and_changes(oct: Arc<Octocrab>, prs: &mut [PrSummary]) {
-    if prs.is_empty() { return; }
-    let mut set: JoinSet<(usize, i64, CiStatus)> = JoinSet::new();
-    for (i, p) in prs.iter().enumerate() {
-        let oct = oct.clone();
-        let owner = p.owner.clone();
-        let repo = p.repo.clone();
-        let number = p.number;
-        set.spawn(async move {
-            let (changed, sha) = fetch_pull_meta(oct.as_ref(), &owner, &repo, number).await;
-            let ci = if sha.is_empty() {
-                CiStatus::None
-            } else {
-                fetch_ci_status(oct.as_ref(), &owner, &repo, &sha).await
-            };
-            (i, changed, ci)
-        });
-    }
-    while let Some(res) = set.join_next().await {
-        if let Ok((i, changed, ci)) = res {
-            if let Some(p) = prs.get_mut(i) {
-                p.changed_files = changed;
-                p.ci_status = ci;
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Hand-written stand-in for a real `/graphql` response to
+    /// [`LIST_PRS_QUERY`], covering the three CI shapes that matter:
+    /// a passing rollup, a `null` rollup (repo with no CI configured on that
+    /// commit), and a pending one.
+    fn fixture() -> serde_json::Value {
+        serde_json::json!({
+          "data": {
+            "search": {
+              "nodes": [
+                {
+                  "databaseId": 1001,
+                  "number": 42,
+                  "title": "feat: add widget",
+                  "url": "https://github.com/esparta/scorehub-api/pull/42",
+                  "state": "OPEN",
+                  "updatedAt": "2026-08-24T12:00:00Z",
+                  "changedFiles": 7,
+                  "author": { "login": "csequeira" },
+                  "repository": { "name": "scorehub-api", "owner": { "login": "esparta" } },
+                  "commits": { "nodes": [
+                    { "commit": { "statusCheckRollup": { "state": "SUCCESS" } } }
+                  ]}
+                },
+                {
+                  "databaseId": 1002,
+                  "number": 7,
+                  "title": "chore: bump deps",
+                  "url": "https://github.com/esparta/galley/pull/7",
+                  "state": "OPEN",
+                  "updatedAt": "2026-08-23T09:30:00Z",
+                  "changedFiles": 2,
+                  "author": { "login": "someone-else" },
+                  "repository": { "name": "galley", "owner": { "login": "esparta" } },
+                  "commits": { "nodes": [
+                    { "commit": { "statusCheckRollup": serde_json::Value::Null } }
+                  ]}
+                },
+                {
+                  "databaseId": 1003,
+                  "number": 99,
+                  "title": "fix: flaky test",
+                  "url": "https://github.com/other-org/tools/pull/99",
+                  "state": "OPEN",
+                  "updatedAt": "2026-08-22T18:45:12Z",
+                  "changedFiles": 1,
+                  "author": { "login": "csequeira" },
+                  "repository": { "name": "tools", "owner": { "login": "other-org" } },
+                  "commits": { "nodes": [
+                    { "commit": { "statusCheckRollup": { "state": "PENDING" } } }
+                  ]}
+                }
+              ]
             }
-        }
+          }
+        })
+    }
+
+    #[test]
+    fn maps_core_fields() {
+        let out = map_search_response(&fixture(), PrFilter::Mine).unwrap();
+        assert_eq!(out.len(), 3);
+        let first = &out[0];
+        assert_eq!(first.id, 1001);
+        assert_eq!(first.owner, "esparta");
+        assert_eq!(first.repo, "scorehub-api");
+        assert_eq!(first.number, 42);
+        assert_eq!(first.title, "feat: add widget");
+        assert_eq!(first.author, "csequeira");
+        assert_eq!(first.html_url, "https://github.com/esparta/scorehub-api/pull/42");
+        assert_eq!(first.changed_files, 7);
+    }
+
+    #[test]
+    fn lowercases_state() {
+        let out = map_search_response(&fixture(), PrFilter::Mine).unwrap();
+        assert!(out.iter().all(|p| p.state == "open"));
+    }
+
+    #[test]
+    fn normalizes_updated_at_to_rfc3339_offset() {
+        let out = map_search_response(&fixture(), PrFilter::Mine).unwrap();
+        // GitHub sends `…Z`; we re-emit the `+00:00` spelling the REST path used.
+        assert_eq!(out[0].updated_at, "2026-08-24T12:00:00+00:00");
+        assert_eq!(out[2].updated_at, "2026-08-22T18:45:12+00:00");
+    }
+
+    #[test]
+    fn maps_ci_rollup_states() {
+        let out = map_search_response(&fixture(), PrFilter::Mine).unwrap();
+        assert_eq!(out[0].ci_status, CiStatus::Passing);
+        // null rollup == "no checks on this commit" == None, matching the
+        // REST behaviour this replaced.
+        assert_eq!(out[1].ci_status, CiStatus::None);
+        assert_eq!(out[2].ci_status, CiStatus::Pending);
+    }
+
+    #[test]
+    fn rollup_state_covers_every_status_state() {
+        assert_eq!(rollup_state_to_ci(Some("SUCCESS")), CiStatus::Passing);
+        assert_eq!(rollup_state_to_ci(Some("PENDING")), CiStatus::Pending);
+        assert_eq!(rollup_state_to_ci(Some("EXPECTED")), CiStatus::Pending);
+        assert_eq!(rollup_state_to_ci(Some("FAILURE")), CiStatus::Failing);
+        assert_eq!(rollup_state_to_ci(Some("ERROR")), CiStatus::Failing);
+        assert_eq!(rollup_state_to_ci(None), CiStatus::None);
+        assert_eq!(rollup_state_to_ci(Some("SOMETHING_NEW")), CiStatus::None);
+    }
+
+    #[test]
+    fn filter_drives_is_mine_and_review_requested() {
+        let mine = map_search_response(&fixture(), PrFilter::Mine).unwrap();
+        assert!(mine.iter().all(|p| p.is_mine && !p.review_requested));
+
+        let rr = map_search_response(&fixture(), PrFilter::ReviewRequested).unwrap();
+        assert!(rr.iter().all(|p| !p.is_mine && p.review_requested));
+    }
+
+    #[test]
+    fn missing_author_falls_back_to_empty_string() {
+        let resp = serde_json::json!({
+          "data": { "search": { "nodes": [{
+            "databaseId": 5, "number": 1, "title": "t", "url": "u",
+            "state": "OPEN", "updatedAt": "2026-08-24T12:00:00Z", "changedFiles": 0,
+            "author": serde_json::Value::Null,
+            "repository": { "name": "r", "owner": { "login": "o" } },
+            "commits": { "nodes": [] }
+          }]}}
+        });
+        let out = map_search_response(&resp, PrFilter::Mine).unwrap();
+        assert_eq!(out[0].author, "");
+        assert_eq!(out[0].ci_status, CiStatus::None);
+    }
+
+    #[test]
+    fn empty_result_set_is_ok_not_error() {
+        let resp = serde_json::json!({ "data": { "search": { "nodes": [] } } });
+        assert!(map_search_response(&resp, PrFilter::Mine).unwrap().is_empty());
+    }
+
+    #[test]
+    fn skips_non_pull_request_nodes() {
+        // Inline fragments leave non-PullRequest search hits as `{}`.
+        let resp = serde_json::json!({ "data": { "search": { "nodes": [{}] } } });
+        assert!(map_search_response(&resp, PrFilter::Mine).unwrap().is_empty());
+    }
+
+    #[test]
+    fn graphql_errors_bubble_up_instead_of_empty_list() {
+        let resp = serde_json::json!({
+          "data": serde_json::Value::Null,
+          "errors": [{ "message": "Field 'changedFiles' doesn't exist" }]
+        });
+        let err = map_search_response(&resp, PrFilter::Mine).unwrap_err();
+        assert!(matches!(err, AppError::Network(_)), "got {err:?}");
+        assert!(err.to_string().contains("changedFiles"));
+    }
+
+    #[test]
+    fn malformed_response_is_an_error_not_an_empty_list() {
+        let resp = serde_json::json!({ "data": { "search": {} } });
+        assert!(map_search_response(&resp, PrFilter::Mine).is_err());
     }
 }

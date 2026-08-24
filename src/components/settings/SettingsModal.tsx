@@ -45,7 +45,11 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const handleClose = useCallback(() => {
     if (reposDirty.current) {
       reposDirty.current = false;
-      void refreshLists();
+      // Force: the repo set just changed, so this is an explicit
+      // invalidation, not an opportunistic load. It must bypass both the
+      // store's freshness window and the backend list cache, otherwise the
+      // newly added repo's PRs would not show up until the TTL expired.
+      void refreshLists(true);
     }
     onClose();
   }, [onClose, refreshLists]);

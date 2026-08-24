@@ -30,7 +30,14 @@ pub async fn clear_pat(state: State<'_, AppState>) -> AppResult<()> {
 
 #[tauri::command]
 pub async fn has_pat() -> AppResult<bool> {
-    Ok(secrets::get_pat()?.is_some())
+    // The frontend calls this on boot to decide between the PAT screen and the
+    // PR list, so it sits on the critical path. Keyring reads are blocking
+    // (DBus / Credential Manager / Keychain), so keep them off the async
+    // worker pool.
+    let stored = tauri::async_runtime::spawn_blocking(secrets::get_pat)
+        .await
+        .map_err(|e| crate::error::AppError::Internal(format!("keyring task panicked: {e}")))??;
+    Ok(stored.is_some())
 }
 
 #[tauri::command]
