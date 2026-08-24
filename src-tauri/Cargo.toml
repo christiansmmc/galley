@@ -1,6 +1,6 @@
 [package]
 name = "pr-reviewer"
-version = "0.10.0"
+version = "0.11.0"
 description = "Linux desktop GitHub PR reviewer"
 authors = ["csequeira153@gmail.com"]
 edition = "2021"
@@ -14,6 +14,21 @@ path = "src/lib.rs"
 [[bin]]
 name = "pr-reviewer"
 path = "src/main.rs"
+
+# Standard Tauri release profile. Cargo defaults to opt-level 3 /
+# codegen-units 16 / no LTO, which leaves a noticeably larger and slower
+# binary than the bundle deserves.
+#
+# `strip = true` here is rustc's own symbol stripping and is unrelated to the
+# `NO_STRIP=true` the Linux bundle build needs — that flag disables
+# *linuxdeploy's* bundled `strip`, which can't parse SHT_RELR sections in
+# modern host libs. Both can be true at once.
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
