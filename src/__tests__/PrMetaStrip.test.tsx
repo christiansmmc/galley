@@ -13,6 +13,7 @@ function makePr(overrides: Partial<PrDetail> = {}): PrDetail {
       changed_files: 5, ci_status: "passing",
     },
     body: null,
+    body_html: null,
     head_sha: "abc",
     base_sha: "def",
     head_ref: "feature",
@@ -56,6 +57,19 @@ describe("PrMetaStrip", () => {
     expect(screen.getByText("Some PR description here.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /esconder descrição/ }));
     expect(screen.queryByText("Some PR description here.")).not.toBeInTheDocument();
+  });
+
+  it("shows the rendered description instead of the markdown source", () => {
+    render(<PrMetaStrip pr={makePr({ body: "## Why", body_html: "<h2>Why</h2>" })} />);
+    fireEvent.click(screen.getByRole("button", { name: /mostrar descrição/ }));
+    expect(screen.getByRole("heading", { level: 2, name: "Why" })).toBeInTheDocument();
+    expect(screen.queryByText("## Why")).not.toBeInTheDocument();
+  });
+
+  it("hides the description toggle when the body renders to nothing", () => {
+    // A PR template left untouched: only HTML comments, which GitHub drops.
+    render(<PrMetaStrip pr={makePr({ body: "<!-- describe your change -->", body_html: "" })} />);
+    expect(screen.queryByText(/mostrar descrição/)).not.toBeInTheDocument();
   });
 
   it("renders Draft badge when draft=true", () => {

@@ -93,6 +93,7 @@ export interface PrSummary {
 export interface PrDetail {
   summary: PrSummary;
   body: string | null;
+  body_html: string | null;
   head_sha: string;
   base_sha: string;
   head_ref: string;
