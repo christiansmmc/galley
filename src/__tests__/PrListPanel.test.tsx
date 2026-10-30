@@ -1,11 +1,14 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { PrListPanel } from "../components/prs/PrListPanel";
 import { usePrsStore } from "../state/prsStore";
 import { useSettingsStore } from "../state/settingsStore";
 
 vi.mock("../ipc/client", () => ({
-  api: { listPrs: vi.fn().mockResolvedValue([]) },
+  api: {
+    listPrs: vi.fn().mockResolvedValue([]),
+    setSettings: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 beforeEach(() => {
@@ -23,7 +26,7 @@ beforeEach(() => {
   } as never);
   useSettingsStore.setState({
     settings: {
-      ui: { theme: "system", sidebar_collapsed: false, filetree_collapsed: false, sidebar_width: 300, filetree_width: 240 },
+      ui: { theme: "system", sidebar_collapsed: false, filetree_collapsed: false, sidebar_width: 300, filetree_width: 240, pr_list_tab: "review_requested" },
       repos: [{ owner: "x", name: "y" }],
       path_filters: [],
     },
@@ -75,6 +78,45 @@ describe("PrListPanel", () => {
     } as never);
     render(<PrListPanel />);
     expect(screen.getByRole("button", { name: /#371 RR 2/ })).toBeInTheDocument();
+  });
+
+  // Layout remounts the panel when a PR opens or closes, so unmount + render
+  // is what leaving a PR does to it.
+  it("comes back to the tab the last PR was opened from", async () => {
+    const first = render(<PrListPanel />);
+    fireEvent.click(screen.getByText(/Meus/));
+    fireEvent.click(screen.getByText("Mine 1"));
+    expect(usePrsStore.getState().openPr).toHaveBeenCalledWith("x", "y", 1);
+    await waitFor(() => expect(useSettingsStore.getState().settings?.ui.pr_list_tab).toBe("mine"));
+
+    first.unmount();
+    render(<PrListPanel />);
+    expect(screen.getByText("Mine 1")).toBeInTheDocument();
+    expect(screen.queryByText("RR 2")).not.toBeInTheDocument();
+  });
+
+  it("does not remember a tab that was only browsed", () => {
+    const first = render(<PrListPanel />);
+    fireEvent.click(screen.getByText(/Meus/));
+    expect(screen.getByText("Mine 1")).toBeInTheDocument();
+
+    first.unmount();
+    render(<PrListPanel />);
+    expect(screen.getByText("RR 2")).toBeInTheDocument();
+    expect(screen.queryByText("Mine 1")).not.toBeInTheDocument();
+  });
+
+  it("switches to the saved tab when settings finish loading after mount", () => {
+    const settings = useSettingsStore.getState().settings!;
+    useSettingsStore.setState({ settings: null } as never);
+    render(<PrListPanel />);
+    expect(screen.getByText("RR 2")).toBeInTheDocument();
+
+    act(() => {
+      useSettingsStore.setState({ settings: { ...settings, ui: { ...settings.ui, pr_list_tab: "mine" } } } as never);
+    });
+    expect(screen.getByText("Mine 1")).toBeInTheDocument();
+    expect(screen.queryByText("RR 2")).not.toBeInTheDocument();
   });
 
   it("filters by search query across title, author, number", () => {

@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RefreshCw, Search } from "lucide-react";
-import type { PrSummary } from "../../ipc/types";
+import type { PrListTab, PrSummary } from "../../ipc/types";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { PrListItem } from "./PrListItem";
 import { Button, EmptyState, Input, SkeletonBars, Spinner, Sweep, Tabs } from "../ui";
 import { useSettingsStore } from "../../state/settingsStore";
 import { useT } from "../../i18n";
-
-type Tab = "mine" | "review_requested";
 
 /** Group PRs by `owner/repo` while preserving insertion order. */
 function groupByRepo(prs: PrSummary[]): Array<[string, PrSummary[]]> {
@@ -45,9 +43,23 @@ export function PrListPanel() {
   const pendingPr = usePrsStore(s => s.pendingPr);
   const setPrListCollapsed = useUiStore(s => s.setPrListCollapsed);
   const repos = useSettingsStore(s => s.settings?.repos) ?? [];
-  const [tab, setTab] = useState<Tab>("review_requested");
+  const savedTab = useSettingsStore(s => s.settings?.ui.pr_list_tab) ?? "review_requested";
+  // Seeded from the tab the last PR was opened from. Layout remounts this panel
+  // when a PR opens or closes, which is what brings the list back there; a tab
+  // that was only browsed in the meantime isn't remembered.
+  const [tab, setTab] = useState<PrListTab>(savedTab);
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Settings load after the first mount, and a save can land after a remount.
+  useEffect(() => { setTab(savedTab); }, [savedTab]);
+
+  const openFromTab = (p: PrSummary) => {
+    const ss = useSettingsStore.getState();
+    const s = ss.settings;
+    if (s && s.ui.pr_list_tab !== tab) void ss.save({ ...s, ui: { ...s.ui, pr_list_tab: tab } });
+    openPr(p.owner, p.repo, p.number);
+  };
 
   // Initial load. Cheap to re-run: this panel is mounted conditionally (the
   // rail replaces it when collapsed, and Layout re-parents it when a PR
@@ -143,7 +155,7 @@ export function PrListPanel() {
         />
       </div>
 
-      <Tabs<Tab>
+      <Tabs<PrListTab>
         value={tab}
         onChange={setTab}
         tabs={[
@@ -216,7 +228,7 @@ export function PrListPanel() {
                         currentPr?.summary.repo === p.repo
                       }
                       loading={loading}
-                      onClick={() => openPr(p.owner, p.repo, p.number)}
+                      onClick={() => openFromTab(p)}
                     />
                   );
                 })}

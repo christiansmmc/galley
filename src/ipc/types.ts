@@ -8,6 +8,8 @@ export type AccentColor = "sage" | "ochre" | "ink" | "rust";
 
 export type LanguageChoice = "auto" | "en" | "pt-BR";
 
+export type PrListTab = "mine" | "review_requested";
+
 export interface DiffFont {
   size: number;
   family: string;
@@ -27,6 +29,7 @@ export interface UiPrefs {
   accent_color: AccentColor;
   creed: string;
   language: LanguageChoice;
+  pr_list_tab: PrListTab;
 }
 
 export interface PaletteSources {

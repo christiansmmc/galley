@@ -33,6 +33,8 @@ pub struct UiPrefs {
     pub creed: String,
     #[serde(default)]
     pub language: LanguageChoice,
+    #[serde(default)]
+    pub pr_list_tab: PrListTab,
 }
 
 fn default_true() -> bool { true }
@@ -54,8 +56,19 @@ impl Default for UiPrefs {
             accent_color: AccentColor::default(),
             creed: default_creed(),
             language: LanguageChoice::default(),
+            pr_list_tab: PrListTab::default(),
         }
     }
+}
+
+/// Tab the last PR was opened from; the PR list comes back to it.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum PrListTab {
+    #[default]
+    #[serde(rename = "review_requested")]
+    ReviewRequested,
+    #[serde(rename = "mine")]
+    Mine,
 }
 
 /// User language preference for the UI. "Auto" defers to the OS locale
