@@ -67,6 +67,16 @@ describe("PrListPanel", () => {
     expect(screen.getByText("Mine 1")).toBeInTheDocument();
   });
 
+  it("shows the PR number before the title", () => {
+    usePrsStore.setState({
+      reviewRequested: [
+        { id: 2, owner: "x", repo: "y", number: 371, title: "RR 2", author: "other", state: "open", updated_at: "", html_url: "", is_mine: false, review_requested: true, changed_files: 5, ci_status: "pending" },
+      ],
+    } as never);
+    render(<PrListPanel />);
+    expect(screen.getByRole("button", { name: /#371 RR 2/ })).toBeInTheDocument();
+  });
+
   it("filters by search query across title, author, number", () => {
     render(<PrListPanel />);
     const input = screen.getByLabelText("Buscar PRs") as HTMLInputElement;
