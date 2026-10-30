@@ -8,6 +8,7 @@ import { Button, Spinner } from "../ui";
 import { usePrsStore } from "../../state/prsStore";
 import { useUiStore } from "../../state/uiStore";
 import { CiBadge } from "./CiBadge";
+import { PrDescription } from "./PrDescription";
 
 interface Props { pr: PrDetail; }
 
@@ -19,7 +20,7 @@ export function PrMetaStrip({ pr }: Props) {
   const [bodyOpen, setBodyOpen] = useState(false);
   const s = pr.summary;
   const age = formatAge(s.updated_at);
-  const hasBody = !!(pr.body && pr.body.trim().length > 0);
+  const hasBody = !!(pr.body_html ?? pr.body)?.trim();
 
   const openGithub = () => {
     if (s.html_url) void api.openExternalUrl(s.html_url);
@@ -146,22 +147,7 @@ export function PrMetaStrip({ pr }: Props) {
 
       {bodyOpen && hasBody && (
         <div style={{ padding: "0 24px var(--space-3)" }}>
-          <pre style={{
-            margin: 0,
-            padding: "var(--space-4) var(--space-5)",
-            background: "var(--c-mantle)",
-            border: "1px solid var(--c-line-soft)",
-            color: "var(--c-text)",
-            fontSize: "var(--text-base)",
-            fontFamily: "var(--font-ui)",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            maxHeight: 240,
-            overflowY: "auto",
-            lineHeight: "var(--lh-normal)" as unknown as number,
-          }}>
-            {pr.body}
-          </pre>
+          <PrDescription html={pr.body_html} fallback={pr.body} />
         </div>
       )}
     </div>

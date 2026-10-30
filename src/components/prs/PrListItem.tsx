@@ -77,6 +77,9 @@ export function PrListItem({ pr, selected, loading, onClick }: Props) {
           minWidth: 0,
         }}
       >
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--c-subtext)", marginRight: 3 }}>
+          #{pr.number}
+        </span>{" "}
         {pr.title}
       </span>
       <span

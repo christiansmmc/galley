@@ -308,6 +308,97 @@ select.prr-input option {
 .cfg-act:disabled { opacity: 0.5; cursor: default; }
 .cfg-act.danger:hover { color: var(--c-danger); }
 
+/* Rendered PR description. The markup is GitHub's body_html, so there are no
+   elements to hang inline styles on. */
+.pr-description {
+  max-height: min(45vh, 420px);
+  padding: var(--space-6) var(--space-7);
+  background: var(--c-mantle);
+  border: 1px solid var(--c-line-soft);
+  color: var(--c-text);
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
+  overflow-wrap: anywhere;
+}
+.pr-description > * { max-width: 860px; }
+.pr-description > :first-child { margin-top: 0; }
+.pr-description > :last-child { margin-bottom: 0; }
+.pr-description h1,
+.pr-description h2,
+.pr-description h3,
+.pr-description h4,
+.pr-description h5,
+.pr-description h6 {
+  margin: var(--space-8) 0 var(--space-3);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+.pr-description h1 { font-size: var(--text-lg); }
+.pr-description h2 { font-size: 14px; }
+.pr-description h3 { font-size: var(--text-md); }
+.pr-description h4,
+.pr-description h5,
+.pr-description h6 { font-size: var(--text-base); color: var(--c-subtext); }
+.pr-description h1,
+.pr-description h2 {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--c-line-soft);
+}
+.pr-description p,
+.pr-description ul,
+.pr-description ol,
+.pr-description pre,
+.pr-description blockquote,
+.pr-description table,
+.pr-description details { margin: 0 0 var(--space-5); }
+.pr-description ul,
+.pr-description ol { padding-left: var(--space-8); }
+.pr-description li { margin: var(--space-1) 0; }
+.pr-description li > p { margin: 0; }
+.pr-description li > ul,
+.pr-description li > ol { margin: var(--space-1) 0 0; }
+.pr-description .task-list-item { list-style: none; }
+.pr-description .task-list-item input { margin: 0 var(--space-3) 0 calc(-1 * var(--space-7)); vertical-align: middle; }
+.pr-description a { color: var(--c-accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.pr-description code {
+  padding: 1px var(--space-2);
+  background: var(--c-crust);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+.pr-description pre {
+  padding: var(--space-4) var(--space-5);
+  background: var(--c-base);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  line-height: var(--lh-normal);
+  overflow-x: auto;
+  overflow-wrap: normal;
+}
+.pr-description pre code { padding: 0; background: none; font-size: inherit; }
+.pr-description blockquote {
+  padding-left: var(--space-6);
+  border-left: 2px solid var(--c-line);
+  color: var(--c-subtext);
+}
+.pr-description table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  overflow-wrap: normal;
+}
+.pr-description th,
+.pr-description td { padding: var(--space-2) var(--space-5); border: 1px solid var(--c-line); }
+.pr-description th { background: var(--c-surface0); font-weight: 600; text-align: left; }
+.pr-description img { max-width: 100%; height: auto; }
+.pr-description hr { margin: var(--space-6) 0; border: 0; border-top: 1px solid var(--c-line); }
+.pr-description summary { cursor: pointer; }
+
 /* Hover affordance for selectable rows in the PR list / file tree.
    Class owns background so the inline-style trap (inline > class) does
    not silently break hover. */

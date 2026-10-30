@@ -48,6 +48,7 @@ const baseUi = {
   accent_color: "sage" as const,
   creed: "reading",
   language: "auto" as const,
+  pr_list_tab: "review_requested" as const,
 };
 
 beforeEach(() => {

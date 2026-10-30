@@ -43,6 +43,8 @@ pub enum PrFilter { Mine, ReviewRequested }
 pub struct PrDetail {
     pub summary: PrSummary,
     pub body: Option<String>,
+    #[serde(default)]
+    pub body_html: Option<String>,
     pub head_sha: String,
     pub base_sha: String,
     #[serde(default)]
@@ -152,8 +154,15 @@ impl GitHubClient {
 
     pub async fn get_pr(&self, owner: &str, repo: &str, number: u64) -> AppResult<PrDetail> {
         let route = format!("/repos/{owner}/{repo}/pulls/{number}");
+        // The `full` media type adds `body_html`: GitHub's own render of the
+        // description, with mentions/refs linked and private images signed.
+        let mut headers = http::header::HeaderMap::new();
+        headers.insert(
+            http::header::ACCEPT,
+            http::header::HeaderValue::from_static("application/vnd.github.full+json"),
+        );
         let pr: serde_json::Value = self.inner
-            .get(route, None::<&()>).await
+            .get_with_headers(route, None::<&()>, Some(headers)).await
             .map_err(|e| AppError::Network(e.to_string()))?;
         let id = pr.get("id").and_then(|v| v.as_i64()).unwrap_or(0);
         let updated_at = pr.get("updated_at").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -164,6 +173,7 @@ impl GitHubClient {
         let head_ref = pr.get("head").and_then(|h| h.get("ref")).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let base_ref = pr.get("base").and_then(|b| b.get("ref")).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let body = pr.get("body").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let body_html = pr.get("body_html").and_then(|v| v.as_str()).map(|s| s.to_string());
         let state = pr.get("state").and_then(|v| v.as_str()).unwrap_or("open").to_string();
         let draft = pr.get("draft").and_then(|v| v.as_bool()).unwrap_or(false);
         let mergeable = pr.get("mergeable").and_then(|v| v.as_bool());
@@ -188,7 +198,7 @@ impl GitHubClient {
                 is_mine: false, review_requested: false,
                 changed_files, ci_status,
             },
-            body, head_sha, base_sha, head_ref, base_ref, draft, mergeable, mergeable_state,
+            body, body_html, head_sha, base_sha, head_ref, base_ref, draft, mergeable, mergeable_state,
             additions, deletions, reviewers_count,
         })
     }
@@ -418,6 +428,40 @@ mod tests {
             }
           }
         })
+    }
+
+    /// One-shot GitHub stand-in that, like the real API, only includes
+    /// `body_html` when the request asks for the `full` media type.
+    #[tokio::test]
+    async fn get_pr_requests_and_maps_rendered_body() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            let (mut sock, _) = listener.accept().await.unwrap();
+            let mut buf = vec![0u8; 8192];
+            let n = sock.read(&mut buf).await.unwrap();
+            let request = String::from_utf8_lossy(&buf[..n]).to_lowercase();
+            let mut pr = serde_json::json!({ "id": 1, "body": "## Why" });
+            if request.contains("accept: application/vnd.github.full+json") {
+                pr["body_html"] = "<h2>Why</h2>".into();
+            }
+            let payload = pr.to_string();
+            let response = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{payload}",
+                payload.len(),
+            );
+            sock.write_all(response.as_bytes()).await.unwrap();
+        });
+
+        let oct = octocrab::Octocrab::builder()
+            .base_uri(format!("http://{addr}")).unwrap()
+            .build().unwrap();
+        let pr = GitHubClient::test_with(oct, "me".into()).get_pr("x", "y", 1).await.unwrap();
+
+        assert_eq!(pr.body.as_deref(), Some("## Why"));
+        assert_eq!(pr.body_html.as_deref(), Some("<h2>Why</h2>"));
     }
 
     #[test]
