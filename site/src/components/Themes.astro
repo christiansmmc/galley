@@ -1,0 +1,119 @@
+---
+import { STRINGS } from '../lib/i18n';
+const en = STRINGS.en;
+const base = import.meta.env.BASE_URL;
+
+// Brand accent palette is theme-independent (handoff).
+const swatches = [
+  { color: '#94a677', label: 'Sage' },
+  { color: '#c7a25e', label: 'Ochre' },
+  { color: '#6d8298', label: 'Ink' },
+  { color: '#b16a48', label: 'Rust' },
+];
+---
+<section class="band themes">
+  <div class="inner">
+    <p class="eyebrow" data-i18n="themes_eyebrow">{en.themes_eyebrow}</p>
+    <h2 class="serif title" data-i18n="themes_title">{en.themes_title}</h2>
+    <p class="lead" data-i18n="themes_body">{en.themes_body}</p>
+
+    <div class="grid">
+      <figure>
+        <img class="shot" src={`${base}/shots/01-hero.png`} alt="Linen theme" />
+        <figcaption class="serif" data-i18n="themes_linen">{en.themes_linen}</figcaption>
+      </figure>
+      <figure>
+        <img class="shot" src={`${base}/shots/07-paper.png`} alt="Paper theme" />
+        <figcaption class="serif" data-i18n="themes_paper">{en.themes_paper}</figcaption>
+      </figure>
+    </div>
+
+    <div class="swatches">
+      {
+        swatches.map((s) => (
+          <div class="swatch">
+            <span class="dot" style={`background:${s.color}`} />
+            <span class="mono label">{s.label}</span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .themes {
+    margin-top: 110px;
+    padding: 104px 32px;
+  }
+  .inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .eyebrow {
+    margin-bottom: 22px;
+  }
+  .title {
+    font-family: 'Spectral', serif;
+    font-weight: 500;
+    font-size: clamp(28px, 3.6vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .lead {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 18px auto 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 56px;
+  }
+  figure {
+    margin: 0;
+  }
+  .grid .shot {
+    border-radius: 11px;
+  }
+  figcaption {
+    font-style: italic;
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .swatches {
+    display: flex;
+    justify-content: center;
+    gap: 34px;
+    margin-top: 52px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+  .label {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  @media (max-width: 720px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

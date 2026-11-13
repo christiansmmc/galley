@@ -1,0 +1,32 @@
+---
+import { STRINGS } from '../lib/i18n';
+const en = STRINGS.en;
+---
+<section class="band manifesto">
+  <h2 class="serif line" data-i18n="manifesto_line">{en.manifesto_line}</h2>
+  <p class="sub" data-i18n="manifesto_sub">{en.manifesto_sub}</p>
+</section>
+
+<style>
+  .manifesto {
+    margin-top: 96px;
+    padding: 84px 32px;
+    text-align: center;
+  }
+  .line {
+    font-family: 'Spectral', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(26px, 3.5vw, 34px);
+    margin: 0;
+    color: var(--fg);
+  }
+  .sub {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 440px;
+    margin: 16px auto 0;
+  }
+</style>

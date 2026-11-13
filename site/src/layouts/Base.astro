@@ -1,0 +1,70 @@
+---
+import '../styles/global.css';
+const base = import.meta.env.BASE_URL;
+const { title = 'Galley — a quieter way to review pull requests' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en" data-theme="linen">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta
+      name="description"
+      content="Galley — a desktop GitHub PR reviewer. Reading. No summaries."
+    />
+    <link rel="icon" type="image/png" href={`${base}/favicon.png`} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      // Boot: set theme + lang before first paint to avoid a flash.
+      // Theme default = Linen; honor a stored choice, else prefers-color-scheme.
+      (function () {
+        try {
+          var storedT = localStorage.getItem('galley-theme');
+          var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+          var theme =
+            storedT === 'paper' || storedT === 'linen'
+              ? storedT
+              : prefersLight
+                ? 'paper'
+                : 'linen';
+          document.documentElement.setAttribute('data-theme', theme);
+
+          var storedL = localStorage.getItem('galley-lang');
+          var nav = (navigator.language || '').toLowerCase();
+          var lang =
+            storedL === 'en' || storedL === 'pt'
+              ? storedL
+              : nav.indexOf('pt') === 0
+                ? 'pt'
+                : 'en';
+          document.documentElement.setAttribute('lang', lang);
+
+          window.__setTheme = function (t) {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('galley-theme', t);
+          };
+          window.__setLang = function (l) {
+            document.documentElement.setAttribute('lang', l);
+            localStorage.setItem('galley-lang', l);
+            document.querySelectorAll('[data-i18n]').forEach(function (el) {
+              var key = el.getAttribute('data-i18n');
+              var val =
+                (window.__STRINGS && window.__STRINGS[l] && window.__STRINGS[l][key]) || '';
+              if (val) el.textContent = val;
+            });
+            document.dispatchEvent(new CustomEvent('langchange', { detail: l }));
+          };
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

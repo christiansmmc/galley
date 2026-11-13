@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { configDefaults } from "vitest/config";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
@@ -23,5 +24,7 @@ export default defineConfig(async () => ({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     globals: true,
+    // site/ is the Astro landing page with its own vitest setup.
+    exclude: [...configDefaults.exclude, "site/**"],
   },
 }));

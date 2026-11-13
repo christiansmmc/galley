@@ -5,7 +5,8 @@
 <h1 align="center">Galley</h1>
 
 <p align="center">
-  A desktop GitHub PR reviewer.
+  A desktop GitHub PR reviewer.<br />
+  <a href="https://christiansmmc.github.io/galley/">Website</a> · <a href="https://github.com/christiansmmc/galley/releases/latest">Download</a>
 </p>
 
 ---

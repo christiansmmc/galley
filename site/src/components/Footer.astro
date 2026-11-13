@@ -1,0 +1,31 @@
+---
+import { STRINGS } from '../lib/i18n';
+const en = STRINGS.en;
+---
+<footer class="footer wrap">
+  <span class="serif tagline" data-i18n="footer_tagline">{en.footer_tagline}</span>
+  <span class="mono license" data-i18n="footer_license">{en.footer_license}</span>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--line);
+    padding-top: 30px;
+    padding-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .tagline {
+    font-style: italic;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .license {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--faint);
+  }
+</style>

@@ -1,0 +1,88 @@
+---
+import { STRINGS } from '../lib/i18n';
+const en = STRINGS.en;
+type Key = keyof typeof en;
+const base = import.meta.env.BASE_URL;
+
+// Image mapping is fixed by the handoff; copy follows the i18n keys.
+const features: { img: string; alt: string; t: Key; b: Key }[] = [
+  { img: '03-palette.png', alt: 'Command palette', t: 'feat_palette_title', b: 'feat_palette_body' },
+  { img: '07-paper.png', alt: 'Side-by-side diff', t: 'feat_diff_title', b: 'feat_diff_body' },
+  { img: '04-settings.png', alt: 'Appearance settings', t: 'feat_taste_title', b: 'feat_taste_body' },
+  { img: '05-first-run.png', alt: 'Add a repository', t: 'feat_repos_title', b: 'feat_repos_body' },
+];
+---
+<section class="features wrap-narrow">
+  <p class="eyebrow" data-i18n="features_eyebrow">{en.features_eyebrow}</p>
+  <div class="rows">
+    {
+      features.map((f, i) => {
+        const reversed = i % 2 === 1;
+        return (
+          <div class={`row ${reversed ? 'rev' : ''}`}>
+            {reversed && <img class="shot" src={`${base}/shots/${f.img}`} alt={f.alt} />}
+            <div class="copy">
+              <h3 class="serif" data-i18n={f.t}>{en[f.t]}</h3>
+              <p class="body" data-i18n={f.b}>{en[f.b]}</p>
+            </div>
+            {!reversed && <img class="shot" src={`${base}/shots/${f.img}`} alt={f.alt} />}
+          </div>
+        );
+      })
+    }
+  </div>
+</section>
+
+<style>
+  .features {
+    padding-top: 110px;
+  }
+  .eyebrow {
+    margin-bottom: 72px;
+  }
+  .rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 96px;
+  }
+  .row:last-child {
+    margin-bottom: 0;
+  }
+  /* Reversed rows put the image first; ratio flips to 1.15fr 1fr. */
+  .row.rev {
+    grid-template-columns: 1.15fr 1fr;
+  }
+  .copy h3 {
+    font-family: 'Spectral', serif;
+    font-weight: 500;
+    font-size: 27px;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  .copy .body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--muted);
+    margin: 0;
+    max-width: 380px;
+  }
+  @media (max-width: 720px) {
+    .row,
+    .row.rev {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-bottom: 72px;
+    }
+    /* Keep copy above the image regardless of source order. */
+    .row .copy {
+      order: -1;
+    }
+  }
+</style>

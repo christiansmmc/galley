@@ -1,0 +1,35 @@
+/*
+ * Galley landing — design tokens (verbatim from the design handoff).
+ * Default theme = Linen (dark). The boot script in Base.astro sets
+ * data-theme before first paint (stored > prefers-color-scheme > linen).
+ */
+:root,
+[data-theme='linen'] {
+  --bg: #1c1a18;
+  --bg-2: #272320;
+  --surface: #121110;
+  --surface-2: #1b1916;
+  --fg: #e9e4da;
+  --muted: #928c80;
+  --faint: #6a655b;
+  --line: rgba(255, 255, 255, 0.09);
+  --accent: #94a677;
+  --accent-fg: #191b12;
+  --italic: #9fae8a;
+  --shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme='paper'] {
+  --bg: #efeae0;
+  --bg-2: #e6e0d3;
+  --surface: #faf7f0;
+  --surface-2: #efeae0;
+  --fg: #2b2720;
+  --muted: #6e675b;
+  --faint: #9a9384;
+  --line: rgba(40, 34, 24, 0.13);
+  --accent: #7f8d57;
+  --accent-fg: #f7f5ee;
+  --italic: #6f7c4f;
+  --shadow: 0 30px 60px -30px rgba(60, 50, 34, 0.28);
+}
