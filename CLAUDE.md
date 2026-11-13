@@ -38,3 +38,10 @@ Do **not** ask the user whether to bump — bump every time. Do **not** run `sud
 - Frontend state: zustand stores in `src/state/` (prsStore / settingsStore / draftsStore / uiStore).
 - Tauri commands surface: `src-tauri/src/commands/`, registered in `main.rs` invoke_handler.
 - IPC contract: `src/ipc/client.ts` (TS) + `src/ipc/types.ts` (TS types mirror Rust `Settings` / `PrDetail` / etc.).
+
+## Landing page (`site/`)
+
+- Astro static site, published at https://christiansmmc.github.io/galley/ by `.github/workflows/pages.yml` on pushes to `master` that touch `site/**`.
+- Self-contained: own `package.json`, lockfile and `pnpm-workspace.yaml` — run `pnpm install/test/build` inside `site/`. The root vitest excludes `site/**`.
+- Downloads are fetched client-side from this repo's `releases/latest`, so a release needs no site rebuild. Publish releases only here (the old `galley-app` repo is retired).
+- Site-only changes don't bump the app version.
