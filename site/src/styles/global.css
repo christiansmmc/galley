@@ -1,0 +1,114 @@
+@import './theme.css';
+
+* {
+  box-sizing: border-box;
+}
+html {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  /* Smooth theme swap on the root + full-bleed sections (handoff). */
+  transition: background 0.35s ease, color 0.35s ease;
+}
+::selection {
+  background: rgba(148, 166, 119, 0.3);
+}
+
+/* Type families */
+.serif {
+  font-family: 'Spectral', Georgia, serif;
+}
+.mono {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Eyebrow label (uppercase mono, wide tracking) */
+.eyebrow {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Layout helpers */
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+.wrap-narrow {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+.muted {
+  color: var(--muted);
+}
+a {
+  color: inherit;
+}
+
+/* Full-bleed band (manifesto / themes) — transitions with the theme. */
+.band {
+  background: var(--bg-2);
+  transition: background 0.35s ease;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: opacity 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--line);
+}
+.btn-ghost:hover {
+  border-color: var(--muted);
+}
+.textlink {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+.textlink:hover {
+  color: var(--fg);
+}
+
+/* Frameless screenshot — the source PNGs already include window chrome. */
+.shot {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}

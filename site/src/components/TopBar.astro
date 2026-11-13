@@ -1,0 +1,140 @@
+---
+import { STRINGS } from '../lib/i18n';
+const en = STRINGS.en;
+const base = import.meta.env.BASE_URL;
+---
+<nav class="nav wrap">
+  <a class="brand" href="#top" aria-label="Galley">
+    <img class="mark" src={`${base}/favicon.png`} alt="" width="22" height="22" />
+    <span class="serif wordmark">Galley</span>
+  </a>
+  <div class="controls">
+    <div class="seg" id="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="pt">PT</button>
+    </div>
+    <div class="seg" id="theme-toggle" role="group" aria-label="Theme">
+      <button type="button" data-theme-set="paper">Paper</button>
+      <button type="button" data-theme-set="linen">Linen</button>
+    </div>
+    <a class="dl" href="#download" data-i18n="nav_download">{en.nav_download}</a>
+  </div>
+</nav>
+
+<style>
+  .nav {
+    padding-top: 22px;
+    padding-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    text-decoration: none;
+    color: var(--fg);
+  }
+  .mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: block;
+    object-fit: contain;
+  }
+  .wordmark {
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .seg {
+    display: flex;
+    align-items: center;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .seg button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    padding: 5px 11px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .seg button.on {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .dl {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-fg);
+    background: var(--accent);
+    padding: 8px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-left: 4px;
+    transition: opacity 0.18s ease;
+  }
+  .dl:hover {
+    opacity: 0.9;
+  }
+  @media (max-width: 560px) {
+    .wordmark {
+      display: none;
+    }
+    .controls {
+      gap: 6px;
+    }
+  }
+</style>
+
+<script>
+  function syncTheme(t: string) {
+    document
+      .querySelectorAll('#theme-toggle button')
+      .forEach((b) => b.classList.toggle('on', b.getAttribute('data-theme-set') === t));
+  }
+  function syncLang(l: string) {
+    document
+      .querySelectorAll('#lang-toggle button')
+      .forEach((b) => b.classList.toggle('on', b.getAttribute('data-lang') === l));
+  }
+  document.querySelectorAll('#theme-toggle button').forEach((b) => {
+    b.addEventListener('click', () => {
+      const t = b.getAttribute('data-theme-set');
+      if (!t) return;
+      window.__setTheme(t);
+      syncTheme(t);
+    });
+  });
+  document.querySelectorAll('#lang-toggle button').forEach((b) => {
+    b.addEventListener('click', () => {
+      const l = b.getAttribute('data-lang');
+      if (!l) return;
+      window.__setLang(l);
+      syncLang(l);
+    });
+  });
+  const initTheme = document.documentElement.getAttribute('data-theme') || 'linen';
+  const initLang = document.documentElement.getAttribute('lang') || 'en';
+  syncTheme(initTheme);
+  syncLang(initLang);
+  // Apply copy only when the boot lang overrides the English SSR default.
+  if (initLang !== 'en') window.__setLang(initLang);
+</script>

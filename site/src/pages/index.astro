@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import TopBar from '../components/TopBar.astro';
+import Hero from '../components/Hero.astro';
+import Manifesto from '../components/Manifesto.astro';
+import Features from '../components/Features.astro';
+import Themes from '../components/Themes.astro';
+import Download from '../components/Download.astro';
+import Footer from '../components/Footer.astro';
+import { STRINGS } from '../lib/i18n';
+---
+<Base>
+  <TopBar />
+  <Hero />
+  <Manifesto />
+  <Features />
+  <Themes />
+  <Download />
+  <Footer />
+  <script is:inline set:html={`window.__STRINGS = ${JSON.stringify(STRINGS)};`}></script>
+</Base>
